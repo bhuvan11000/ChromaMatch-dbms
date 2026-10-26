@@ -1079,12 +1079,12 @@ sequenceDiagram
     participant S as gameService
     participant P as PostgreSQL
     participant M as MongoDB
-    B->>H: POST /api/games/start {mode: global}
+    B->>H: POST /api/games/start (mode global)
     H->>S: startGame(userId, ...)
-    S->>S: generateRandomColors(3); sign game token
+    S->>S: generateRandomColors(3), sign game token
     S-->>B: token + 3 targets (play order)
     Note over B: 3 × (reveal 5 s → hide → sliders → submit locally)
-    B->>H: POST /api/games/submit {token, guesses[3]}
+    B->>H: POST /api/games/submit (token, guesses x3)
     H->>S: submitGame(userId, ...)
     S->>S: verify token, scoreGame()
     S->>P: submit_game_result(...)  (one atomic call)
@@ -1104,10 +1104,10 @@ sequenceDiagram
     else missing
         S->>S: generateDailyColors(date, secret)
         S->>P: ensure_daily_challenge(date, colors)
-        Note over P: INSERT ... ON CONFLICT DO NOTHING; colors inserted only by the winner
+        Note over P: INSERT ... ON CONFLICT DO NOTHING, colors inserted only by the winner
         P-->>S: challenge id (+ colors)
     end
-    S->>S: randomPermutation(3); sign token (cid, rounds with n)
+    S->>S: randomPermutation(3), sign token (cid, rounds with n)
 ```
 
 #### 5.12.3 Room lifecycle
@@ -1118,7 +1118,7 @@ stateDiagram-v2
     lobby --> cancelled: creator leaves
     lobby --> in_progress: start_room (creator, ≥2 members, colors created)
     in_progress --> in_progress: submit_room_attempt / leave_room
-    in_progress --> finished: no member 'active' (check_room_over)
+    in_progress --> finished: no member active - check_room_over
     finished --> [*]
     cancelled --> [*]
 ```
@@ -1132,15 +1132,15 @@ sequenceDiagram
     participant G as gameService
     participant P as PostgreSQL
     participant M as MongoDB
-    B->>G: start {mode: room, roomCode}
+    B->>G: start (mode room, roomCode)
     G->>P: read room, membership, room_colors (must be in_progress, active, attempts left)
     G-->>B: token (rid, tmr, shuffled rounds)
-    Note over B: play 3 rounds; timed rooms auto-submit slider values at 0
-    B->>G: submit {token, guesses, timedOut[3]}
+    Note over B: play 3 rounds, timed rooms auto-submit slider values at 0
+    B->>G: submit (token, guesses, timedOut x3)
     G->>G: verify token, score (server-side)
     G->>P: submit_room_attempt(user, rid, scores) — locks room then member
     P-->>G: attempt_number, best, member/room status
-    G->>M: insertGame({mode: room, attempt_number, timed_out...})
+    G->>M: insertGame(room attempt document)
     G-->>B: result + room summary
 ```
 
