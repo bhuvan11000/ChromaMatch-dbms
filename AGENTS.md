@@ -10,8 +10,8 @@ Repo-specific rules for AI coding agents. The design docs are the contract; this
 
 ## Current status
 - The repository is scaffolded, not docs-only. Next.js 16 App Router, TypeScript strict, Tailwind 4, the TanStack Query provider, ESLint, Prettier, Vitest, Docker Compose, `.env.example`, and GitHub Actions CI are in place.
-- Implemented: the app shell (`src/app`), root configuration, exact-pinned dependencies, the §5.1 folder skeleton, CI (`lint → typecheck → test → build`), §5.3 constants and validated env (`src/lib/config`), `AppError` + the full §8.1 catalog (`src/lib/errors.ts`), structured JSON logging (`src/lib/logger.ts`), the Origin/Content-Type check (`src/lib/auth/origin.ts`), the API wrapper (`withHandler`, `json`, `apiError`, `parseBody`, rate-limit hook in `src/lib/api`), and `GET /api/health` returning `{status:"ok"}`. Unit tests cover constants, env parsing, the error catalog, Origin checks, API helpers/wrapper, and logging (`npm test`: 7 files, 56 tests).
-- Not implemented yet: domain logic (`src/lib/domain`), auth/session/token code, PostgreSQL schema/migrations/functions/triggers/views, Mongo validator/repository/aggregations, services, Zod request/response schemas for features, feature API route handlers, gameplay/auth/admin pages, and Playwright.
+- Implemented: the app shell (`src/app`), root configuration, exact-pinned dependencies, the §5.1 folder skeleton, CI (`lint → typecheck → test → build`), §5.3 constants and validated env (`src/lib/config`), `AppError` + the full §8.1 catalog (`src/lib/errors.ts`), structured JSON logging (`src/lib/logger.ts`), the Origin/Content-Type check (`src/lib/auth/origin.ts`), the API wrapper (`withHandler`, `json`, `apiError`, `parseBody`, rate-limit hook in `src/lib/api`), Docker Compose for PostgreSQL 16 + MongoDB 7, the postgres.js/Drizzle client (`src/lib/db/pg/client.ts`), the MongoClient singleton (`src/lib/db/mongo/client.ts`), and `GET /api/health` returning `{ postgres: "ok" | "down", mongo: "ok" | "down" }` via `healthService` with 1.5 s pings. Unit tests cover constants, env parsing, the error catalog, Origin checks, API helpers/wrapper, logging, both DB clients, the health service, and the health route (`npm test`: 11 files, 71 tests).
+- Not implemented yet: domain logic (`src/lib/domain`), auth/session/token code, PostgreSQL schema/migrations/functions/triggers/views, Mongo validator/repository/aggregations, feature services, Zod request/response schemas for features, feature API route handlers, gameplay/auth/admin pages, and Playwright.
 - Stub scripts: `test:int`, `test:e2e`, `db:seed`, `db:seed-admin`, and `mongo:init` print `not implemented yet` and exit 0. `db:generate`, `db:custom`, and `db:migrate` are wired to drizzle-kit, but there is no schema or migration yet.
 - Tooling pin: exact versions are used. TypeScript 5.9.3 and ESLint 9.39.5 are intentional; the current latest majors conflict with `eslint-config-next@16.4.3`.
 - Known warnings: Next 16 deprecates `src/middleware.ts` in favour of `src/proxy.ts` (kept per §5.1); ESLint 9.39.5 reports its own end-of-support notice.
@@ -22,7 +22,7 @@ Repo-specific rules for AI coding agents. The design docs are the contract; this
 - These script names are normative (Architecture §5.15.1): `npm run dev`, `npm run build`, `npm start`, `npm run lint`, `npm run typecheck`, `npm run format`, `npm test`, `npm run test:unit`, `npm run test:int`, `npm run test:e2e`, `npm run db:generate`, `npm run db:custom`, `npm run db:migrate`, `npm run db:seed`, `npm run db:seed-admin`, `npm run mongo:init`.
 - Local Postgres + Mongo come from `docker-compose.yml`; integration tests need real DBs with migrations/validator applied.
 - After every step: `npm run lint`, `npm run typecheck`, `npm test` must pass. CI order: lint → typecheck → unit → integration → build.
-- Copy `.env.example`; never commit `.env*` except `.env.example`.
+- Copy `.env.example` to `.env.local`; never commit `.env*` except `.env.example`.
 
 ## Stack (no additions without asking)
 Next.js App Router + TypeScript strict on the Node runtime; Tailwind; TanStack Query; Zod; Drizzle ORM + postgres.js (PostgreSQL); official `mongodb` driver (no Mongoose); `jose`; `@node-rs/argon2`; Vitest + optional Playwright; Recharts. Supabase is plain Postgres only (no Supabase Auth/Realtime/Storage); rooms use polling, not WebSockets.
@@ -78,3 +78,13 @@ Next.js App Router + TypeScript strict on the Node runtime; Tailwind; TanStack Q
 - Keep diffs small and focused; do not reformat unrelated files. Commit regularly.
 - Before the final commit of every task, update this AGENTS.md (Current status, commands, gotchas, or rules as applicable) so it matches the repository as committed.
 - Finish with: files changed, tests added, any Architecture §6 default used, and anything uncertain.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

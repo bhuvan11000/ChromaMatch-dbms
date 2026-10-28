@@ -8,18 +8,32 @@ A color-matching game built with Next.js, PostgreSQL, and MongoDB.
 - npm 10 or newer
 - Docker and Docker Compose for local PostgreSQL and MongoDB
 
-## Setup
+## Local setup
+
+Start the local PostgreSQL 16 and MongoDB 7 containers:
 
 ```bash
-cp .env.example .env
 docker compose up -d
+```
+
+Create your local environment file from the documented defaults:
+
+```bash
+cp .env.example .env.local
+```
+
+Install dependencies and start the development server:
+
+```bash
 npm install
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000>. Check dependency connectivity at
+<http://localhost:3000/api/health>.
 
-Never commit `.env` or any other `.env*` file. Only `.env.example` is tracked.
+Never commit `.env`, `.env.local`, or any other `.env*` file. Only
+`.env.example` is tracked.
 
 ## Scripts
 

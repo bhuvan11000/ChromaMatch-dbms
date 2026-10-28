@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: chromamatch
       POSTGRES_PASSWORD: chromamatch
@@ -16,7 +16,7 @@ services:
       retries: 10
 
   mongo:
-    image: mongo:8
+    image: mongo:7
     ports:
       - "27017:27017"
     volumes:
