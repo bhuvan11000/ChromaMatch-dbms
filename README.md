@@ -1,1 +1,57 @@
-# ChromaMatch-dbms
+# ChromaMatch
+
+A color-matching game built with Next.js, PostgreSQL, and MongoDB.
+
+## Status
+
+Scaffold only. The application shell, tooling, and folder structure are in place. Game logic,
+database schema, migrations, API handlers, and gameplay pages are added in later steps.
+
+## Prerequisites
+
+- Node.js 22.18 or newer (Node 24 LTS also works)
+- npm 10 or newer
+- Docker and Docker Compose for local PostgreSQL and MongoDB
+
+## Setup
+
+```bash
+cp .env.example .env
+docker compose up -d
+npm install
+npm run dev
+```
+
+Open <http://localhost:3000>.
+
+Never commit `.env` or any other `.env*` file. Only `.env.example` is tracked.
+
+## Scripts
+
+| Script            | Purpose                                                       |
+| ----------------- | ------------------------------------------------------------- |
+| `dev`             | Start the Next.js development server                          |
+| `build` / `start` | Production build / run                                        |
+| `lint`            | Run ESLint                                                    |
+| `typecheck`       | Run `tsc --noEmit`                                            |
+| `format`          | Format the repository with Prettier                           |
+| `test`            | Run unit tests (Vitest)                                       |
+| `test:unit`       | Run unit tests only                                           |
+| `test:int`        | Integration tests — not implemented yet                       |
+| `test:e2e`        | Playwright end-to-end tests — not implemented yet             |
+| `db:generate`     | Generate a Drizzle migration from the schema                  |
+| `db:custom`       | Create an empty custom migration: `npm run db:custom -- name` |
+| `db:migrate`      | Apply migrations using `DATABASE_URL_DIRECT`                  |
+| `db:seed`         | Seed achievement definitions — not implemented yet            |
+| `db:seed-admin`   | Promote an email to admin — not implemented yet               |
+| `mongo:init`      | Create the Mongo collection, validator, and indexes — not yet |
+
+The scripts whose implementation depends on later steps print `not implemented yet` and exit
+successfully for now.
+
+## Documentation
+
+- [`docs/ChromaMatch_Game_Design.md`](docs/ChromaMatch_Game_Design.md) — game rules and modes.
+- [`docs/ChromaMatch_Database_Design.md`](docs/ChromaMatch_Database_Design.md) — relational and document schemas.
+- [`docs/ChromaMatch_Architecture.md`](docs/ChromaMatch_Architecture.md) — implementation contract.
+- [`AGENTS.md`](AGENTS.md) — agent rules and fast-path conventions.

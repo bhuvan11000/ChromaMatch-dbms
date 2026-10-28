@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+build/
+.vercel/
+
+# Testing
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Tooling
+.eslintcache
+
+# Misc
+.DS_Store
+npm-debug.log*
+
+# Environment files — never commit, except the example
+.env*
+!.env.example

@@ -1,0 +1,2 @@
+-- Course ALTER/DROP demonstrations belong here (Architecture §5.8.2).
+-- This file is a course deliverable, not an application migration.
