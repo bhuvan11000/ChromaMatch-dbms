@@ -10,8 +10,8 @@ Repo-specific rules for AI coding agents. The design docs are the contract; this
 
 ## Current status
 - The repository is scaffolded, not docs-only. Next.js 16 App Router, TypeScript strict, Tailwind 4, the TanStack Query provider, ESLint, Prettier, Vitest, Docker Compose, `.env.example`, and GitHub Actions CI are in place.
-- Implemented: the app shell (`src/app`), root configuration, exact-pinned dependencies, the §5.1 folder skeleton, and CI (`lint → typecheck → test → build`). There are no unit tests yet; `npm test` passes with zero tests.
-- Not implemented yet: domain logic (`src/lib/domain`), constants/env validation, auth/session/token code, PostgreSQL schema/migrations/functions/triggers/views, Mongo validator/repository/aggregations, services, Zod schemas, API route handlers, gameplay/auth/admin pages, and Playwright.
+- Implemented: the app shell (`src/app`), root configuration, exact-pinned dependencies, the §5.1 folder skeleton, CI (`lint → typecheck → test → build`), §5.3 constants and validated env (`src/lib/config`), `AppError` + the full §8.1 catalog (`src/lib/errors.ts`), structured JSON logging (`src/lib/logger.ts`), the Origin/Content-Type check (`src/lib/auth/origin.ts`), the API wrapper (`withHandler`, `json`, `apiError`, `parseBody`, rate-limit hook in `src/lib/api`), and `GET /api/health` returning `{status:"ok"}`. Unit tests cover constants, env parsing, the error catalog, Origin checks, API helpers/wrapper, and logging (`npm test`: 7 files, 56 tests).
+- Not implemented yet: domain logic (`src/lib/domain`), auth/session/token code, PostgreSQL schema/migrations/functions/triggers/views, Mongo validator/repository/aggregations, services, Zod request/response schemas for features, feature API route handlers, gameplay/auth/admin pages, and Playwright.
 - Stub scripts: `test:int`, `test:e2e`, `db:seed`, `db:seed-admin`, and `mongo:init` print `not implemented yet` and exit 0. `db:generate`, `db:custom`, and `db:migrate` are wired to drizzle-kit, but there is no schema or migration yet.
 - Tooling pin: exact versions are used. TypeScript 5.9.3 and ESLint 9.39.5 are intentional; the current latest majors conflict with `eslint-config-next@16.4.3`.
 - Known warnings: Next 16 deprecates `src/middleware.ts` in favour of `src/proxy.ts` (kept per §5.1); ESLint 9.39.5 reports its own end-of-support notice.
@@ -76,4 +76,5 @@ Next.js App Router + TypeScript strict on the Node runtime; Tailwind; TanStack Q
 ## Working style
 - First give a short plan: files to create/change and tests. If the user says "plan only", stop and wait; otherwise implement.
 - Keep diffs small and focused; do not reformat unrelated files. Commit regularly.
+- Before the final commit of every task, update this AGENTS.md (Current status, commands, gotchas, or rules as applicable) so it matches the repository as committed.
 - Finish with: files changed, tests added, any Architecture §6 default used, and anything uncertain.
