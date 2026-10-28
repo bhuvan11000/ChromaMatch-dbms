@@ -8,9 +8,18 @@ Repo-specific rules for AI coding agents. The design docs are the contract; this
 - If something is unspecified, use the Architecture §6 default and say which one you used.
 - Useful anchors: §5.2 layering, §5.3 constants/env, §5.4 scoring, §5.6 game tokens, §5.8–5.9 DB layers, §5.10 API, §5.11 frontend, §5.14 testing, §6 defaults, §8.1 error codes.
 
+## Current status
+- The repository is scaffolded, not docs-only. Next.js 16 App Router, TypeScript strict, Tailwind 4, the TanStack Query provider, ESLint, Prettier, Vitest, Docker Compose, `.env.example`, and GitHub Actions CI are in place.
+- Implemented: the app shell (`src/app`), root configuration, exact-pinned dependencies, the §5.1 folder skeleton, and CI (`lint → typecheck → test → build`). There are no unit tests yet; `npm test` passes with zero tests.
+- Not implemented yet: domain logic (`src/lib/domain`), constants/env validation, auth/session/token code, PostgreSQL schema/migrations/functions/triggers/views, Mongo validator/repository/aggregations, services, Zod schemas, API route handlers, gameplay/auth/admin pages, and Playwright.
+- Stub scripts: `test:int`, `test:e2e`, `db:seed`, `db:seed-admin`, and `mongo:init` print `not implemented yet` and exit 0. `db:generate`, `db:custom`, and `db:migrate` are wired to drizzle-kit, but there is no schema or migration yet.
+- Tooling pin: exact versions are used. TypeScript 5.9.3 and ESLint 9.39.5 are intentional; the current latest majors conflict with `eslint-config-next@16.4.3`.
+- Known warnings: Next 16 deprecates `src/middleware.ts` in favour of `src/proxy.ts` (kept per §5.1); ESLint 9.39.5 reports its own end-of-support notice.
+- Do not scaffold again. Start from the next unimplemented layer and write tests with the code.
+
 ## Repo state and commands
-- At the time this file was written the repo is docs-only: no `package.json`, `src/`, tests, or CI yet. Do not pretend scripts exist. Scaffold to Architecture §5.1 before implementing.
-- Once scaffolded, these script names are normative (Architecture §5.15.1): `npm run dev`, `npm run build`, `npm start`, `npm run lint`, `npm run typecheck`, `npm run format`, `npm test`, `npm run test:unit`, `npm run test:int`, `npm run test:e2e`, `npm run db:generate`, `npm run db:custom`, `npm run db:migrate`, `npm run db:seed`, `npm run db:seed-admin`, `npm run mongo:init`.
+- The repository is scaffolded; see Current status. Do not re-scaffold or pretend unimplemented scripts work.
+- These script names are normative (Architecture §5.15.1): `npm run dev`, `npm run build`, `npm start`, `npm run lint`, `npm run typecheck`, `npm run format`, `npm test`, `npm run test:unit`, `npm run test:int`, `npm run test:e2e`, `npm run db:generate`, `npm run db:custom`, `npm run db:migrate`, `npm run db:seed`, `npm run db:seed-admin`, `npm run mongo:init`.
 - Local Postgres + Mongo come from `docker-compose.yml`; integration tests need real DBs with migrations/validator applied.
 - After every step: `npm run lint`, `npm run typecheck`, `npm test` must pass. CI order: lint → typecheck → unit → integration → build.
 - Copy `.env.example`; never commit `.env*` except `.env.example`.
