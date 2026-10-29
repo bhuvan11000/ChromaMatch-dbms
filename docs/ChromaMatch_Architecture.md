@@ -799,7 +799,7 @@ As in DB doc §9: partial index on `users(global_best_score DESC)` where not ban
 | Postgres signal | Mapped to |
 |---|---|
 | `error.code = 'CM000'` | `AppError(error.message)` (a code from §8.1) |
-| `23505` on the username unique index/constraint | `USERNAME_TAKEN` |
+| `23505` on the username unique constraint/index (`users_username_key`, `users_username_lower_key`) | `USERNAME_TAKEN` |
 | `23505` on the email constraint | `EMAIL_TAKEN` |
 | `23505` on `rooms_room_code_key` | internal retry in `createRoom` |
 | `23514` (check violation) | `VALIDATION_ERROR` |
