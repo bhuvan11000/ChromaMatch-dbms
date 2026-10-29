@@ -15,7 +15,7 @@
     "format": "prettier --write .",
     "test": "npm run test:unit",
     "test:unit": "vitest run",
-    "test:int": "node -e \"console.log('not implemented yet')\"",
+    "test:int": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "node -e \"console.log('not implemented yet')\"",
     "db:generate": "drizzle-kit generate",
     "db:custom": "drizzle-kit generate --custom --name",
