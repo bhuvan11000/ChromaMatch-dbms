@@ -43,6 +43,27 @@
       "when": 1793283753199,
       "tag": "0005_daily_function",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793285318602,
+      "tag": "0006_room_functions",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793285557974,
+      "tag": "0007_admin_procedures",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793285673293,
+      "tag": "0008_views",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,830 @@
+{
+  "id": "fa92811f-39d1-4b45-9665-9d651e353d79",
+  "prevId": "01ca4271-6e9f-46e9-9858-435eb3b3fc34",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.achievements": {
+      "name": "achievements",
+      "schema": "",
+      "columns": {
+        "achievement_id": {
+          "name": "achievement_id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "name": "achievements_achievement_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(60)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criteria_type": {
+          "name": "criteria_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "threshold": {
+          "name": "threshold",
+          "type": "numeric(6, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criteria_description": {
+          "name": "criteria_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "achievements_name_key": {
+          "name": "achievements_name_key",
+          "columns": [
+            "name"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "achievements_criteria_type_check": {
+          "name": "achievements_criteria_type_check",
+          "value": "\"achievements\".\"criteria_type\" in ('games_played', 'daily_streak', 'perfect_round', 'new_pb', 'first_daily', 'first_global')"
+        },
+        "achievements_threshold_check": {
+          "name": "achievements_threshold_check",
+          "value": "\"achievements\".\"threshold\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.challenge_colors": {
+      "name": "challenge_colors",
+      "schema": "",
+      "columns": {
+        "daily_challenge_id": {
+          "name": "daily_challenge_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "round_number": {
+          "name": "round_number",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hue": {
+          "name": "hue",
+          "type": "numeric(4, 1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "saturation": {
+          "name": "saturation",
+          "type": "numeric(4, 1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "numeric(4, 1)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "challenge_colors_daily_challenge_id_daily_challenges_daily_challenge_id_fk": {
+          "name": "challenge_colors_daily_challenge_id_daily_challenges_daily_challenge_id_fk",
+          "tableFrom": "challenge_colors",
+          "columnsFrom": [
+            "daily_challenge_id"
+          ],
+          "tableTo": "daily_challenges",
+          "columnsTo": [
+            "daily_challenge_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "challenge_colors_pkey": {
+          "name": "challenge_colors_pkey",
+          "columns": [
+            "daily_challenge_id",
+            "round_number"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "challenge_colors_round_number_check": {
+          "name": "challenge_colors_round_number_check",
+          "value": "\"challenge_colors\".\"round_number\" between 1 and 3"
+        },
+        "challenge_colors_hue_check": {
+          "name": "challenge_colors_hue_check",
+          "value": "\"challenge_colors\".\"hue\" between 0 and 360"
+        },
+        "challenge_colors_saturation_check": {
+          "name": "challenge_colors_saturation_check",
+          "value": "\"challenge_colors\".\"saturation\" between 0 and 100"
+        },
+        "challenge_colors_value_check": {
+          "name": "challenge_colors_value_check",
+          "value": "\"challenge_colors\".\"value\" between 0 and 100"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.daily_challenges": {
+      "name": "daily_challenges",
+      "schema": "",
+      "columns": {
+        "daily_challenge_id": {
+          "name": "daily_challenge_id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "name": "daily_challenges_daily_challenge_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
+          }
+        },
+        "challenge_date": {
+          "name": "challenge_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "daily_challenges_challenge_date_key": {
+          "name": "daily_challenges_challenge_date_key",
+          "columns": [
+            "challenge_date"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.daily_personal_bests": {
+      "name": "daily_personal_bests",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "daily_challenge_id": {
+          "name": "daily_challenge_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "best_score": {
+          "name": "best_score",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "achieved_at": {
+          "name": "achieved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "daily_personal_bests_user_id_users_user_id_fk": {
+          "name": "daily_personal_bests_user_id_users_user_id_fk",
+          "tableFrom": "daily_personal_bests",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "tableTo": "users",
+          "columnsTo": [
+            "user_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "daily_personal_bests_daily_challenge_id_daily_challenges_daily_challenge_id_fk": {
+          "name": "daily_personal_bests_daily_challenge_id_daily_challenges_daily_challenge_id_fk",
+          "tableFrom": "daily_personal_bests",
+          "columnsFrom": [
+            "daily_challenge_id"
+          ],
+          "tableTo": "daily_challenges",
+          "columnsTo": [
+            "daily_challenge_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "daily_personal_bests_pkey": {
+          "name": "daily_personal_bests_pkey",
+          "columns": [
+            "user_id",
+            "daily_challenge_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "daily_personal_bests_best_score_check": {
+          "name": "daily_personal_bests_best_score_check",
+          "value": "\"daily_personal_bests\".\"best_score\" between 0 and 30"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.room_colors": {
+      "name": "room_colors",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "round_number": {
+          "name": "round_number",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hue": {
+          "name": "hue",
+          "type": "numeric(4, 1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "saturation": {
+          "name": "saturation",
+          "type": "numeric(4, 1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "numeric(4, 1)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "room_colors_room_id_rooms_room_id_fk": {
+          "name": "room_colors_room_id_rooms_room_id_fk",
+          "tableFrom": "room_colors",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "tableTo": "rooms",
+          "columnsTo": [
+            "room_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "room_colors_pkey": {
+          "name": "room_colors_pkey",
+          "columns": [
+            "room_id",
+            "round_number"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "room_colors_round_number_check": {
+          "name": "room_colors_round_number_check",
+          "value": "\"room_colors\".\"round_number\" between 1 and 3"
+        },
+        "room_colors_hue_check": {
+          "name": "room_colors_hue_check",
+          "value": "\"room_colors\".\"hue\" between 0 and 360"
+        },
+        "room_colors_saturation_check": {
+          "name": "room_colors_saturation_check",
+          "value": "\"room_colors\".\"saturation\" between 0 and 100"
+        },
+        "room_colors_value_check": {
+          "name": "room_colors_value_check",
+          "value": "\"room_colors\".\"value\" between 0 and 100"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.room_players": {
+      "name": "room_players",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "joined_at": {
+          "name": "joined_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "attempts_used": {
+          "name": "attempts_used",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "best_score": {
+          "name": "best_score",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "best_achieved_at": {
+          "name": "best_achieved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "room_players_room_id_rooms_room_id_fk": {
+          "name": "room_players_room_id_rooms_room_id_fk",
+          "tableFrom": "room_players",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "tableTo": "rooms",
+          "columnsTo": [
+            "room_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "room_players_user_id_users_user_id_fk": {
+          "name": "room_players_user_id_users_user_id_fk",
+          "tableFrom": "room_players",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "tableTo": "users",
+          "columnsTo": [
+            "user_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {
+        "room_players_pkey": {
+          "name": "room_players_pkey",
+          "columns": [
+            "room_id",
+            "user_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "room_players_status_check": {
+          "name": "room_players_status_check",
+          "value": "\"room_players\".\"status\" in ('active', 'finished', 'left')"
+        },
+        "room_players_attempts_used_check": {
+          "name": "room_players_attempts_used_check",
+          "value": "\"room_players\".\"attempts_used\" >= 0"
+        },
+        "room_players_best_score_check": {
+          "name": "room_players_best_score_check",
+          "value": "\"room_players\".\"best_score\" between 0 and 30"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.rooms": {
+      "name": "rooms",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "name": "rooms_room_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
+          }
+        },
+        "room_code": {
+          "name": "room_code",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creator_id": {
+          "name": "creator_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "room_size": {
+          "name": "room_size",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timer_seconds": {
+          "name": "timer_seconds",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attempts_limit": {
+          "name": "attempts_limit",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(12)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'lobby'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "rooms_creator_id_users_user_id_fk": {
+          "name": "rooms_creator_id_users_user_id_fk",
+          "tableFrom": "rooms",
+          "columnsFrom": [
+            "creator_id"
+          ],
+          "tableTo": "users",
+          "columnsTo": [
+            "user_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "rooms_room_code_key": {
+          "name": "rooms_room_code_key",
+          "columns": [
+            "room_code"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "rooms_room_size_check": {
+          "name": "rooms_room_size_check",
+          "value": "\"rooms\".\"room_size\" >= 2"
+        },
+        "rooms_timer_seconds_check": {
+          "name": "rooms_timer_seconds_check",
+          "value": "\"rooms\".\"timer_seconds\" in (5, 10, 15)"
+        },
+        "rooms_attempts_limit_check": {
+          "name": "rooms_attempts_limit_check",
+          "value": "\"rooms\".\"attempts_limit\" in (3, 5)"
+        },
+        "rooms_status_check": {
+          "name": "rooms_status_check",
+          "value": "\"rooms\".\"status\" in ('lobby', 'in_progress', 'finished', 'cancelled')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.user_achievements": {
+      "name": "user_achievements",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "achievement_id": {
+          "name": "achievement_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "earned_at": {
+          "name": "earned_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_achievements_user_id_users_user_id_fk": {
+          "name": "user_achievements_user_id_users_user_id_fk",
+          "tableFrom": "user_achievements",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "tableTo": "users",
+          "columnsTo": [
+            "user_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "user_achievements_achievement_id_achievements_achievement_id_fk": {
+          "name": "user_achievements_achievement_id_achievements_achievement_id_fk",
+          "tableFrom": "user_achievements",
+          "columnsFrom": [
+            "achievement_id"
+          ],
+          "tableTo": "achievements",
+          "columnsTo": [
+            "achievement_id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "user_achievements_pkey": {
+          "name": "user_achievements_pkey",
+          "columns": [
+            "user_id",
+            "achievement_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "name": "users_user_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
+          }
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'player'"
+        },
+        "is_banned": {
+          "name": "is_banned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "global_best_score": {
+          "name": "global_best_score",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "global_best_achieved_at": {
+          "name": "global_best_achieved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_games_played": {
+          "name": "total_games_played",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "current_daily_streak": {
+          "name": "current_daily_streak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "longest_daily_streak": {
+          "name": "longest_daily_streak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "last_daily_played_date": {
+          "name": "last_daily_played_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_username_key": {
+          "name": "users_username_key",
+          "columns": [
+            "username"
+          ],
+          "nullsNotDistinct": false
+        },
+        "users_email_key": {
+          "name": "users_email_key",
+          "columns": [
+            "email"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "users_role_check": {
+          "name": "users_role_check",
+          "value": "\"users\".\"role\" in ('player', 'admin')"
+        },
+        "users_global_best_score_check": {
+          "name": "users_global_best_score_check",
+          "value": "\"users\".\"global_best_score\" between 0 and 30"
+        },
+        "users_total_games_played_check": {
+          "name": "users_total_games_played_check",
+          "value": "\"users\".\"total_games_played\" >= 0"
+        },
+        "users_current_daily_streak_check": {
+          "name": "users_current_daily_streak_check",
+          "value": "\"users\".\"current_daily_streak\" >= 0"
+        },
+        "users_longest_daily_streak_check": {
+          "name": "users_longest_daily_streak_check",
+          "value": "\"users\".\"longest_daily_streak\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
