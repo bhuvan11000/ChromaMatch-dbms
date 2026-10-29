@@ -24,6 +24,9 @@ next-env.d.ts
 .DS_Store
 npm-debug.log*
 
+# Local uncertainty log (not committed)
+UNCERTAINTIES.md
+
 # Environment files — never commit, except the example
 .env*
 !.env.example

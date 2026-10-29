@@ -80,6 +80,7 @@ Next.js App Router + TypeScript strict on the Node runtime; Tailwind; TanStack Q
 ## Working style
 - First give a short plan: files to create/change and tests. If the user says "plan only", stop and wait; otherwise implement.
 - Keep diffs small and focused; do not reformat unrelated files. Commit regularly.
+- Log ambiguous choices and unresolved follow-ups in the local, gitignored `UNCERTAINTIES.md`; never commit that file.
 - Before the final commit of every task, update this AGENTS.md (Current status, commands, gotchas, or rules as applicable) so it matches the repository as committed.
 - Finish with: files changed, tests added, any Architecture §6 default used, and anything uncertain.
 
