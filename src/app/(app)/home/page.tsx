@@ -70,12 +70,15 @@ export default function HomePage() {
       });
     },
   });
+  const logout = logoutMutation.mutate;
 
   useEffect(() => {
     if (session.error instanceof ApiError && session.error.status === 401) {
-      router.replace("/login");
+      // A validly signed cookie can outlive a deleted account. Clearing it
+      // through the logout route prevents a /home ↔ /login redirect loop.
+      logout();
     }
-  }, [router, session.error]);
+  }, [logout, session.error]);
 
   if (session.isPending) {
     return (
@@ -131,7 +134,7 @@ export default function HomePage() {
         <Button
           variant="outline"
           className="w-full sm:w-auto"
-          onClick={() => logoutMutation.mutate()}
+          onClick={() => logout()}
           loading={logoutMutation.isPending}
           disabled={logoutMutation.isPending}
         >
