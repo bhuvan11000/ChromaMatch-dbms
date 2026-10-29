@@ -1320,6 +1320,21 @@ The game and database documents list undecided items. To avoid blocking implemen
 | `INTERNAL_ERROR` | 500 | |
 | `SERVICE_UNAVAILABLE` | 503 | A database is unreachable |
 
+#### 8.1.1 Database trigger error mapping
+
+Room triggers raise SQLSTATE `CM000` with the message set to one of the codes above, exactly like the SQL functions in §5.8.3. The mapping is:
+
+| Trigger rule | Code |
+|---|---|
+| Insert a member while the room is not in `lobby` | `ROOM_NOT_LOBBY` |
+| Insert a member beyond `room_size` | `ROOM_FULL` |
+| Set `attempts_used` above `attempts_limit` | `ATTEMPTS_EXHAUSTED` |
+| Increase `attempts_used` when the member is not `active` | `MEMBER_NOT_ACTIVE` |
+| Move a member status backwards or sideways (only `active → finished` and `active → left` are allowed) | `MEMBER_NOT_ACTIVE` |
+| Decrease `best_score` or set it back to `NULL` | `VALIDATION_ERROR` |
+| Use an invalid room status transition | `VALIDATION_ERROR` |
+| Set `started_at` / `ended_at` inconsistently with the room status | `VALIDATION_ERROR` |
+
 ### 8.2 Proposed achievement seed (to be finalized; names/thresholds adjustable)
 
 | Name | `criteria_type` | `threshold` | Criteria description |

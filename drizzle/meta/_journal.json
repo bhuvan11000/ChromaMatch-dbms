@@ -8,6 +8,27 @@
       "when": 1793263682956,
       "tag": "0000_chemical_zaran",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793281014962,
+      "tag": "0001_cross_column_checks",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793281018065,
+      "tag": "0002_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793281022371,
+      "tag": "0003_triggers",
+      "breakpoints": true
     }
   ]
 }

@@ -23,25 +23,14 @@ import {
  * NUMERIC columns intentionally use Drizzle's default string mapping. Convert
  * them at the data-access boundary with helpers from ./mappers.ts.
  *
- * Deliberately deferred to migration 2+:
- * - Cross-column CHECKs:
- *   * users: (global_best_score IS NULL) = (global_best_achieved_at IS NULL)
- *   * users: longest_daily_streak >= current_daily_streak
- *   * achievements: threshold required for games_played/daily_streak/
- *     perfect_round and NULL for new_pb/first_daily/first_global
- *   * rooms: started_at non-null iff status is in_progress/finished;
- *     ended_at non-null iff status is finished/cancelled
- *   * room_players: (best_score IS NULL) = (best_achieved_at IS NULL)
- * - Triggers:
- *   * room_players BEFORE INSERT: lobby-only joining and room capacity
- *   * room_players BEFORE UPDATE: attempts within attempts_limit, forward-only
- *     status transitions, non-decreasing best_score
- *   * rooms BEFORE UPDATE: allowed status transitions and timestamps
- * - Partial/composite indexes from DB doc §9 / Architecture §5.8.6.
+ * Cross-column CHECKs, room triggers and the §9 indexes live in the custom
+ * migrations 0001–0003 (logical migrations 2–4), not in this file. They are
+ * intentionally hand-written SQL.
+ *
+ * Deliberately deferred to later migrations:
  * - Functions/procedures/views from Architecture §5.8.3–5.8.5.
  * - "Exactly 3 colors" per challenge/room is a transaction/function invariant,
  *   not a CHECK (the composite PK only guarantees at most 3).
- * - Optional case-insensitive username uniqueness (Architecture §1.5 R2).
  * - Room size upper bound is a service constant (ROOM_MAX_SIZE = 10); the DB
  *   CHECK only enforces the documented minimum (>= 2).
  */

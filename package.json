@@ -18,7 +18,7 @@
     "test:int": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "node -e \"console.log('not implemented yet')\"",
     "db:generate": "drizzle-kit generate",
-    "db:custom": "drizzle-kit generate --custom --name",
+    "db:custom": "drizzle-kit generate --custom",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node scripts/seed-achievements.ts",
     "db:seed-admin": "node scripts/seed-admin.ts",
