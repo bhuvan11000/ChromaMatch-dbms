@@ -92,4 +92,20 @@ describe("mapPgError", () => {
       mapPgError(pgError({ code: "23505", constraint_name: "some_other_key" }), silentLogger).code,
     ).toBe("INTERNAL_ERROR");
   });
+
+  it("does not log SQL or bound parameters from Drizzle wrappers", () => {
+    const lines: string[] = [];
+    const capturingLogger = createLogger({
+      level: "error",
+      sink: (line) => lines.push(line),
+    });
+    const wrapper = Object.assign(new Error("Failed query: select $1\nparams: super-secret"), {
+      query: "select $1",
+      params: ["super-secret"],
+    });
+
+    expect(mapPgError(wrapper, capturingLogger).code).toBe("INTERNAL_ERROR");
+    expect(lines.join("\n")).not.toContain("super-secret");
+    expect(lines.join("\n")).not.toContain("select $1");
+  });
 });

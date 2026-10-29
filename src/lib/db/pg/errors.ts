@@ -98,12 +98,17 @@ function isKnownErrorCode(value: string): value is ErrorCode {
 
 function sanitizedErrorFields(error: unknown): Record<string, unknown> {
   const root = rootError(error);
+  const record = asRecord(root);
+  // DrizzleQueryError stores the full SQL and bound parameters; never log those.
+  const isDrizzleQueryError =
+    record !== null && typeof record.query === "string" && Array.isArray(record.params);
+
   return {
     errorName: root instanceof Error ? root.name : typeof root,
-    errorMessage: getErrorMessage(error) ?? undefined,
+    errorMessage: isDrizzleQueryError ? undefined : (getErrorMessage(error) ?? undefined),
     code: getPgErrorCode(error) ?? undefined,
     constraint: getConstraintName(error) ?? undefined,
-    stack: root instanceof Error ? root.stack : undefined,
+    stack: isDrizzleQueryError || !(root instanceof Error) ? undefined : root.stack,
   };
 }
 
