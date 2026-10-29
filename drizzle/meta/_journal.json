@@ -29,6 +29,20 @@
       "when": 1793281022371,
       "tag": "0003_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793283749175,
+      "tag": "0004_game_functions",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793283753199,
+      "tag": "0005_daily_function",
+      "breakpoints": true
     }
   ]
 }
