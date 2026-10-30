@@ -235,6 +235,11 @@
     background-image: var(--spectrum-gradient);
   }
 
+  /* Arcade pin depth: a hairline top light and a solid bottom edge. */
+  .cm-mode-token {
+    filter: drop-shadow(0 -1px 0 rgb(255 255 255 / 0.12)) drop-shadow(0 3px 0 rgb(0 0 0 / 0.38));
+  }
+
   /* A strip of colour tests in a film bezel — brand flourish only. */
   .cm-test-strip {
     box-shadow:

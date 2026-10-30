@@ -17,10 +17,10 @@ interface ModeGlyphMeta {
 }
 
 /*
- * These are little arcade tokens: a coloured rim around a dark instrument
- * plate. Each mode has a distinct silhouette AND a distinct mini-illustration,
- * so the cards never rely on colour alone. Brand colours are hard-coded here on
- * purpose — they are illustrations, not chrome.
+ * Little arcade pins: an anodised rim, a dark instrument plate, and a bold
+ * mini-scene. The object and the scene are deliberately redundant so the token
+ * still reads without colour. Brand colours are hard-coded here because these
+ * are illustrations, not chrome.
  */
 const GLYPHS: Record<ModeGlyphKind, ModeGlyphMeta> = {
   global: {
@@ -28,17 +28,20 @@ const GLYPHS: Record<ModeGlyphKind, ModeGlyphMeta> = {
     rim: "bg-accent-cyan",
     icon: (
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-full">
-        <circle cx="12" cy="12" r="6.4" stroke="#e9e6df" strokeWidth="1.4" />
-        <path
-          d="M5.6 12h12.8M12 5.6c-2.1 2.2-2.1 10.6 0 12.8M12 5.6c2.1 2.2 2.1 10.6 0 12.8"
+        <circle cx="12" cy="12" r="7.2" fill="#e9e6df" fillOpacity="0.08" />
+        <path d="M12 4.8a7.2 7.2 0 0 1 6.2 3.6L12 12Z" fill="#22d3ee" />
+        <path d="M18.2 8.4A7.2 7.2 0 0 1 12 19.2V12Z" fill="#f43f5e" />
+        <path d="M12 19.2A7.2 7.2 0 0 1 5.8 8.4L12 12Z" fill="#facc15" />
+        <ellipse
+          cx="12"
+          cy="12"
+          rx="3.1"
+          ry="7.2"
           stroke="#e9e6df"
-          strokeWidth="1"
-          strokeLinecap="round"
-          opacity="0.4"
+          strokeWidth="0.9"
+          opacity="0.35"
         />
-        <circle cx="9.2" cy="9.4" r="1.5" fill="#22d3ee" />
-        <circle cx="15" cy="10.2" r="1.2" fill="#f43f5e" />
-        <circle cx="12.3" cy="15.2" r="1.3" fill="#facc15" />
+        <circle cx="12" cy="12" r="1.15" fill="#18181c" />
       </svg>
     ),
   },
@@ -47,19 +50,19 @@ const GLYPHS: Record<ModeGlyphKind, ModeGlyphMeta> = {
     rim: "bg-accent-gold",
     icon: (
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-full">
-        <circle cx="12" cy="10.5" r="4.2" fill="#facc15" />
         <path
-          d="M12 2.8v2.1M12 16.1v2.1M4.3 10.5h2.1M17.6 10.5h2.1M6.6 5.1l1.5 1.5M15.9 14.4l1.5 1.5M17.4 5.1 15.9 6.6M8.1 14.4l-1.5 1.5"
-          stroke="#facc15"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M6 19.8h12"
+          d="M5.4 17.6h13.2"
           stroke="#e9e6df"
-          strokeWidth="1.2"
+          strokeWidth="1.4"
           strokeLinecap="round"
           opacity="0.5"
+        />
+        <path d="M6.8 17.6a5.2 5.2 0 0 1 10.4 0Z" fill="#facc15" />
+        <path
+          d="M12 4.7v2.5M6.3 7.3l1.8 1.8M17.7 7.3l-1.8 1.8M4.1 13.3h2.3M17.6 13.3h2.3"
+          stroke="#facc15"
+          strokeWidth="1.9"
+          strokeLinecap="round"
         />
       </svg>
     ),
@@ -69,17 +72,21 @@ const GLYPHS: Record<ModeGlyphKind, ModeGlyphMeta> = {
     rim: "bg-accent-violet",
     icon: (
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-full">
-        <rect x="3.4" y="7" width="17.2" height="11" rx="2.5" stroke="#e9e6df" strokeWidth="1.4" />
-        <circle cx="8" cy="12.5" r="1.2" fill="#a78bfa" />
-        <circle cx="11.6" cy="12.5" r="1.2" fill="#a78bfa" />
-        <circle cx="15.2" cy="12.5" r="1.2" fill="#a78bfa" />
-        <path
-          d="M6.6 9.6h4"
+        <rect
+          x="2.8"
+          y="7.2"
+          width="18.4"
+          height="9.6"
+          rx="2.6"
+          fill="#e9e6df"
+          fillOpacity="0.08"
           stroke="#e9e6df"
-          strokeWidth="1.1"
-          strokeLinecap="round"
-          opacity="0.5"
+          strokeWidth="1.4"
         />
+        <circle cx="6.1" cy="10" r="1" stroke="#e9e6df" strokeWidth="1" />
+        <circle cx="9.8" cy="13" r="1.4" fill="#a78bfa" />
+        <circle cx="13" cy="13" r="1.4" fill="#a78bfa" />
+        <circle cx="16.2" cy="13" r="1.4" fill="#a78bfa" />
       </svg>
     ),
   },
@@ -88,13 +95,13 @@ const GLYPHS: Record<ModeGlyphKind, ModeGlyphMeta> = {
     rim: "bg-primary",
     icon: (
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-full">
-        <rect x="3.5" y="13" width="4.6" height="6.5" rx="1.2" fill="#22d3ee" />
-        <rect x="9.7" y="8.5" width="4.6" height="11" rx="1.2" fill="#facc15" />
-        <rect x="15.9" y="14.5" width="4.6" height="5" rx="1.2" fill="#f43f5e" />
         <path
-          d="m12 2.8.8 1.7 1.9.3-1.4 1.3.3 1.9-1.6-.9-1.6.9.3-1.9-1.4-1.3 1.9-.3L12 2.8Z"
-          fill="#ff6b2c"
+          d="m12 2.4.9 1.9 2.1.3-1.5 1.5.3 2.1-1.8-1-1.8 1 .3-2.1-1.5-1.5 2.1-.3.9-1.9Z"
+          fill="#facc15"
         />
+        <rect x="3.2" y="12.8" width="4.8" height="7.2" rx="1.3" fill="#22d3ee" />
+        <rect x="9.6" y="9.1" width="4.8" height="10.9" rx="1.3" fill="#facc15" />
+        <rect x="16" y="14.1" width="4.8" height="5.9" rx="1.3" fill="#f43f5e" />
       </svg>
     ),
   },
@@ -104,23 +111,36 @@ const GLYPHS: Record<ModeGlyphKind, ModeGlyphMeta> = {
     icon: (
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-full">
         <rect
-          x="3.6"
-          y="9.5"
-          width="5"
-          height="10"
-          rx="1.4"
+          x="2.9"
+          y="9.2"
+          width="5.2"
+          height="11"
+          rx="1.5"
           fill="#22d3ee"
-          transform="rotate(-14 6.1 14.5)"
+          stroke="#18181c"
+          strokeWidth="0.5"
+          transform="rotate(-15 5.5 14.7)"
         />
-        <rect x="9.5" y="7.5" width="5" height="12" rx="1.4" fill="#facc15" />
         <rect
-          x="15.4"
-          y="9.5"
-          width="5"
-          height="10"
-          rx="1.4"
+          x="9.4"
+          y="7"
+          width="5.2"
+          height="13.2"
+          rx="1.5"
+          fill="#facc15"
+          stroke="#18181c"
+          strokeWidth="0.5"
+        />
+        <rect
+          x="16"
+          y="9.2"
+          width="5.2"
+          height="11"
+          rx="1.5"
           fill="#f43f5e"
-          transform="rotate(14 17.9 14.5)"
+          stroke="#18181c"
+          strokeWidth="0.5"
+          transform="rotate(15 18.6 14.7)"
         />
       </svg>
     ),
@@ -128,27 +148,33 @@ const GLYPHS: Record<ModeGlyphKind, ModeGlyphMeta> = {
 };
 
 /**
- * Mode token: a coloured rim, a dark plate, and a distinct mini-illustration.
- * Decorative by design — always render the mode name as the visible label.
+ * Mode pin: coloured rim, dark plate, bold mini-scene. Decorative by design —
+ * always render the mode name as the visible label.
  */
 export function ModeGlyph({ kind, size = "lg", className }: ModeGlyphProps) {
   const meta = GLYPHS[kind];
-  const box = size === "lg" ? "size-14" : "size-11";
-  const iconBox = size === "lg" ? "size-7" : "size-6";
+  const box = size === "lg" ? "size-16" : "size-12";
+  const inset = size === "lg" ? "inset-[4px]" : "inset-[3px]";
+  const iconBox = size === "lg" ? "size-9" : "size-7";
 
   return (
     <span
       aria-hidden="true"
       data-mode={kind}
-      className={cn("relative flex shrink-0 items-center justify-center", box, meta.rim, className)}
+      className={cn(
+        "cm-mode-token relative flex shrink-0 items-center justify-center",
+        box,
+        meta.rim,
+        className,
+      )}
       style={{ clipPath: meta.clipPath } as CSSProperties}
     >
       <span
-        className="absolute inset-[3px] bg-[#18181c]"
+        className={cn("absolute bg-[#18181c]", inset)}
         style={{ clipPath: meta.clipPath } as CSSProperties}
       />
       <span
-        className="absolute inset-[3px] bg-gradient-to-b from-white/10 via-transparent to-transparent"
+        className={cn("absolute bg-gradient-to-b from-white/15 via-white/5 to-transparent", inset)}
         style={{ clipPath: meta.clipPath } as CSSProperties}
       />
       <span className={cn("relative", iconBox)}>{meta.icon}</span>

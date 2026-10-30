@@ -17,6 +17,7 @@ import {
 } from "@/components/ui";
 import { useSession } from "@/hooks/useSession";
 import { ApiError, apiClient } from "@/lib/api-client";
+import { cn } from "@/lib/cn";
 
 interface ModeCard {
   name: string;
@@ -58,6 +59,39 @@ const AVATAR_TONES = [
   "bg-accent-violet/15 text-accent-violet",
   "bg-success/15 text-success",
 ] as const;
+
+function SoonLock({ className }: { className?: string }) {
+  return (
+    <span
+      role="img"
+      aria-label="Coming soon"
+      title="Coming soon"
+      className={cn(
+        "grid size-7 shrink-0 place-items-center rounded-full border border-border bg-muted text-muted-foreground",
+        className,
+      )}
+    >
+      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
+        <rect
+          x="4.8"
+          y="8.6"
+          width="10.4"
+          height="6.8"
+          rx="2"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M7.3 8.6V6.7a2.7 2.7 0 0 1 5.4 0v1.9"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <circle cx="10" cy="12" r="1" fill="currentColor" />
+      </svg>
+    </span>
+  );
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -193,40 +227,30 @@ export default function HomePage() {
         </div>
 
         <div className="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {MODES.map((mode) => (
-            <Card key={mode.name} className="flex min-w-0 flex-col p-5">
-              <div className="flex items-start justify-between gap-2">
+          {MODES.map((mode) =>
+            mode.kind === "profile" ? (
+              <Card
+                key={mode.name}
+                className="flex min-w-0 items-center gap-4 p-5 sm:col-span-2 lg:col-span-2"
+              >
                 <ModeGlyph kind={mode.kind} />
-                <span
-                  role="img"
-                  aria-label="Coming soon"
-                  title="Coming soon"
-                  className="grid size-7 shrink-0 place-items-center rounded-full border border-border bg-muted text-muted-foreground"
-                >
-                  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
-                    <rect
-                      x="4.8"
-                      y="8.6"
-                      width="10.4"
-                      height="6.8"
-                      rx="2"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    />
-                    <path
-                      d="M7.3 8.6V6.7a2.7 2.7 0 0 1 5.4 0v1.9"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="10" cy="12" r="1" fill="currentColor" />
-                  </svg>
-                </span>
-              </div>
-              <h2 className="mt-4 text-lg font-bold tracking-tight">{mode.name}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
-            </Card>
-          ))}
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg font-bold tracking-tight">{mode.name}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
+                </div>
+                <SoonLock />
+              </Card>
+            ) : (
+              <Card key={mode.name} className="flex min-w-0 flex-col p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <ModeGlyph kind={mode.kind} />
+                  <SoonLock />
+                </div>
+                <h2 className="mt-4 text-lg font-bold tracking-tight">{mode.name}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
+              </Card>
+            ),
+          )}
         </div>
       </section>
 
