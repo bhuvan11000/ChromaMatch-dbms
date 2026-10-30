@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -23,6 +24,7 @@ interface ModeCard {
   name: string;
   description: string;
   kind: ModeGlyphKind;
+  href?: string;
 }
 
 const MODES: ModeCard[] = [
@@ -30,6 +32,7 @@ const MODES: ModeCard[] = [
     kind: "global",
     name: "Global",
     description: "Random colours. All-time glory.",
+    href: "/play/global",
   },
   {
     kind: "daily",
@@ -240,6 +243,26 @@ export default function HomePage() {
                 </div>
                 <SoonLock />
               </Card>
+            ) : mode.href ? (
+              <Link
+                key={mode.name}
+                href={mode.href}
+                className="group block min-w-0 rounded-[1.25rem] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+              >
+                <Card interactive className="flex h-full min-w-0 flex-col p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <ModeGlyph kind={mode.kind} />
+                    <span
+                      aria-hidden="true"
+                      className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase transition-colors group-hover:text-foreground"
+                    >
+                      Play →
+                    </span>
+                  </div>
+                  <h2 className="mt-4 text-lg font-bold tracking-tight">{mode.name}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
+                </Card>
+              </Link>
             ) : (
               <Card key={mode.name} className="flex min-w-0 flex-col p-5">
                 <div className="flex items-start justify-between gap-2">

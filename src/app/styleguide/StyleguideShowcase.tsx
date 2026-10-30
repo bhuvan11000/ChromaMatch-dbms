@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { GameStage } from "@/components/game";
+import {
+  ChannelDiffBars,
+  ColorSwatch,
+  GameStage,
+  HsvSliders,
+  RoundProgress,
+} from "@/components/game";
 import {
   Button,
   Card,
@@ -20,6 +26,7 @@ import {
   useToast,
   type CelebrationKind,
 } from "@/components/ui";
+import type { Hsv } from "@/lib/domain/hsv";
 
 const SURFACE_TOKENS = [
   { name: "Background", token: "--background" },
@@ -109,6 +116,7 @@ export function StyleguideShowcase() {
   const [celebration, setCelebration] = useState<CelebrationKind>("pb");
   const [celebrationRun, setCelebrationRun] = useState(0);
   const [scoreRun, setScoreRun] = useState(0);
+  const [guess, setGuess] = useState<Hsv>({ h: 214.6, s: 62, v: 80.5 });
 
   // Stage countdown demo; the only motion permitted inside the stage.
   const [countdownRunning, setCountdownRunning] = useState(false);
@@ -440,24 +448,29 @@ export function StyleguideShowcase() {
           description="Fixed #1e1e1e. Identical for every player and theme. Countdown only."
         >
           <div className="space-y-4">
+            <RoundProgress currentRound={2} completedRounds={1} />
             <GameStage
               roundNumber={2}
               modeLabel="Global"
               phaseLabel="Memorise"
               countdown={{ remainingMs, totalMs: 5000, label: "Reveal" }}
             >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div
-                  aria-label="Target swatch"
-                  role="img"
-                  className="h-32 w-full rounded-[0.875rem] border border-stage-border bg-stage-surface sm:h-40 sm:w-56"
-                  style={{ backgroundColor: "hsl(206 62% 51%)" }}
-                />
-                <p className="font-mono text-[10px] tracking-[0.18em] text-stage-muted uppercase">
-                  Target swatch
-                </p>
-              </div>
+              <ColorSwatch
+                hsv={{ h: 214.6, s: 62, v: 80.5 }}
+                label="Target swatch"
+                size="reveal"
+                tone="stage"
+              />
             </GameStage>
+            <GameStage roundNumber={2} modeLabel="Global" phaseLabel="Recreate">
+              <HsvSliders value={guess} onChange={setGuess} />
+            </GameStage>
+            <Card className="p-5">
+              <p className="font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
+                Result breakdown
+              </p>
+              <ChannelDiffBars diff={{ h: 5.6, s: 3.5, v: 3.5 }} className="mt-3" />
+            </Card>
             <Button variant="outline" size="sm" onClick={runCountdown} disabled={countdownRunning}>
               {countdownRunning ? "Counting…" : "Run countdown"}
             </Button>

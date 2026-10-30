@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { ROUNDS_PER_GAME } from "@/lib/config/constants";
 import { cn } from "@/lib/cn";
 
+import { RevealCountdown } from "./RevealCountdown";
+
 /** Calibrated, achromatic stage gray (Munsell N2). Identical for every player. */
 export const GAME_STAGE_HEX = "#1e1e1e";
 export const GAME_STAGE_NEUTRAL_TOKEN = "neutral-1e1e1e";
@@ -32,11 +34,6 @@ export interface GameStageProps {
   className?: string;
 }
 
-function clampPercent(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(100, value));
-}
-
 /**
  * The fixed neutral game stage.
  *
@@ -55,12 +52,6 @@ export function GameStage({
   footer,
   className,
 }: GameStageProps) {
-  const progress = countdown
-    ? clampPercent((countdown.remainingMs / Math.max(1, countdown.totalMs)) * 100)
-    : 0;
-  const seconds = countdown ? Math.max(0, countdown.remainingMs) / 1000 : 0;
-  const wholeSeconds = Math.ceil(seconds);
-
   return (
     <section
       data-testid="game-stage"
@@ -95,30 +86,11 @@ export function GameStage({
       </header>
 
       {countdown ? (
-        <div className="mt-3" data-testid="game-stage-countdown">
-          <div className="flex items-baseline justify-between gap-3 font-mono text-[11px] tracking-[0.14em] text-stage-muted uppercase">
-            <span>{countdown.label ?? "Reveal window"}</span>
-            <span aria-hidden="true" className="text-sm font-bold text-stage-fg tabular-nums">
-              {seconds.toFixed(1)}s
-            </span>
-          </div>
-          <div
-            role="progressbar"
-            aria-label={countdown.label ?? "Reveal window"}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progress)}
-            className="mt-1.5 h-2 w-full overflow-hidden rounded-full border border-stage-border bg-stage-surface"
-          >
-            <div
-              className="h-full rounded-full bg-stage-fg transition-[width] duration-100 ease-linear motion-reduce:transition-none"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <span className="sr-only" role="timer" aria-live="polite">
-            {wholeSeconds} {wholeSeconds === 1 ? "second" : "seconds"} remaining
-          </span>
-        </div>
+        <RevealCountdown
+          remainingMs={countdown.remainingMs}
+          totalMs={countdown.totalMs}
+          label={countdown.label}
+        />
       ) : null}
 
       <div className="mt-4 sm:mt-5">{children}</div>
