@@ -287,6 +287,65 @@
     color-scheme: dark;
   }
 
+  /*
+   * Functional HSV channel ramps for the guess dock. These are the only
+   * chromatic gradients allowed inside the stage: they are controls showing
+   * the player's own mix, never decoration and never the target swatch.
+   * The input is rotated so the same native horizontal range stays reliable
+   * across browsers while reading as a vertical fader.
+   */
+  .cm-ramp-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 2.25rem;
+    border: 1px solid var(--stage-border);
+    border-radius: 9999px;
+    background: var(--cm-ramp, var(--stage-surface));
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .cm-ramp-slider:focus-visible {
+    outline: 2px solid var(--stage-fg);
+    outline-offset: 4px;
+  }
+
+  .cm-ramp-slider::-webkit-slider-runnable-track {
+    height: 100%;
+    border-radius: 9999px;
+    background: transparent;
+  }
+
+  .cm-ramp-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: 0.2rem;
+    border: 3px solid var(--stage-bg);
+    border-radius: 9999px;
+    background: var(--stage-fg);
+    box-shadow:
+      0 0 0 1px var(--stage-fg),
+      0 3px 0 rgb(0 0 0 / 0.45);
+  }
+
+  .cm-ramp-slider::-moz-range-track {
+    height: 100%;
+    border-radius: 9999px;
+    background: transparent;
+  }
+
+  .cm-ramp-slider::-moz-range-thumb {
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 3px solid var(--stage-bg);
+    border-radius: 9999px;
+    background: var(--stage-fg);
+    box-shadow:
+      0 0 0 1px var(--stage-fg),
+      0 3px 0 rgb(0 0 0 / 0.45);
+  }
+
   .cm-burst-chip {
     position: absolute;
     top: 50%;

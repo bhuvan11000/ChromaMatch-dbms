@@ -105,108 +105,121 @@ export default function RegisterPage() {
         : null;
 
   return (
-    <Card elevated className="relative overflow-hidden p-5 sm:p-7">
-      <TestStrip size="sm" mystery />
+    <Card elevated className="relative overflow-hidden p-0">
+      <div aria-hidden="true" className="cm-spectrum-bar h-1.5 w-full" />
 
-      <div className="mt-6">
-        <Wordmark size="md" />
-        <h1 className="mt-5 text-2xl font-bold tracking-tight sm:text-3xl">
-          Fresh <span className="text-primary">eyes</span> wanted.
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Three colours. Five seconds. No take-backs.
+      <div className="p-5 sm:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-muted-foreground uppercase">
+            Studio pass / 02
+          </p>
+          <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-primary uppercase">
+            New colourist
+          </p>
+        </div>
+
+        <TestStrip size="sm" mystery className="mt-4 -rotate-1" />
+
+        <div className="mt-6">
+          <Wordmark size="md" />
+          <h1 className="mt-5 text-2xl font-bold tracking-tight sm:text-3xl">
+            Fresh <span className="text-primary">eyes</span> wanted.
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Three colours. Five seconds. No take-backs.
+          </p>
+        </div>
+
+        <form noValidate onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <Input
+            ref={usernameRef}
+            id="register-username"
+            name="username"
+            type="text"
+            label="Username"
+            autoComplete="username"
+            placeholder="colourhunter"
+            hint="Letters, numbers, underscores."
+            value={values.username}
+            error={errors.username}
+            onChange={(event) => updateField("username", event.target.value)}
+            onBlur={() => validateField("username")}
+            required
+          />
+
+          <Input
+            ref={emailRef}
+            id="register-email"
+            name="email"
+            type="email"
+            label="Email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={values.email}
+            error={errors.email}
+            onChange={(event) => updateField("email", event.target.value)}
+            onBlur={() => validateField("email")}
+            required
+          />
+
+          <Input
+            ref={passwordRef}
+            id="register-password"
+            name="password"
+            type="password"
+            label="Password"
+            autoComplete="new-password"
+            hint="8+ characters."
+            value={values.password}
+            error={errors.password}
+            onChange={(event) => updateField("password", event.target.value)}
+            onBlur={() => validateField("password")}
+            required
+          />
+
+          <ErrorMessage message={serverError} title="Registration failed" />
+
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            loading={registerMutation.isPending}
+            disabled={registerMutation.isPending}
+          >
+            {registerMutation.isPending ? (
+              "Creating account…"
+            ) : (
+              <>
+                Count me in
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transform-none"
+                >
+                  <path
+                    d="M4 10h11M10.5 5.5 15 10l-4.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </>
+            )}
+          </Button>
+        </form>
+
+        <p className="mt-6 border-t border-dashed border-border pt-4 text-center text-sm text-muted-foreground">
+          Already in?{" "}
+          <Link
+            href="/login"
+            className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
+          >
+            Sign in
+          </Link>
         </p>
       </div>
-
-      <form noValidate onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <Input
-          ref={usernameRef}
-          id="register-username"
-          name="username"
-          type="text"
-          label="Username"
-          autoComplete="username"
-          placeholder="colourhunter"
-          hint="Letters, numbers, underscores."
-          value={values.username}
-          error={errors.username}
-          onChange={(event) => updateField("username", event.target.value)}
-          onBlur={() => validateField("username")}
-          required
-        />
-
-        <Input
-          ref={emailRef}
-          id="register-email"
-          name="email"
-          type="email"
-          label="Email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          value={values.email}
-          error={errors.email}
-          onChange={(event) => updateField("email", event.target.value)}
-          onBlur={() => validateField("email")}
-          required
-        />
-
-        <Input
-          ref={passwordRef}
-          id="register-password"
-          name="password"
-          type="password"
-          label="Password"
-          autoComplete="new-password"
-          hint="8+ characters."
-          value={values.password}
-          error={errors.password}
-          onChange={(event) => updateField("password", event.target.value)}
-          onBlur={() => validateField("password")}
-          required
-        />
-
-        <ErrorMessage message={serverError} title="Registration failed" />
-
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full"
-          loading={registerMutation.isPending}
-          disabled={registerMutation.isPending}
-        >
-          {registerMutation.isPending ? (
-            "Creating account…"
-          ) : (
-            <>
-              Count me in
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 20 20"
-                fill="none"
-                className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transform-none"
-              >
-                <path
-                  d="M4 10h11M10.5 5.5 15 10l-4.5 4.5"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </>
-          )}
-        </Button>
-      </form>
-
-      <p className="mt-6 border-t border-border pt-4 text-center text-sm text-muted-foreground">
-        Already in?{" "}
-        <Link
-          href="/login"
-          className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
-        >
-          Sign in
-        </Link>
-      </p>
     </Card>
   );
 }

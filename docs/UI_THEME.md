@@ -64,10 +64,16 @@ Rules:
   shadows. Flat achromatic structural rules (`#363636`) and the countdown track
   are the only framing allowed. The stage must look identical for every player
   and in every theme.
-- No motion except the flat, achromatic countdown bar during reveal and timed
-  guessing. Never animate the stage background.
-- Only the target/guess swatch and neutral readouts belong inside. Celebrations,
-  score count-ups, test strips, spectrum bars and mode accent colours stay outside.
+- No ambient motion except the flat, achromatic countdown bar during reveal and
+  timed guessing. Control press/drag feedback is allowed. Never animate the
+  stage background.
+- Only the target/guess swatch, the functional HSV slider ramps, neutral
+  readouts and the single stage action belong inside. Celebrations, score
+  count-ups, test strips, spectrum bars and mode accent colours stay outside.
+- The guess dock is the one functional-colour exception: the three HSV ramp
+  tracks may show their channel gradients because they are controls, not
+  decoration. The stage surround, HUD and all non-control chrome stay
+  achromatic.
 - The HUD uses mono labels (`Round 1 / 3`, mode, phase) and exposes the countdown
   with `role="progressbar"` plus a polite once-per-second screen-reader message.
 
@@ -90,6 +96,13 @@ they must not recreate their own stage background.
 | `EmptyState` | `components/ui/EmptyState.tsx` | Friendly empty tray with an optional next action. |
 | `ModeGlyph` | `components/ui/ModeGlyph.tsx` | Enamel arcade pin: 48/64 px, coloured rim, dark plate, bold mini-scene and bottom lip. Decorative, so always render the mode name as the visible label. |
 | `GameStage` | `components/game/GameStage.tsx` | Fixed neutral stage; header, countdown, content, optional footer. |
+| `ColorSwatch` | `components/game/ColorSwatch.tsx` | Display-only HSV swatch; sizes `sm/md/lg/reveal/canvas/fill`; stage or chrome tone. |
+| `RevealCountdown` | `components/game/RevealCountdown.tsx` | Achromatic timer + progress bar used by `GameStage`. |
+| `HsvSliders` | `components/game/HsvSliders.tsx` | The guess dock: three vertical functional HSV ramps + live canvas. |
+| `RoundProgress` | `components/game/RoundProgress.tsx` | Three-pill round tracker; check icon and text carry completion. |
+| `ChannelDiffBars` | `components/game/ChannelDiffBars.tsx` | Result delta rows for H/S/V, each with a labelled value and bar. |
+| `GameResult` | `components/game/GameResult.tsx` | Result-screen score header, split target/guess wells, deltas, notices. |
+| `GlobalGameView` | `components/game/GlobalGameView.tsx` | Presentational phase shell for the Global mode; the pattern future modes reuse. |
 | `Celebration` | `components/ui/Celebration.tsx` | Result-screen stamp: tag + shape + icon + text. |
 | `ScoreCountUp` | `components/ui/Celebration.tsx` | Integer-tenths count-up; instant final value under reduced motion / SSR. |
 
@@ -133,3 +146,56 @@ Rules:
 - Layout is mobile-first: 360 px minimum, 44 px touch targets, cards stack before
   they shrink. Never rely on hover for an essential action.
 - Empty states invite the next action; errors say what happened and what to do.
+
+## 7. Game round language (all modes)
+
+Every mode uses the same four-beat rhythm. Daily and Room may change the source
+of the colours, the timer and the notices, but never the visual grammar.
+
+```
+IDLE / intro ──► REVEAL ──► GUESS ──► RESULT
+```
+
+1. **Intro.** A mode token, a short editorial headline, three facts and one
+   primary action. Brand flourishes (`<TestStrip>`) live here, outside the stage.
+2. **Reveal.** `<GameStage>` frames the target as a full-canvas `<ColorSwatch>`
+   (`size="canvas"`, `frame="none"`). The only chrome is the achromatic HUD,
+   `<RevealCountdown>` and the round tracker. The target must unmount when the
+   reveal ends — never use `display: none` or opacity.
+3. **Guess.** The stage becomes a colour dock: `<HsvSliders>` shows the live
+   guess as a large canvas and three vertical functional ramps. The live mix
+   and its ramps are the only chromatic content inside the stage. Use the
+   stage-styled submit keycap in the footer; do not introduce a second primary
+   action.
+4. **Result.** `<GameResult>` owns the score header, PB/achievement notices and
+   the split `Target / Your mix` wells. `<ChannelDiffBars>` accompanies each
+   round. The result sits outside the stage and may use brand colour,
+   celebrations and count-ups.
+
+### 7.1 Reuse map
+
+- **Global:** `GlobalGameView` is the reference implementation.
+- **Daily:** reuse `GameStage`, `HsvSliders`, `RoundProgress`, `GameResult` and
+  `ChannelDiffBars`. Change only the intro copy, mode label, and daily notices.
+- **Room:** reuse the same components. Add the room timer through
+  `GameStage.countdown` and auto-submit, but keep the stage, dock, round tracker
+  and result layout identical.
+- Do not fork a per-mode slider, result card or reveal panel. Mode-specific
+  differences belong in copy, data and notices.
+
+### 7.2 Slider ramp rule
+
+The H/S/V ramps are **functional controls**, not decoration. Hue shows the full
+wheel; saturation and value ramp from the current mix to that channel's extreme.
+Never use a ramp as a target swatch, a decorative gradient, or the only carrier
+of a value. Keep the mono numeric readout, `aria-valuetext`, native range
+semantics and Shift+Arrow step.
+
+### 7.3 Result split well
+
+Target is always the upper half and the player's mix the lower half, separated
+by a hairline. Each half carries a visible label and HSV mono badge. Do not swap
+the order between modes; players should learn the seam once.
+
+When a new mode or screen is added, update `/styleguide` with its state and reuse
+these components before inventing a new visual pattern.

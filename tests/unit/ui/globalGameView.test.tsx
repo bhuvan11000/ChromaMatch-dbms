@@ -128,6 +128,9 @@ describe("GlobalGameView", () => {
     expect(html).toContain("Round 1");
     expect(html).toContain("Round 2");
     expect(html).toContain("Round 3");
+    expect(html).toContain('data-testid="round-split-swatch-1"');
+    expect(html).toContain("Target");
+    expect(html).toContain("Your mix");
     expect(html).toContain("First Global Game");
     expect(html).toContain("Play again");
     expect(html).toContain("Leaderboard");

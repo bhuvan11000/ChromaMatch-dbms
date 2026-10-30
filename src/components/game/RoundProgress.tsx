@@ -25,7 +25,7 @@ function CheckIcon() {
 }
 
 /**
- * Compact round tracker shown outside the stage. Completion is carried by a
+ * Arcade round tracker shown outside the stage. Completion is carried by a
  * check icon and text, not by colour alone.
  */
 export function RoundProgress({
@@ -50,26 +50,29 @@ export function RoundProgress({
             >
               <span
                 className={cn(
-                  "grid size-6 place-items-center rounded-full border font-mono text-[10px] font-bold tabular-nums",
+                  "grid size-7 place-items-center rounded-full border-2 font-mono text-[11px] font-bold tabular-nums transition-colors",
                   isComplete
                     ? "border-success/40 bg-success-soft text-success"
                     : isCurrent
-                      ? "border-primary bg-primary text-primary-foreground"
+                      ? "border-primary bg-primary text-primary-foreground shadow-[0_2px_0_var(--primary-lip)]"
                       : "border-border bg-muted text-muted-foreground",
                 )}
               >
                 {isComplete ? <CheckIcon /> : round}
               </span>
               {round < totalRounds ? (
-                <span aria-hidden="true" className="h-px w-3 bg-border" />
+                <span aria-hidden="true" className="h-0.5 w-3 rounded-full bg-border" />
               ) : null}
             </li>
           );
         })}
       </ol>
 
-      <p className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-        Round {currentRound} / {totalRounds}
+      <p className="font-display text-sm font-bold tracking-tight text-foreground">
+        Round {currentRound}
+        <span className="ml-1 font-mono text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+          / {totalRounds}
+        </span>
       </p>
     </div>
   );

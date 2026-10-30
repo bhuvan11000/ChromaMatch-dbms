@@ -471,6 +471,31 @@ export function StyleguideShowcase() {
               </p>
               <ChannelDiffBars diff={{ h: 5.6, s: 3.5, v: 3.5 }} className="mt-3" />
             </Card>
+            <Card className="p-5">
+              <p className="font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
+                Result split well
+              </p>
+              <div className="mt-3 overflow-hidden rounded-[1rem] border border-border">
+                <div className="relative h-28">
+                  <ColorSwatch
+                    hsv={{ h: 214.6, s: 62, v: 80.5 }}
+                    label="Target colour"
+                    size="fill"
+                    frame="none"
+                  />
+                  <span className="absolute top-2 left-2 rounded-full border border-white/20 bg-black/50 px-2 py-1 font-mono text-[8px] font-bold tracking-[0.16em] text-white uppercase">
+                    Target
+                  </span>
+                </div>
+                <div className="h-px bg-border" />
+                <div className="relative h-28">
+                  <ColorSwatch hsv={guess} label="Your mix" size="fill" frame="none" />
+                  <span className="absolute top-2 left-2 rounded-full border border-white/20 bg-black/50 px-2 py-1 font-mono text-[8px] font-bold tracking-[0.16em] text-white uppercase">
+                    Your mix
+                  </span>
+                </div>
+              </div>
+            </Card>
             <Button variant="outline" size="sm" onClick={runCountdown} disabled={countdownRunning}>
               {countdownRunning ? "Counting…" : "Run countdown"}
             </Button>

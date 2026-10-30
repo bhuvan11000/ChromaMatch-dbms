@@ -66,15 +66,13 @@ const AVATAR_TONES = [
 function SoonLock({ className }: { className?: string }) {
   return (
     <span
-      role="img"
-      aria-label="Coming soon"
       title="Coming soon"
       className={cn(
-        "grid size-7 shrink-0 place-items-center rounded-full border border-border bg-muted text-muted-foreground",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted px-2 py-1 font-mono text-[9px] font-bold tracking-[0.14em] text-muted-foreground uppercase",
         className,
       )}
     >
-      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
+      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3.5">
         <rect
           x="4.8"
           y="8.6"
@@ -92,6 +90,7 @@ function SoonLock({ className }: { className?: string }) {
         />
         <circle cx="10" cy="12" r="1" fill="currentColor" />
       </svg>
+      Soon
     </span>
   );
 }
@@ -222,6 +221,16 @@ export default function HomePage() {
             <p className="mt-3 max-w-sm text-base text-muted-foreground">
               Three colours. Five seconds. One honest guess.
             </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {["3 rounds", "5.0s flash", "HSV memory", "No guess timer"].map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-border bg-card px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.12em] text-muted-foreground uppercase"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="mx-auto w-full max-w-sm sm:-rotate-1">
@@ -249,18 +258,36 @@ export default function HomePage() {
                 href={mode.href}
                 className="group block min-w-0 rounded-[1.25rem] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
               >
-                <Card interactive className="flex h-full min-w-0 flex-col p-5">
+                <Card
+                  interactive
+                  elevated
+                  className="relative flex h-full min-w-0 flex-col overflow-hidden p-5 pt-6 ring-1 ring-primary/30"
+                >
+                  <div
+                    aria-hidden="true"
+                    className="cm-spectrum-bar absolute inset-x-0 top-0 h-1"
+                  />
                   <div className="flex items-start justify-between gap-2">
                     <ModeGlyph kind={mode.kind} />
-                    <span
-                      aria-hidden="true"
-                      className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase transition-colors group-hover:text-foreground"
-                    >
-                      Play →
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-1 font-mono text-[9px] font-bold tracking-[0.14em] text-primary uppercase">
+                      <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
+                      Live
                     </span>
                   </div>
                   <h2 className="mt-4 text-lg font-bold tracking-tight">{mode.name}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
+                  <span className="mt-4 inline-flex items-center gap-1.5 font-mono text-[10px] font-bold tracking-[0.16em] text-foreground uppercase">
+                    Play now
+                    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3.5">
+                      <path
+                        d="M4.5 10h10M10.5 6 14.5 10l-4 4"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
                 </Card>
               </Link>
             ) : (

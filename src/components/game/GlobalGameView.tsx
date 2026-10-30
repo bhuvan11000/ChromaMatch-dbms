@@ -2,7 +2,16 @@
 
 import type { CSSProperties } from "react";
 
-import { Button, Card, ErrorMessage, ModeGlyph, Spinner, Wordmark } from "@/components/ui";
+import {
+  Button,
+  Card,
+  ErrorMessage,
+  ModeGlyph,
+  Spinner,
+  TestStrip,
+  Wordmark,
+} from "@/components/ui";
+import { ROUNDS_PER_GAME } from "@/lib/config/constants";
 import type { Hsv } from "@/lib/domain/hsv";
 import type { GameMachineState } from "@/hooks/useGameMachine";
 
@@ -46,10 +55,33 @@ function StageSubmitButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       style={STAGE_KEYCAP_STYLE}
-      className="cm-keycap cm-keycap-secondary inline-flex min-h-12 w-full items-center justify-center rounded-[1rem] border border-stage-border bg-stage-surface px-6 py-3 font-display text-base font-semibold tracking-tight text-stage-fg select-none hover:bg-stage-border focus-visible:ring-2 focus-visible:ring-stage-fg focus-visible:ring-offset-2 focus-visible:ring-offset-stage-bg focus-visible:outline-none"
+      className="cm-keycap cm-keycap-secondary inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border border-stage-fg/20 bg-stage-fg px-6 py-3 font-display text-base font-semibold tracking-tight text-stage-bg select-none hover:bg-white focus-visible:ring-2 focus-visible:ring-stage-fg focus-visible:ring-offset-2 focus-visible:ring-offset-stage-bg focus-visible:outline-none sm:w-auto"
     >
       Submit guess
+      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
+        <path
+          d="M4.5 10h10M10.5 6 14.5 10l-4 4"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </button>
+  );
+}
+
+function PlayArrowIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
+      <path
+        d="M4.5 10h10M10.5 6 14.5 10l-4 4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -94,34 +126,55 @@ export function GlobalGameView({
     switch (state.phase) {
       case "IDLE":
         return (
-          <Card elevated className="p-6 sm:p-8">
-            <div className="flex items-start gap-4">
-              <ModeGlyph kind="global" size="lg" />
-              <div className="min-w-0">
-                <h2 className="text-2xl font-bold tracking-tight">Global</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Three random colours. Five seconds each. No guess timer.
+          <Card elevated className="relative overflow-hidden p-0">
+            <div aria-hidden="true" className="cm-spectrum-bar h-1.5 w-full" />
+
+            <div className="p-6 sm:p-8">
+              <div className="flex flex-wrap items-start justify-between gap-6">
+                <div className="flex min-w-0 items-start gap-4">
+                  <ModeGlyph kind="global" size="lg" />
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+                      Global · random palette
+                    </p>
+                    <h2 className="mt-1 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+                      Flash. Mix. Repeat.
+                    </h2>
+                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                      Three random colours. Five seconds each. Rebuild them from memory.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full max-w-[11rem] shrink-0">
+                  <TestStrip size="md" mystery className="-rotate-1" />
+                  <p className="mt-2 text-center font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
+                    Three wells. No peeking.
+                  </p>
+                </div>
+              </div>
+
+              <ul className="mt-6 grid gap-2 sm:grid-cols-3">
+                {["3 rounds", "5s flash", "Score /30"].map((item) => (
+                  <li
+                    key={item}
+                    className="rounded-[0.875rem] border border-border bg-muted/60 px-3 py-2.5 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Button size="lg" onClick={start}>
+                  Play Global
+                  <PlayArrowIcon />
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Guesses stay in this tab until you submit.
                 </p>
               </div>
             </div>
-
-            <ul className="mt-6 grid gap-2 sm:grid-cols-3">
-              {["3 rounds", "5s reveal", "Score /30"].map((item) => (
-                <li
-                  key={item}
-                  className="rounded-[0.875rem] border border-border bg-muted/60 px-3 py-2 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <Button size="lg" onClick={start} className="mt-6 w-full sm:w-auto">
-              Start game
-            </Button>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Guesses stay in this tab until you submit.
-            </p>
           </Card>
         );
 
@@ -130,7 +183,12 @@ export function GlobalGameView({
           <Card elevated className="p-6 sm:p-8">
             <div className="flex min-h-40 flex-col items-center justify-center gap-3 text-center">
               <Spinner size="lg" label="Mixing colours" />
-              <p className="text-sm text-muted-foreground">Mixing three random colours…</p>
+              <p className="font-display text-lg font-bold tracking-tight">
+                Calibrating the stage…
+              </p>
+              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+                Three random colours incoming
+              </p>
             </div>
           </Card>
         );
@@ -159,22 +217,23 @@ export function GlobalGameView({
                 label: "Reveal window",
               }}
             >
-              <div className="flex flex-col gap-3">
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="font-mono text-[10px] font-bold tracking-[0.18em] text-stage-muted uppercase">
-                    Target colour
-                  </p>
-                  <p className="font-mono text-[10px] tracking-[0.14em] text-stage-muted uppercase">
-                    Hold it
-                  </p>
-                </div>
+              <div className="relative overflow-hidden rounded-[0.875rem] border-2 border-stage-border">
                 <ColorSwatch
                   hsv={target}
                   label={`Round ${state.roundIndex + 1} target colour`}
-                  size="reveal"
+                  size="canvas"
                   tone="stage"
+                  frame="none"
                   testId="target-swatch"
                 />
+                <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
+                  <span className="self-start rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.18em] text-white uppercase">
+                    Target colour
+                  </span>
+                  <span className="self-end rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] tracking-[0.14em] text-white/80 uppercase">
+                    Hold it
+                  </span>
+                </div>
               </div>
             </GameStage>
           </>
@@ -197,9 +256,19 @@ export function GlobalGameView({
               roundNumber={state.roundIndex + 1}
               modeLabel="Global"
               phaseLabel="Recreate from memory"
-              footer={<StageSubmitButton onClick={submitGuess} />}
+              footer={
+                <div className="flex justify-end">
+                  <StageSubmitButton onClick={submitGuess} />
+                </div>
+              }
             >
-              <HsvSliders value={state.currentGuess} onChange={setGuess} />
+              <HsvSliders
+                value={state.currentGuess}
+                onChange={setGuess}
+                roundLabel={`${String(state.roundIndex + 1).padStart(2, "0")} / ${String(
+                  ROUNDS_PER_GAME,
+                ).padStart(2, "0")}`}
+              />
             </GameStage>
           </>
         );
@@ -210,7 +279,10 @@ export function GlobalGameView({
           <Card elevated className="p-6 sm:p-8">
             <div className="flex min-h-40 flex-col items-center justify-center gap-3 text-center">
               <Spinner size="lg" label="Scoring your guesses" />
-              <p className="text-sm text-muted-foreground">Scoring your mix…</p>
+              <p className="font-display text-lg font-bold tracking-tight">Developing your mix…</p>
+              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+                Three rounds, one honest score
+              </p>
             </div>
           </Card>
         );

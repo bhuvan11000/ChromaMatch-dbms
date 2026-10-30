@@ -12,6 +12,9 @@ export default function AuthLayout({ children }: Readonly<{ children: ReactNode 
         aria-hidden="true"
         className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[36rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
       />
+      <p className="pointer-events-none absolute bottom-4 left-1/2 hidden -translate-x-1/2 font-mono text-[9px] font-bold tracking-[0.18em] text-muted-foreground uppercase sm:block">
+        ChromaMatch · colour memory studio
+      </p>
       <div className="relative w-full max-w-md">{children}</div>
     </main>
   );
