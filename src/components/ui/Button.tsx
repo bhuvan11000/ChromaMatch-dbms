@@ -14,18 +14,22 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
-  secondary: "bg-muted text-foreground hover:bg-border",
-  outline: "border border-border bg-transparent text-foreground hover:bg-muted",
-  ghost: "bg-transparent text-foreground hover:bg-muted",
-  danger: "bg-danger text-danger-foreground hover:opacity-90",
+  primary:
+    "cm-keycap cm-keycap-primary border border-primary-lip/40 bg-primary text-primary-foreground hover:bg-primary-hover",
+  secondary:
+    "cm-keycap cm-keycap-secondary border border-border bg-muted text-foreground hover:bg-border",
+  outline:
+    "cm-keycap cm-keycap-outline border-2 border-border bg-transparent text-foreground hover:border-muted-foreground/50 hover:bg-muted",
+  ghost: "border border-transparent bg-transparent text-foreground hover:bg-muted",
+  danger:
+    "cm-keycap cm-keycap-danger border border-danger-lip/50 bg-danger text-danger-foreground hover:brightness-110",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: "min-h-9 px-3 py-2 text-xs",
-  md: "min-h-11 px-4 py-2.5 text-sm",
-  lg: "min-h-12 px-6 py-3 text-base",
-  icon: "size-11 p-0",
+  sm: "min-h-9 gap-1.5 rounded-[0.625rem] px-3 py-2 text-xs",
+  md: "min-h-11 gap-2 rounded-[0.875rem] px-4 py-2.5 text-sm",
+  lg: "min-h-12 gap-2 rounded-[1rem] px-6 py-3 text-base",
+  icon: "size-11 rounded-[0.875rem] p-0",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -48,9 +52,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors",
+        "inline-flex items-center justify-center font-display font-semibold tracking-tight whitespace-nowrap select-none",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
-        "disabled:cursor-not-allowed disabled:opacity-60",
+        "disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none",
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
         className,

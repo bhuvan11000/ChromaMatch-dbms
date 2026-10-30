@@ -118,45 +118,54 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          "max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl border border-border bg-card p-6 text-card-foreground shadow-2xl sm:rounded-2xl",
+          "relative max-h-[90dvh] w-full overflow-hidden rounded-t-[1.25rem] border border-border bg-card-elevated text-card-foreground shadow-2xl sm:rounded-[1.25rem]",
           SIZE_CLASSES[size],
         )}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h2 id={titleId} className="text-lg font-semibold tracking-tight">
-              {title}
-            </h2>
-            {description ? (
-              <p id={descriptionId} className="mt-1 text-sm text-muted-foreground">
-                {description}
+        <div aria-hidden="true" className="cm-spectrum-bar h-1 w-full" />
+        <div className="max-h-[calc(90dvh-0.25rem)] overflow-y-auto p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
+                Console dialog
               </p>
-            ) : null}
+              <h2
+                id={titleId}
+                className="mt-1 font-display text-lg font-bold tracking-tight sm:text-xl"
+              >
+                {title}
+              </h2>
+              {description ? (
+                <p id={descriptionId} className="mt-1 text-sm text-muted-foreground">
+                  {description}
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => onCloseRef.current()}
+              aria-label="Close dialog"
+              className="-m-1 size-9 shrink-0 rounded-[0.625rem] border border-border bg-muted/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card-elevated focus-visible:outline-none"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="mx-auto size-4.5">
+                <path
+                  d="m6 6 12 12M18 6 6 18"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => onCloseRef.current()}
-            aria-label="Close dialog"
-            className="-m-1 shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          >
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-5">
-              <path
-                d="m6 6 12 12M18 6 6 18"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
+
+          <div className="mt-5">{children}</div>
+
+          {footer ? (
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              {footer}
+            </div>
+          ) : null}
         </div>
-
-        <div className="mt-5">{children}</div>
-
-        {footer ? (
-          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            {footer}
-          </div>
-        ) : null}
       </div>
     </div>,
     document.body,

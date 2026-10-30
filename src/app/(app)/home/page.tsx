@@ -4,7 +4,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { Button, Card, ErrorMessage, Spinner, useToast } from "@/components/ui";
+import {
+  Button,
+  Card,
+  ErrorMessage,
+  ModeGlyph,
+  Spinner,
+  Wordmark,
+  modeTag,
+  useToast,
+  type ModeGlyphKind,
+} from "@/components/ui";
 import { useSession } from "@/hooks/useSession";
 import { ApiError, apiClient } from "@/lib/api-client";
 
@@ -12,39 +22,39 @@ interface ModeCard {
   name: string;
   description: string;
   detail: string;
-  accent: string;
+  kind: ModeGlyphKind;
 }
 
 const MODES: ModeCard[] = [
   {
+    kind: "global",
     name: "Global",
-    description: "Three fresh colours every game. Your best score goes on the global board.",
+    description: "Three fresh random swatches every run. Chase an all-time personal best.",
     detail: "Random colours · Personal best",
-    accent: "from-violet-500 via-fuchsia-500 to-pink-500",
   },
   {
+    kind: "daily",
     name: "Daily",
-    description: "One shared challenge per UTC day. Build a streak and compare with everyone.",
-    detail: "Same colours for everyone · Resets at 00:00 UTC",
-    accent: "from-amber-400 via-orange-500 to-rose-500",
+    description: "One date-seeded palette for the whole world. Protect your streak.",
+    detail: "Same colours for everyone · Resets 00:00 UTC",
   },
   {
+    kind: "room",
     name: "Custom Room",
-    description: "Create a private room, share the code, and play at your own pace.",
+    description: "Spin up a private studio code, set a round timer, and compare eyes.",
     detail: "2–10 players · 3 or 5 attempts",
-    accent: "from-emerald-400 via-teal-500 to-cyan-500",
   },
   {
+    kind: "boards",
     name: "Leaderboards",
-    description: "See the sharpest eyes in Global and Daily play, ranked with stable ties.",
+    description: "See the sharpest eyes on the global and daily boards, ranked with stable ties.",
     detail: "Global and Daily boards",
-    accent: "from-sky-400 via-blue-500 to-indigo-500",
   },
   {
+    kind: "profile",
     name: "Profile",
-    description: "Track your scores, streaks, channel accuracy, and unlocked achievements.",
+    description: "Inspect your channel drift, 30-day trend, and unlocked achievements.",
     detail: "Stats · Streak · Achievements",
-    accent: "from-stone-400 via-neutral-500 to-zinc-500",
   },
 ];
 
@@ -73,18 +83,24 @@ export default function HomePage() {
   const logout = logoutMutation.mutate;
 
   useEffect(() => {
+    // After a successful logout the cleared cache refetches /api/me, which
+    // returns 401. Do not treat that expected 401 as a deleted account.
+    if (logoutMutation.isSuccess) return;
+
     if (session.error instanceof ApiError && session.error.status === 401) {
       // A validly signed cookie can outlive a deleted account. Clearing it
       // through the logout route prevents a /home ↔ /login redirect loop.
       logout();
     }
-  }, [logout, session.error]);
+  }, [logout, logoutMutation.isSuccess, session.error]);
 
   if (session.isPending) {
     return (
       <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-3">
         <Spinner size="lg" label="Loading your account" />
-        <p className="text-sm text-muted-foreground">Loading your account…</p>
+        <p className="font-mono text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+          Waking the console…
+        </p>
       </div>
     );
   }
@@ -106,7 +122,7 @@ export default function HomePage() {
         <p className="mt-4 text-center text-sm text-muted-foreground">
           <a
             href="/login"
-            className="font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+            className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
           >
             Back to sign in
           </a>
@@ -119,75 +135,82 @@ export default function HomePage() {
 
   return (
     <div>
-      <header className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="size-10 shrink-0 rounded-xl bg-linear-to-br from-primary via-fuchsia-500 to-amber-400 shadow-sm"
-          />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-tight">ChromaMatch</p>
-            <p className="truncate text-xs text-muted-foreground">Signed in as {user.username}</p>
-          </div>
-        </div>
+      <header className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
+        <Wordmark size="md" />
 
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={() => logout()}
-          loading={logoutMutation.isPending}
-          disabled={logoutMutation.isPending}
-        >
-          {logoutMutation.isPending ? "Logging out…" : "Log out"}
-        </Button>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 font-mono text-[10px] text-muted-foreground">
+            <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-success" />
+            <span className="shrink-0 font-bold tracking-[0.14em] uppercase">Operator</span>
+            <span aria-hidden="true" className="text-border">
+              /
+            </span>
+            <span className="truncate text-foreground">{user.username}</span>
+          </span>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={() => logout()}
+            loading={logoutMutation.isPending}
+            disabled={logoutMutation.isPending}
+          >
+            {logoutMutation.isPending ? "Leaving…" : "Log out"}
+          </Button>
+        </div>
       </header>
 
       <section aria-labelledby="modes-heading" className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold tracking-[0.24em] text-muted-foreground uppercase">
-              Mode select
+            <p className="font-mono text-[10px] font-bold tracking-[0.24em] text-muted-foreground uppercase">
+              Mode select · Studio bay
             </p>
             <h1
               id="modes-heading"
-              className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl"
+              className="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl"
             >
-              Choose your next match
+              Pick your next calibration
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              Gameplay arrives in the next step. Your account, session, and the API foundation are
-              ready.
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground text-pretty">
+              Three swatches. Five seconds each. One honest score. The game screens are warming up
+              in the next build.
             </p>
           </div>
-          <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            5 modes
+          <span className="rounded-full border border-border bg-muted px-3 py-1 font-mono text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+            5 stations
           </span>
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {MODES.map((mode) => (
             <Card key={mode.name} className="flex min-w-0 flex-col p-5">
-              <div
-                aria-hidden="true"
-                className={`h-1.5 w-12 rounded-full bg-linear-to-r ${mode.accent}`}
-              />
-              <div className="mt-4 flex items-start justify-between gap-3">
-                <h2 className="text-lg font-semibold tracking-tight">{mode.name}</h2>
-                <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+              <div className="flex items-start justify-between gap-3">
+                <ModeGlyph kind={mode.kind} />
+                <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                   Soon
                 </span>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">{mode.description}</p>
-              <p className="mt-auto pt-4 text-xs font-medium text-muted-foreground">
-                {mode.detail}
-              </p>
+              <div className="mt-4">
+                <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                  {modeTag(mode.kind)}
+                </p>
+                <h2 className="mt-1 text-lg font-bold tracking-tight">{mode.name}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{mode.description}</p>
+              </div>
+              <div className="mt-auto">
+                <p className="mt-5 border-t border-border pt-3 text-xs font-medium text-muted-foreground">
+                  {mode.detail}
+                </p>
+              </div>
             </Card>
           ))}
         </div>
       </section>
 
-      <p className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
-        ChromaMatch · PostgreSQL + MongoDB · Server-authoritative scoring
+      <p className="mt-10 border-t border-border pt-6 font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+        PostgreSQL + MongoDB · Server-authoritative scoring · Darkroom Arcade v1.0
       </p>
     </div>
   );

@@ -2,11 +2,21 @@ import type { HTMLAttributes } from "react";
 
 import { cn } from "@/lib/cn";
 
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  /** Adds a tactile hover lift; use only when the whole card is clickable. */
+  interactive?: boolean;
+  /** Slightly raised surface for dialogs and focal panels. */
+  elevated?: boolean;
+}
+
+export function Card({ className, interactive = false, elevated = false, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card text-card-foreground shadow-sm",
+        "cm-console-card rounded-[1.25rem] border border-border text-card-foreground",
+        elevated ? "bg-card-elevated shadow-md" : "bg-card shadow-sm",
+        interactive &&
+          "transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 hover:border-muted-foreground/40 hover:shadow-md focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40",
         className,
       )}
       {...props}
@@ -21,7 +31,10 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h2
-      className={cn("text-lg font-semibold tracking-tight text-card-foreground", className)}
+      className={cn(
+        "font-display text-lg font-bold tracking-tight text-card-foreground",
+        className,
+      )}
       {...props}
     />
   );

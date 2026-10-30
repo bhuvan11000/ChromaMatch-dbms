@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import type { ZodType } from "zod";
 
-import { Button, Card, ErrorMessage, Input } from "@/components/ui";
+import { Button, Card, ErrorMessage, Input, Wordmark } from "@/components/ui";
 import { SESSION_QUERY_KEY } from "@/hooks/useSession";
 import { ApiError, apiClient } from "@/lib/api-client";
 import {
@@ -94,20 +94,15 @@ export default function LoginPage() {
         : null;
 
   return (
-    <Card className="p-6 sm:p-8">
+    <Card elevated className="relative overflow-hidden p-6 sm:p-8">
+      <div aria-hidden="true" className="cm-spectrum-bar absolute inset-x-0 top-0 h-1" />
       <div className="mb-6">
-        <div className="flex items-center gap-2.5">
-          <span
-            aria-hidden="true"
-            className="size-8 rounded-lg bg-linear-to-br from-primary via-fuchsia-500 to-amber-400 shadow-sm"
-          />
-          <span className="text-xs font-semibold tracking-[0.24em] text-muted-foreground uppercase">
-            ChromaMatch
-          </span>
-        </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">Welcome back</h1>
+        <Wordmark size="md" subtitle="Darkroom calibration console" />
+        <h1 className="mt-6 text-2xl font-bold tracking-tight sm:text-3xl">
+          Step into the darkroom
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Sign in to keep your colour streak going.
+          Warm up your cones. Your colours have been waiting.
         </p>
       </div>
 
@@ -145,6 +140,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
+          size="lg"
           className="w-full"
           loading={loginMutation.isPending}
           disabled={loginMutation.isPending}
@@ -153,14 +149,18 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-6 border-t border-border pt-4 text-center text-sm text-muted-foreground">
         New to ChromaMatch?{" "}
         <Link
           href="/register"
-          className="font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
+          className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
         >
           Create an account
         </Link>
+      </p>
+
+      <p className="mt-4 text-center font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
+        Session · 7 days · Server-scored
       </p>
     </Card>
   );

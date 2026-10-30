@@ -16,6 +16,10 @@ const SIZE_CLASSES: Record<SpinnerSize, string> = {
   lg: "size-8",
 };
 
+/**
+ * Aperture spinner: an outer calibration ring with an inner darkroom blade.
+ * Under reduced motion the ring stops and remains fully legible.
+ */
 export function Spinner({
   size = "md",
   label = "Loading",
@@ -32,13 +36,30 @@ export function Spinner({
         aria-hidden="true"
         viewBox="0 0 24 24"
         fill="none"
-        className={cn("animate-spin", SIZE_CLASSES[size])}
+        className={cn("animate-spin motion-reduce:animate-none", SIZE_CLASSES[size])}
       >
-        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
-        <path
-          d="M21 12a9 9 0 0 0-9-9"
+        <circle
+          cx="12"
+          cy="12"
+          r="9.5"
           stroke="currentColor"
-          strokeWidth="3"
+          strokeOpacity="0.2"
+          strokeWidth="1.5"
+        />
+        <circle
+          cx="12"
+          cy="12"
+          r="9.5"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeDasharray="14 46"
+        />
+        <path
+          d="M12 7.2a4.8 4.8 0 0 1 4.8 4.8"
+          stroke="currentColor"
+          strokeOpacity="0.7"
+          strokeWidth="1.8"
           strokeLinecap="round"
         />
       </svg>

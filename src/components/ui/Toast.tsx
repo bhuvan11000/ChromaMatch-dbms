@@ -36,9 +36,61 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 const VARIANT_CLASSES: Record<ToastVariant, string> = {
   info: "border-border bg-card text-card-foreground",
-  success: "border-success/30 bg-success-soft text-foreground",
-  error: "border-danger/40 bg-danger-soft text-foreground",
+  success: "border-success/40 bg-success-soft text-foreground",
+  error: "border-danger/50 bg-danger-soft text-foreground",
 };
+
+const VARIANT_TAG: Record<ToastVariant, string> = {
+  info: "text-accent-cyan",
+  success: "text-success",
+  error: "text-danger",
+};
+
+const VARIANT_BADGE: Record<ToastVariant, string> = {
+  info: "rounded-full border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan",
+  success:
+    "border-success/40 bg-success/10 text-success [clip-path:polygon(25%_4%,75%_4%,100%_50%,75%_96%,25%_96%,0%_50%)]",
+  error:
+    "border-danger/45 bg-danger/10 text-danger [clip-path:polygon(30%_2%,70%_2%,98%_30%,98%_70%,70%_98%,30%_98%,2%_70%,2%_30%)]",
+};
+
+const VARIANT_LABEL: Record<ToastVariant, string> = {
+  info: "INFO",
+  success: "OK",
+  error: "ERR",
+};
+
+function VariantIcon({ variant }: { variant: ToastVariant }) {
+  if (variant === "success") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3.5">
+        <path
+          d="m4 10.5 4 4 8-9"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  if (variant === "error") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3.5">
+        <path d="M10 4.5v6.2" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        <circle cx="10" cy="14.6" r="1.2" fill="currentColor" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3.5">
+      <path d="M10 9v6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="10" cy="5.4" r="1.2" fill="currentColor" />
+    </svg>
+  );
+}
 
 let fallbackToastId = 0;
 
@@ -52,26 +104,47 @@ function createToastId(): string {
 }
 
 function ToastCard({ item, onDismiss }: { item: ToastRecord; onDismiss: (id: string) => void }) {
+  const variant = item.variant ?? "info";
+
   return (
     <div
-      role={item.variant === "error" ? "alert" : "status"}
+      role={variant === "error" ? "alert" : "status"}
       className={cn(
-        "pointer-events-auto w-full max-w-sm rounded-xl border p-4 shadow-lg",
-        VARIANT_CLASSES[item.variant ?? "info"],
+        "pointer-events-auto w-full max-w-sm rounded-[1rem] border-2 p-4 shadow-xl",
+        VARIANT_CLASSES[variant],
       )}
     >
       <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "mt-0.5 flex size-7 shrink-0 items-center justify-center border",
+            VARIANT_BADGE[variant],
+          )}
+        >
+          <VariantIcon variant={variant} />
+        </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{item.title}</p>
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "font-mono text-[10px] font-bold tracking-[0.18em]",
+                VARIANT_TAG[variant],
+              )}
+            >
+              [{VARIANT_LABEL[variant]}]
+            </span>
+            <p className="text-sm font-semibold">{item.title}</p>
+          </div>
           {item.description ? (
-            <p className="mt-1 text-sm break-words opacity-80">{item.description}</p>
+            <p className="mt-1 text-sm break-words text-muted-foreground">{item.description}</p>
           ) : null}
         </div>
         <button
           type="button"
           onClick={() => onDismiss(item.id)}
           aria-label="Dismiss notification"
-          className="-m-1 shrink-0 rounded-md p-1 opacity-60 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="-m-1 shrink-0 rounded-[0.4rem] p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-4">
             <path
