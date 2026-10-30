@@ -88,14 +88,18 @@ they must not recreate their own stage background.
 | `Spinner` | `components/ui/Spinner.tsx` | Aperture ring; stops under reduced motion. |
 | `ErrorMessage` | `components/ui/ErrorMessage.tsx` | Icon + title + message; no repeated diagnostic label. |
 | `EmptyState` | `components/ui/EmptyState.tsx` | Friendly empty tray with an optional next action. |
-| `ModeGlyph` | `components/ui/ModeGlyph.tsx` | Coloured arcade token: distinct silhouette + mini-scene; decorative, so always render the mode name as the visible label. |
+| `ModeGlyph` | `components/ui/ModeGlyph.tsx` | Enamel arcade pin: 48/64 px, coloured rim, dark plate, bold mini-scene and bottom lip. Decorative, so always render the mode name as the visible label. |
 | `GameStage` | `components/game/GameStage.tsx` | Fixed neutral stage; header, countdown, content, optional footer. |
 | `Celebration` | `components/ui/Celebration.tsx` | Result-screen stamp: tag + shape + icon + text. |
 | `ScoreCountUp` | `components/ui/Celebration.tsx` | Integer-tenths count-up; instant final value under reduced motion / SSR. |
 
 Styleguide: **`/styleguide`** (`src/app/styleguide/page.tsx`). Dev-only — the
 production build resolves `NODE_ENV` and returns 404. It shows tokens, type,
-all component states, the stage, and celebrations.
+test strips, mode pins, all component states, the stage, and celebrations.
+
+Home grid: four vertical mode cards plus a wide Profile banner spanning two
+columns. Profile is an account station rather than a play mode, and the span
+keeps both the 2-column and 3-column grids full.
 
 ## 5. Celebrations
 
