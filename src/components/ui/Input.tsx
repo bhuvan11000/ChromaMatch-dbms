@@ -48,10 +48,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <div className="w-full">
       <label
         htmlFor={inputId}
-        className="mb-1.5 flex items-center gap-2 font-display text-sm font-semibold tracking-tight text-foreground"
+        className="mb-1.5 block font-display text-sm font-semibold tracking-tight text-foreground"
       >
         {label}
-        <span aria-hidden="true" className="h-px flex-1 bg-border" style={{ maxWidth: "2.5rem" }} />
       </label>
       <input
         ref={ref}

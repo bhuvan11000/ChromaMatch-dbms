@@ -11,10 +11,14 @@ higher-level contract; this file fixes the visual system that later steps follow
    bottom lip, a 2 px press. Hover is a colour shift, focus is a visible ring.
 3. **Reward on results, never on the stage.** Count-ups, stamps and bursts live on
    result/summary screens only.
-4. **Meaning never depends on colour alone.** Every mode, status, rank and
-   celebration pairs an icon, a shape and a text label.
-5. **Calm by default.** No ambient animation in chrome; no sound. CSS only.
-6. **Accessible everywhere.** AA contrast, keyboard-visible focus, 360 px support,
+4. **Meaning never depends on colour alone.** Every mode, rank and celebration
+   pairs an icon, a shape and a text label. Supplementary chrome (like the
+   “coming soon” lock) may be icon-only when it has an accessible label and does
+   not carry essential meaning alone.
+5. **Say it once.** One idea per line; cut metadata and labels that do not help
+   the player. The test strip, mode tokens and celebrations carry the personality.
+6. **Calm by default.** No ambient animation in chrome; no sound. CSS only.
+7. **Accessible everywhere.** AA contrast, keyboard-visible focus, 360 px support,
    and `prefers-reduced-motion` honoured.
 
 ## 2. Tokens
@@ -42,6 +46,8 @@ Useful component classes: `.cm-keycap` (+ `-primary/-secondary/-outline/-danger`
 Rules:
 - `--spectrum-gradient` is decorative brand flourish. **Never** use it inside the
   game stage, on target/guess swatches, or as the only signal for a state.
+- `<TestStrip>` is the playful colour flourish. It is never a target or a guess
+  and never appears inside `<GameStage>`.
 - Numeric readouts (scores, HSV, timers, room codes) use `font-mono tabular-nums`.
 - Do not add a second accent system; pick an existing semantic token.
 - Contrast: light primary text `#fffdfb` on `#c2410c` is 5.1:1; dark primary text
@@ -61,7 +67,7 @@ Rules:
 - No motion except the flat, achromatic countdown bar during reveal and timed
   guessing. Never animate the stage background.
 - Only the target/guess swatch and neutral readouts belong inside. Celebrations,
-  score count-ups, spectrum bars and mode accent colours stay outside.
+  score count-ups, test strips, spectrum bars and mode accent colours stay outside.
 - The HUD uses mono labels (`Round 1 / 3`, mode, phase) and exposes the countdown
   with `role="progressbar"` plus a polite once-per-second screen-reader message.
 
@@ -72,16 +78,17 @@ they must not recreate their own stage background.
 
 | Component | File | Notes |
 |---|---|---|
-| `Wordmark` | `components/ui/Wordmark.tsx` | Filter-trio mark + spectrum underline; sizes `sm/md/lg`. |
+| `Wordmark` | `components/ui/Wordmark.tsx` | Filter-trio mark + spectrum underline; sizes `sm/md/lg`, optional tagline. |
+| `TestStrip` | `components/ui/TestStrip.tsx` | Film-strip colour wells with an optional dashed “?” well; brand flourish, never a game swatch. |
 | `Button` | `components/ui/Button.tsx` | `primary/secondary/outline/ghost/danger` × `sm/md/lg/icon`; loading + disabled; keycap press. |
 | `Input` | `components/ui/Input.tsx` | Recessed well, label/hint/error, icon + text error (not colour alone). |
 | `Card` | `components/ui/Card.tsx` | `interactive`/`elevated` options; header/title/description/content/footer helpers. |
 | `Modal` | `components/ui/Modal.tsx` | Focus trap, Escape, backdrop close, mobile bottom sheet, spectrum strip. |
-| `Toast` | `components/ui/Toast.tsx` | `info` circle / `success` shield / `error` octagon + `[INFO]/[OK]/[ERR]`. |
+| `Toast` | `components/ui/Toast.tsx` | Circle, shield and octagon icon badges + title; no status prefix text. |
 | `Spinner` | `components/ui/Spinner.tsx` | Aperture ring; stops under reduced motion. |
-| `ErrorMessage` | `components/ui/ErrorMessage.tsx` | Diagnostic alert with `[ERR]` tag and optional retry. |
+| `ErrorMessage` | `components/ui/ErrorMessage.tsx` | Icon + title + message; no repeated diagnostic label. |
 | `EmptyState` | `components/ui/EmptyState.tsx` | Friendly empty tray with an optional next action. |
-| `ModeGlyph` | `components/ui/ModeGlyph.tsx` | Distinct silhouette + icon for Global/Daily/Room/Boards/Profile; `modeTag()` returns the visible tag. |
+| `ModeGlyph` | `components/ui/ModeGlyph.tsx` | Coloured arcade token: distinct silhouette + mini-scene; decorative, so always render the mode name as the visible label. |
 | `GameStage` | `components/game/GameStage.tsx` | Fixed neutral stage; header, countdown, content, optional footer. |
 | `Celebration` | `components/ui/Celebration.tsx` | Result-screen stamp: tag + shape + icon + text. |
 | `ScoreCountUp` | `components/ui/Celebration.tsx` | Integer-tenths count-up; instant final value under reduced motion / SSR. |
@@ -114,9 +121,11 @@ Rules:
 ## 6. Microcopy & layout
 
 - Voice: a calm colourist's console with arcade warmth. Playful, never childish.
-  Prefer "Warm up your cones", "Pick your next calibration", "The console is
-  taking a nap — try again" over generic system phrasing.
+  Prefer "What are we mixing today?", "Fresh eyes wanted.", "Count me in" and
+  "For people who argue about teal." over generic system phrasing.
 - One job per label; actions keep their name through the flow (Publish → Published).
+- If a card needs a tag, a detail line and a paragraph, cut two of them. The
+  mode token and name already say what the card is.
 - Layout is mobile-first: 360 px minimum, 44 px touch targets, cards stack before
   they shrink. Never rely on hover for an essential action.
 - Empty states invite the next action; errors say what happened and what to do.

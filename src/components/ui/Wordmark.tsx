@@ -6,8 +6,9 @@ export type WordmarkSize = "sm" | "md" | "lg";
 
 export interface WordmarkProps {
   size?: WordmarkSize;
+  /** Optional short tagline under the wordmark. */
   subtitle?: string;
-  /** Optional trailing badge, e.g. the signed-in operator name. */
+  /** Optional trailing slot, e.g. an account chip. */
   aside?: ReactNode;
   className?: string;
 }
@@ -31,10 +32,9 @@ const SUBTITLE_SIZE: Record<WordmarkSize, string> = {
 };
 
 /**
- * "Darkroom Filter Trio" — three overlapping dichroic plates (cyan, magenta,
- * amber) inside a rounded carbon bezel, with the additive white core where all
- * three overlap. The spectrum underline is a brand flourish used outside the
- * game stage only.
+ * "Darkroom Filter Trio" — three overlapping dichroic plates inside a carbon
+ * bezel, with the additive white core where all three overlap. The spectrum
+ * underline is a brand flourish used outside the game stage only.
  */
 function FilterTrioMark({ className }: { className?: string }) {
   return (
@@ -75,24 +75,16 @@ export function Wordmark({ size = "md", subtitle, aside, className }: WordmarkPr
             />
           </span>
         </p>
-        <div className="mt-1.5 flex min-w-0 items-center gap-2">
-          <span
+        {subtitle ? (
+          <p
             className={cn(
-              "font-mono font-medium tracking-[0.18em] text-muted-foreground uppercase",
+              "mt-1.5 font-mono font-medium tracking-[0.16em] text-muted-foreground uppercase",
               SUBTITLE_SIZE[size],
             )}
           >
-            {subtitle ?? "Studio console"}
-          </span>
-          {subtitle === undefined ? (
-            <span
-              aria-hidden="true"
-              className="rounded-[0.25rem] border border-border bg-muted px-1 py-px font-mono text-[9px] font-bold tracking-[0.12em] text-muted-foreground uppercase"
-            >
-              1.0
-            </span>
-          ) : null}
-        </div>
+            {subtitle}
+          </p>
+        ) : null}
       </div>
       {aside ? <div className="ml-auto shrink-0">{aside}</div> : null}
     </div>

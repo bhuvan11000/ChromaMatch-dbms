@@ -15,6 +15,7 @@ import {
   ModeGlyph,
   ScoreCountUp,
   Spinner,
+  TestStrip,
   Wordmark,
   useToast,
   type CelebrationKind,
@@ -148,10 +149,8 @@ export function StyleguideShowcase() {
           <h1 className="mt-6 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
             Every control, every state
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground text-pretty">
-            The working reference for the Darkroom Arcade. Dev-only: this route resolves to a 404 in
-            production builds. Tokens, components, the fixed stage, and result-screen celebrations
-            live here.
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+            Dev-only reference. Tokens, states, the stage and celebrations.
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
@@ -167,15 +166,20 @@ export function StyleguideShowcase() {
       <div className="mt-10 space-y-10">
         <Section
           id="brand"
-          eyebrow="01 · Brand"
-          title="Filter trio & spectrum"
-          description="Three dichroic plates overlap into an additive core. The spectrum underline is a brand flourish used outside the game stage only."
+          eyebrow="Brand"
+          title="Marks & test strips"
+          description="Three filters, one additive core. The test strip is the playful version of the spectrum."
         >
           <Card className="flex flex-col gap-8 p-6">
             <div className="flex flex-wrap items-center gap-10">
               <Wordmark size="sm" />
               <Wordmark size="md" />
-              <Wordmark size="lg" subtitle="Calibration console" />
+              <Wordmark size="lg" subtitle="Colour memory arcade" />
+            </div>
+            <div className="space-y-3">
+              <TestStrip size="sm" mystery />
+              <TestStrip size="md" />
+              <TestStrip size="lg" mystery />
             </div>
             <div>
               <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
@@ -188,9 +192,9 @@ export function StyleguideShowcase() {
 
         <Section
           id="tokens"
-          eyebrow="02 · Tokens"
-          title="Console surfaces & stage calibration"
-          description="Chrome stays neutral so the game colours are the stars. Stage tokens are identical in light and dark mode and may never be tinted."
+          eyebrow="Tokens"
+          title="Chrome & calibration"
+          description="Neutral chrome, fixed stage, semantic status."
         >
           <div className="space-y-6">
             <div>
@@ -216,9 +220,9 @@ export function StyleguideShowcase() {
 
         <Section
           id="type"
-          eyebrow="03 · Typography"
-          title="Space Grotesk · Plus Jakarta Sans · JetBrains Mono"
-          description="Display carries the arcade-instrument voice; body keeps 360 px readable; mono owns every number that must not jitter."
+          eyebrow="Typography"
+          title="Display · body · numbers"
+          description="Space Grotesk, Plus Jakarta Sans, JetBrains Mono."
         >
           <Card className="space-y-6 p-6">
             <div>
@@ -237,8 +241,7 @@ export function StyleguideShowcase() {
                 Body / Plus Jakarta Sans
               </p>
               <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Hue is a circle. The shortest way around it is the one that counts. Guesses are
-                scored on the server, so the leaderboard stays honest.
+                Hue is a circle. The shortest way around it wins.
               </p>
             </div>
             <div>
@@ -257,9 +260,9 @@ export function StyleguideShowcase() {
 
         <Section
           id="buttons"
-          eyebrow="04 · Controls"
+          eyebrow="Controls"
           title="Tactile keycaps"
-          description="A solid bottom lip makes the control physical. Pressing collapses it by two pixels; focus always shows a visible ring."
+          description="Press to feel the 2 px depression. Focus always shows."
         >
           <div className="space-y-6">
             <Card className="space-y-4 p-6">
@@ -302,42 +305,43 @@ export function StyleguideShowcase() {
                   Disabled outline
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Hold a primary button to feel the 2 px keycap depression.
-              </p>
             </Card>
           </div>
         </Section>
 
         <Section
           id="forms"
-          eyebrow="05 · Forms"
+          eyebrow="Forms"
           title="Recessed input wells"
-          description="Errors pair a diamond icon, a heavier border and text — never colour alone."
+          description="Errors pair icon, border and text."
         >
           <div className="grid gap-4 lg:grid-cols-2">
             <Card className="space-y-5 p-6">
-              <Input label="Username" placeholder="colourhunter" hint="3–30 characters." />
+              <Input
+                label="Username"
+                placeholder="colourhunter"
+                hint="Letters, numbers, underscores."
+              />
               <Input
                 label="Email"
                 type="email"
                 defaultValue="not-an-email"
-                error="Enter a valid email address."
+                error="Enter a valid email."
               />
               <Input label="Password" type="password" disabled defaultValue="disabled-value" />
             </Card>
             <Card className="space-y-4 p-6">
               <ErrorMessage
                 title="Room is full"
-                message="Everyone got there first. Ask the host for a bigger room or a new code."
+                message="Someone beat you to the last stool. Try another code."
                 onRetry={() => undefined}
               />
-              <ErrorMessage message="The game token expired before submission. Start a fresh game." />
+              <ErrorMessage message="That game token expired. Start a fresh game." />
             </Card>
             <Card className="p-6">
               <EmptyState
                 title="No attempts yet"
-                description="Play your first round to put a colour on the board."
+                description="Play a round and give this board something to look at."
                 action={
                   <Button size="sm" variant="outline">
                     Play a round
@@ -350,16 +354,15 @@ export function StyleguideShowcase() {
 
         <Section
           id="surfaces"
-          eyebrow="06 · Surfaces"
-          title="Cards, modal & toasts"
-          description="Notifications always pair an icon and a shape with their label, so status survives grayscale."
+          eyebrow="Surfaces"
+          title="Cards, dialogs, notifications"
+          description="Icon shape carries the status; colour is a bonus."
         >
           <div className="grid gap-4 lg:grid-cols-2">
             <Card className="p-6">
               <h3 className="text-lg font-bold">Console card</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Inset top highlight plus a crisp border. Cards stay neutral; colour belongs to the
-                swatches.
+                Neutral surface. Colour belongs to the swatches.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => setModalOpen(true)}>
@@ -369,9 +372,7 @@ export function StyleguideShowcase() {
             </Card>
             <Card className="p-6">
               <h3 className="text-lg font-bold">Toast stack</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Info is a circle, success is a shield, error is an octagon.
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground">Circle, shield, octagon.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button
                   size="sm"
@@ -380,7 +381,7 @@ export function StyleguideShowcase() {
                     toast({ title: "New swatch loaded", description: "Round 2 is ready." })
                   }
                 >
-                  Info toast
+                  Info
                 </Button>
                 <Button
                   size="sm"
@@ -388,25 +389,25 @@ export function StyleguideShowcase() {
                   onClick={() =>
                     toast({
                       title: "Achievement unlocked",
-                      description: "Sharp Eye — score 9.5 in a single round.",
+                      description: "Sharp Eye — 9.5 in one round.",
                       variant: "success",
                     })
                   }
                 >
-                  Success toast
+                  Success
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() =>
                     toast({
-                      title: "Could not load the board",
-                      description: "The database is taking a nap. Try again.",
+                      title: "Couldn't load the board",
+                      description: "The database is taking a nap.",
                       variant: "error",
                     })
                   }
                 >
-                  Error toast
+                  Error
                 </Button>
               </div>
             </Card>
@@ -417,9 +418,9 @@ export function StyleguideShowcase() {
               <span className="text-sm text-muted-foreground">Aperture spinners</span>
             </Card>
             <Card className="p-6">
-              <h3 className="text-lg font-bold">Mode glyphs</h3>
+              <h3 className="text-lg font-bold">Mode tokens</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Distinct silhouette, icon and tag. Never colour alone.
+                Five silhouettes, five mini-scenes.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-4">
                 <ModeGlyph kind="global" size="md" />
@@ -434,16 +435,16 @@ export function StyleguideShowcase() {
 
         <Section
           id="stage"
-          eyebrow="07 · Game stage"
-          title="The fixed neutral gray"
-          description="A calibrated achromatic instrument surface (#1e1e1e), identical for every player and every theme. No tints, gradients, glows or motion — except the flat countdown bar during reveal and timed guessing."
+          eyebrow="Game stage"
+          title="The fixed gray"
+          description="Fixed #1e1e1e. Identical for every player and theme. Countdown only."
         >
           <div className="space-y-4">
             <GameStage
               roundNumber={2}
               modeLabel="Global"
-              phaseLabel="Memorise swatch"
-              countdown={{ remainingMs, totalMs: 5000, label: "Reveal window" }}
+              phaseLabel="Memorise"
+              countdown={{ remainingMs, totalMs: 5000, label: "Reveal" }}
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div
@@ -452,15 +453,9 @@ export function StyleguideShowcase() {
                   className="h-32 w-full rounded-[0.875rem] border border-stage-border bg-stage-surface sm:h-40 sm:w-56"
                   style={{ backgroundColor: "hsl(206 62% 51%)" }}
                 />
-                <div>
-                  <p className="font-mono text-[10px] tracking-[0.18em] text-stage-muted uppercase">
-                    Target swatch
-                  </p>
-                  <p className="mt-1 text-sm text-stage-muted">
-                    The swatch is the only colour source on the stage. Chrome around it stays
-                    neutral.
-                  </p>
-                </div>
+                <p className="font-mono text-[10px] tracking-[0.18em] text-stage-muted uppercase">
+                  Target swatch
+                </p>
               </div>
             </GameStage>
             <Button variant="outline" size="sm" onClick={runCountdown} disabled={countdownRunning}>
@@ -471,9 +466,9 @@ export function StyleguideShowcase() {
 
         <Section
           id="celebration"
-          eyebrow="08 · Celebrations"
+          eyebrow="Celebrations"
           title="Result-screen feedback"
-          description="Celebrations belong on result and summary screens only — never inside the stage. They pair tag, shape, icon and text so meaning survives reduced motion and grayscale."
+          description="Results only. Tag, shape, icon, text."
         >
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
@@ -494,12 +489,11 @@ export function StyleguideShowcase() {
               kind={celebration}
               detail={
                 celebration === "streak"
-                  ? "Streak 7 days · longest 12"
+                  ? "7 days · longest 12"
                   : celebration === "room-win"
-                    ? "Best attempt 27.4 / 30.0"
-                    : "+3.2 over your previous best"
+                    ? "Best attempt 27.4"
+                    : "+3.2 over your best"
               }
-              subtitle="Shown on the result screen, outside the stage."
             />
 
             <Card className="flex flex-wrap items-center gap-4 p-6">
@@ -524,22 +518,19 @@ export function StyleguideShowcase() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Leave the room?"
-        description="Leaving forfeits your remaining attempts. Your best score stays on the board."
+        description="Your remaining attempts are forfeited. Your best score stays."
         footer={
           <>
             <Button variant="outline" onClick={() => setModalOpen(false)}>
-              Stay in room
+              Stay
             </Button>
             <Button variant="danger" onClick={() => setModalOpen(false)}>
-              Leave room
+              Leave
             </Button>
           </>
         }
       >
-        <p className="text-sm text-muted-foreground">
-          This is the shared confirmation pattern. Modal headers carry the spectrum strip; the
-          content stays neutral.
-        </p>
+        <p className="text-sm text-muted-foreground">You can’t rejoin once you leave.</p>
       </Modal>
     </main>
   );

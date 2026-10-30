@@ -46,11 +46,8 @@ export function ErrorMessage({
         <AlertOctagon />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-danger uppercase">
-          [ERR] Calibration fault
-        </p>
-        {title ? <p className="mt-1 text-sm font-semibold text-foreground">{title}</p> : null}
-        <p className={cn("text-sm break-words text-muted-foreground", title ? "mt-0.5" : "mt-1")}>
+        {title ? <p className="text-sm font-semibold text-foreground">{title}</p> : null}
+        <p className={cn("text-sm break-words text-muted-foreground", title ? "mt-0.5" : null)}>
           {message}
         </p>
         {onRetry ? (

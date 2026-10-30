@@ -11,10 +11,10 @@ import {
   ModeGlyph,
   ScoreCountUp,
   Spinner,
+  TestStrip,
   Wordmark,
   formatScoreTenths,
   getCelebrationMeta,
-  modeTag,
   type CelebrationKind,
 } from "@/components/ui";
 
@@ -168,13 +168,13 @@ describe("base UI kit", () => {
     expect(html).toContain("Enter a valid email.");
   });
 
-  it("renders a diagnostic error alert with a non-colour tag", () => {
+  it("renders a diagnostic error alert without filler labels", () => {
     const html = render(
       <ErrorMessage title="Room is full" message="Ask the host for a bigger room." />,
     );
 
     expect(html).toContain('role="alert"');
-    expect(html).toContain("[ERR]");
+    expect(html).not.toContain("[ERR]");
     expect(html).toContain("Room is full");
     expect(html).toContain("Ask the host for a bigger room.");
   });
@@ -202,13 +202,40 @@ describe("base UI kit", () => {
     expect(html).toContain("border-dashed");
   });
 
-  it("gives every mode glyph a distinct visible tag", () => {
-    const kinds = ["global", "daily", "room", "boards", "profile"] as const;
-    const tags = kinds.map((kind) => modeTag(kind));
+  it("renders decorative test strips with a mystery well", () => {
+    const html = render(<TestStrip colors={["#ff0000", "#00ff00"]} mystery />);
 
-    expect(new Set(tags).size).toBe(kinds.length);
+    expect(html).toContain("cm-test-strip");
+    expect(html).toContain("#ff0000");
+    expect(html).toContain("#00ff00");
+    expect(html).toContain("?");
+    expect(html).toContain('aria-hidden="true"');
+  });
+
+  it("labels a test strip that conveys meaning", () => {
+    const html = render(<TestStrip label="Palette preview" />);
+
+    expect(html).toContain('role="img"');
+    expect(html).toContain('aria-label="Palette preview"');
+    expect(html).not.toContain('aria-hidden="true"');
+  });
+
+  it("renders five distinct decorative mode tokens", () => {
+    const kinds = ["global", "daily", "room", "boards", "profile"] as const;
+
     for (const kind of kinds) {
-      expect(render(<ModeGlyph kind={kind} />)).toContain("clip-path");
+      const html = render(<ModeGlyph kind={kind} />);
+      expect(html).toContain(`data-mode="${kind}"`);
+      expect(html).toContain("clip-path");
+      expect(html).toContain('aria-hidden="true"');
     }
+  });
+
+  it("does not force a tagline onto the wordmark", () => {
+    const html = render(<Wordmark size="md" />);
+
+    expect(html).toContain("Chroma");
+    expect(html).not.toContain("Studio console");
+    expect(html).not.toContain("1.0");
   });
 });

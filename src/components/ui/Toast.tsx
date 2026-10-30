@@ -40,24 +40,12 @@ const VARIANT_CLASSES: Record<ToastVariant, string> = {
   error: "border-danger/50 bg-danger-soft text-foreground",
 };
 
-const VARIANT_TAG: Record<ToastVariant, string> = {
-  info: "text-accent-cyan",
-  success: "text-success",
-  error: "text-danger",
-};
-
 const VARIANT_BADGE: Record<ToastVariant, string> = {
   info: "rounded-full border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan",
   success:
     "border-success/40 bg-success/10 text-success [clip-path:polygon(25%_4%,75%_4%,100%_50%,75%_96%,25%_96%,0%_50%)]",
   error:
     "border-danger/45 bg-danger/10 text-danger [clip-path:polygon(30%_2%,70%_2%,98%_30%,98%_70%,70%_98%,30%_98%,2%_70%,2%_30%)]",
-};
-
-const VARIANT_LABEL: Record<ToastVariant, string> = {
-  info: "INFO",
-  success: "OK",
-  error: "ERR",
 };
 
 function VariantIcon({ variant }: { variant: ToastVariant }) {
@@ -125,17 +113,7 @@ function ToastCard({ item, onDismiss }: { item: ToastRecord; onDismiss: (id: str
           <VariantIcon variant={variant} />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "font-mono text-[10px] font-bold tracking-[0.18em]",
-                VARIANT_TAG[variant],
-              )}
-            >
-              [{VARIANT_LABEL[variant]}]
-            </span>
-            <p className="text-sm font-semibold">{item.title}</p>
-          </div>
+          <p className="text-sm font-semibold">{item.title}</p>
           {item.description ? (
             <p className="mt-1 text-sm break-words text-muted-foreground">{item.description}</p>
           ) : null}

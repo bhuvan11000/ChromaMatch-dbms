@@ -126,13 +126,7 @@ export function Modal({
         <div className="max-h-[calc(90dvh-0.25rem)] overflow-y-auto p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="font-mono text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
-                Console dialog
-              </p>
-              <h2
-                id={titleId}
-                className="mt-1 font-display text-lg font-bold tracking-tight sm:text-xl"
-              >
+              <h2 id={titleId} className="font-display text-lg font-bold tracking-tight sm:text-xl">
                 {title}
               </h2>
               {description ? (

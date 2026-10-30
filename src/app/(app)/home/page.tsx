@@ -10,8 +10,8 @@ import {
   ErrorMessage,
   ModeGlyph,
   Spinner,
+  TestStrip,
   Wordmark,
-  modeTag,
   useToast,
   type ModeGlyphKind,
 } from "@/components/ui";
@@ -21,7 +21,6 @@ import { ApiError, apiClient } from "@/lib/api-client";
 interface ModeCard {
   name: string;
   description: string;
-  detail: string;
   kind: ModeGlyphKind;
 }
 
@@ -29,34 +28,36 @@ const MODES: ModeCard[] = [
   {
     kind: "global",
     name: "Global",
-    description: "Three fresh random swatches every run. Chase an all-time personal best.",
-    detail: "Random colours · Personal best",
+    description: "Random colours. All-time glory.",
   },
   {
     kind: "daily",
     name: "Daily",
-    description: "One date-seeded palette for the whole world. Protect your streak.",
-    detail: "Same colours for everyone · Resets 00:00 UTC",
+    description: "Same palette for everyone, every day.",
   },
   {
     kind: "room",
     name: "Custom Room",
-    description: "Spin up a private studio code, set a round timer, and compare eyes.",
-    detail: "2–10 players · 3 or 5 attempts",
+    description: "A private code and bragging rights.",
   },
   {
     kind: "boards",
     name: "Leaderboards",
-    description: "See the sharpest eyes on the global and daily boards, ranked with stable ties.",
-    detail: "Global and Daily boards",
+    description: "Who's got the sharpest eye?",
   },
   {
     kind: "profile",
     name: "Profile",
-    description: "Inspect your channel drift, 30-day trend, and unlocked achievements.",
-    detail: "Stats · Streak · Achievements",
+    description: "Your colours, streaks and badges.",
   },
 ];
+
+const AVATAR_TONES = [
+  "bg-accent-cyan/15 text-accent-cyan",
+  "bg-accent-gold/15 text-accent-gold",
+  "bg-accent-violet/15 text-accent-violet",
+  "bg-success/15 text-success",
+] as const;
 
 export default function HomePage() {
   const router = useRouter();
@@ -73,9 +74,9 @@ export default function HomePage() {
     },
     onError: (error) => {
       toast({
-        title: "Could not log out",
+        title: "Couldn't log out",
         description:
-          error instanceof ApiError ? error.message : "Please check your connection and try again.",
+          error instanceof ApiError ? error.message : "Check your connection and try again.",
         variant: "error",
       });
     },
@@ -98,9 +99,7 @@ export default function HomePage() {
     return (
       <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-3">
         <Spinner size="lg" label="Loading your account" />
-        <p className="font-mono text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-          Waking the console…
-        </p>
+        <p className="text-sm text-muted-foreground">Warming up…</p>
       </div>
     );
   }
@@ -109,11 +108,11 @@ export default function HomePage() {
     return (
       <div className="mx-auto max-w-md">
         <ErrorMessage
-          title="Could not load your account"
+          title="Couldn't load your account"
           message={
             session.error instanceof ApiError
               ? session.error.message
-              : "Your session could not be loaded. Please try again."
+              : "Your session could not be loaded. Try again."
           }
           onRetry={() => {
             void session.refetch();
@@ -132,24 +131,29 @@ export default function HomePage() {
   }
 
   const user = session.user;
+  const initial = user.username.slice(0, 1).toUpperCase();
+  const avatarTone = AVATAR_TONES[user.username.charCodeAt(0) % AVATAR_TONES.length];
 
   return (
     <div>
-      <header className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5">
         <Wordmark size="md" />
 
-        <div className="flex items-center gap-3">
-          <span className="inline-flex min-w-0 items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 font-mono text-[10px] text-muted-foreground">
-            <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-success" />
-            <span className="shrink-0 font-bold tracking-[0.14em] uppercase">Operator</span>
-            <span aria-hidden="true" className="text-border">
-              /
+        <div className="flex items-center gap-2">
+          <span className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-card py-1 pr-3 pl-1">
+            <span
+              aria-hidden="true"
+              className={`grid size-7 shrink-0 place-items-center rounded-full font-display text-xs font-bold ${avatarTone}`}
+            >
+              {initial}
             </span>
-            <span className="truncate text-foreground">{user.username}</span>
+            <span className="max-w-[8rem] truncate text-xs font-medium text-foreground">
+              {user.username}
+            </span>
           </span>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             className="shrink-0"
             onClick={() => logout()}
@@ -161,56 +165,73 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section aria-labelledby="modes-heading" className="mt-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      <section aria-labelledby="modes-heading" className="mt-8">
+        <div className="grid items-center gap-7 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
-            <p className="font-mono text-[10px] font-bold tracking-[0.24em] text-muted-foreground uppercase">
-              Mode select · Studio bay
-            </p>
             <h1
               id="modes-heading"
-              className="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl"
+              className="text-4xl font-bold tracking-tight text-balance sm:text-5xl"
             >
-              Pick your next calibration
+              What are we{" "}
+              <span className="relative inline-block whitespace-nowrap">
+                mixing
+                <span
+                  aria-hidden="true"
+                  className="cm-spectrum-bar absolute -bottom-1 left-0 h-1 w-full rounded-full"
+                />
+              </span>{" "}
+              today?
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-muted-foreground text-pretty">
-              Three swatches. Five seconds each. One honest score. The game screens are warming up
-              in the next build.
+            <p className="mt-3 max-w-sm text-base text-muted-foreground">
+              Three colours. Five seconds. One honest guess.
             </p>
           </div>
-          <span className="rounded-full border border-border bg-muted px-3 py-1 font-mono text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
-            5 stations
-          </span>
+
+          <div className="mx-auto w-full max-w-sm sm:-rotate-1">
+            <TestStrip size="lg" mystery />
+          </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {MODES.map((mode) => (
             <Card key={mode.name} className="flex min-w-0 flex-col p-5">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between gap-2">
                 <ModeGlyph kind={mode.kind} />
-                <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                  Soon
+                <span
+                  role="img"
+                  aria-label="Coming soon"
+                  title="Coming soon"
+                  className="grid size-7 shrink-0 place-items-center rounded-full border border-border bg-muted text-muted-foreground"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
+                    <rect
+                      x="4.8"
+                      y="8.6"
+                      width="10.4"
+                      height="6.8"
+                      rx="2"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M7.3 8.6V6.7a2.7 2.7 0 0 1 5.4 0v1.9"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="10" cy="12" r="1" fill="currentColor" />
+                  </svg>
                 </span>
               </div>
-              <div className="mt-4">
-                <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-                  {modeTag(mode.kind)}
-                </p>
-                <h2 className="mt-1 text-lg font-bold tracking-tight">{mode.name}</h2>
-                <p className="mt-2 text-sm text-muted-foreground">{mode.description}</p>
-              </div>
-              <div className="mt-auto">
-                <p className="mt-5 border-t border-border pt-3 text-xs font-medium text-muted-foreground">
-                  {mode.detail}
-                </p>
-              </div>
+              <h2 className="mt-4 text-lg font-bold tracking-tight">{mode.name}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
             </Card>
           ))}
         </div>
       </section>
 
-      <p className="mt-10 border-t border-border pt-6 font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
-        PostgreSQL + MongoDB · Server-authoritative scoring · Darkroom Arcade v1.0
+      <p className="mt-10 text-center text-xs text-muted-foreground">
+        For people who argue about teal.
       </p>
     </div>
   );

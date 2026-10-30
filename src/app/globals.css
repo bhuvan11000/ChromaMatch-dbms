@@ -235,6 +235,33 @@
     background-image: var(--spectrum-gradient);
   }
 
+  /* A strip of colour tests in a film bezel — brand flourish only. */
+  .cm-test-strip {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.12),
+      0 3px 0 #09090b;
+  }
+
+  .cm-test-strip::before,
+  .cm-test-strip::after {
+    content: "";
+    position: absolute;
+    right: 0.55rem;
+    left: 0.55rem;
+    height: 3px;
+    background-image: radial-gradient(circle, rgb(255 255 255 / 0.32) 1px, transparent 1.2px);
+    background-size: 10px 3px;
+    pointer-events: none;
+  }
+
+  .cm-test-strip::before {
+    top: 3px;
+  }
+
+  .cm-test-strip::after {
+    bottom: 3px;
+  }
+
   /* Faint instrument-grid backdrop for chrome screens (never the stage). */
   .cm-darkroom-grid {
     background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);

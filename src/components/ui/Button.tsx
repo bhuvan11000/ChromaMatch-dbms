@@ -52,7 +52,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "inline-flex items-center justify-center font-display font-semibold tracking-tight whitespace-nowrap select-none",
+        "group inline-flex items-center justify-center font-display font-semibold tracking-tight whitespace-nowrap select-none",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
         "disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none",
         VARIANT_CLASSES[variant],

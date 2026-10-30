@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import type { ZodType } from "zod";
 
-import { Button, Card, ErrorMessage, Input, Wordmark } from "@/components/ui";
+import { Button, Card, ErrorMessage, Input, TestStrip, Wordmark } from "@/components/ui";
 import { SESSION_QUERY_KEY } from "@/hooks/useSession";
 import { ApiError, apiClient } from "@/lib/api-client";
 import {
@@ -105,17 +105,20 @@ export default function RegisterPage() {
         : null;
 
   return (
-    <Card elevated className="relative overflow-hidden p-6 sm:p-8">
-      <div aria-hidden="true" className="cm-spectrum-bar absolute inset-x-0 top-0 h-1" />
-      <div className="mb-6">
-        <Wordmark size="md" subtitle="New colorist pass" />
-        <h1 className="mt-6 text-2xl font-bold tracking-tight sm:text-3xl">Calibrate your eyes</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Three target swatches. Five-second reveals. Zero second-guessing.
+    <Card elevated className="relative overflow-hidden p-5 sm:p-7">
+      <TestStrip size="sm" mystery />
+
+      <div className="mt-6">
+        <Wordmark size="md" />
+        <h1 className="mt-5 text-2xl font-bold tracking-tight sm:text-3xl">
+          Fresh <span className="text-primary">eyes</span> wanted.
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Three colours. Five seconds. No take-backs.
         </p>
       </div>
 
-      <form noValidate onSubmit={handleSubmit} className="space-y-5">
+      <form noValidate onSubmit={handleSubmit} className="mt-6 space-y-5">
         <Input
           ref={usernameRef}
           id="register-username"
@@ -124,7 +127,7 @@ export default function RegisterPage() {
           label="Username"
           autoComplete="username"
           placeholder="colourhunter"
-          hint="3–30 characters: letters, numbers, and underscores."
+          hint="Letters, numbers, underscores."
           value={values.username}
           error={errors.username}
           onChange={(event) => updateField("username", event.target.value)}
@@ -154,7 +157,7 @@ export default function RegisterPage() {
           type="password"
           label="Password"
           autoComplete="new-password"
-          hint="At least 8 characters."
+          hint="8+ characters."
           value={values.password}
           error={errors.password}
           onChange={(event) => updateField("password", event.target.value)}
@@ -171,22 +174,38 @@ export default function RegisterPage() {
           loading={registerMutation.isPending}
           disabled={registerMutation.isPending}
         >
-          {registerMutation.isPending ? "Creating account…" : "Create account"}
+          {registerMutation.isPending ? (
+            "Creating account…"
+          ) : (
+            <>
+              Count me in
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transform-none"
+              >
+                <path
+                  d="M4 10h11M10.5 5.5 15 10l-4.5 4.5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </>
+          )}
         </Button>
       </form>
 
       <p className="mt-6 border-t border-border pt-4 text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
+        Already in?{" "}
         <Link
           href="/login"
           className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
         >
           Sign in
         </Link>
-      </p>
-
-      <p className="mt-4 text-center font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
-        Free · No downloads · Browser-ready
       </p>
     </Card>
   );

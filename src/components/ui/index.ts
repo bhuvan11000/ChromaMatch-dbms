@@ -24,11 +24,14 @@ export type { InputProps } from "./Input";
 export { Modal } from "./Modal";
 export type { ModalProps, ModalSize } from "./Modal";
 
-export { ModeGlyph, modeTag } from "./ModeGlyph";
+export { ModeGlyph } from "./ModeGlyph";
 export type { ModeGlyphKind, ModeGlyphProps } from "./ModeGlyph";
 
 export { Spinner } from "./Spinner";
 export type { SpinnerProps, SpinnerSize } from "./Spinner";
+
+export { TestStrip, TEST_STRIP_COLORS } from "./TestStrip";
+export type { TestStripProps, TestStripSize } from "./TestStrip";
 
 export { ToastProvider, useToast } from "./Toast";
 export type { ToastOptions, ToastVariant } from "./Toast";
