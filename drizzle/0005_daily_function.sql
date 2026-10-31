@@ -1,6 +1,25 @@
 -- Daily challenge creation function. Architecture §5.8.3 (order 6).
 -- Domain errors use SQLSTATE CM000; the message is an §8.1 error code.
+--
+-- WHAT THIS FILE DOES
+-- Creates one function, ensure_daily_challenge, which makes sure today's daily
+-- challenge exists. It is safe to call many times and from many users at once.
 
+-- FUNCTION: ensure_daily_challenge
+-- INPUTS : a date and a JSON array of exactly 3 colours, e.g.
+--          [{"h":200,"s":50,"v":80}, {"h":10,"s":90,"v":40}, {"h":300,"s":20,"v":60}]
+--          (h = hue 0-360, s = saturation 0-100, v = value 0-100).
+-- RETURNS: the daily_challenge_id (new or already existing).
+-- STEPS  :
+--   1. The date must be today's date in UTC, otherwise INVALID_DATE.
+--      Past (and future) days can't be created.
+--   2. The colours must be an array of exactly 3 objects, each with numeric h, s, v
+--      inside the valid ranges (values are rounded to 1 decimal). Otherwise VALIDATION_ERROR.
+--   3. Try to insert the day. ON CONFLICT DO NOTHING means if somebody else created it
+--      first, no row is inserted and no error is raised.
+--   4. If WE created it, insert its 3 colour rows (round 1, 2, 3) and return the new id.
+--   5. If someone else created it, look up and return the existing id. If it still can't
+--      be found, something is wrong -> INTERNAL_ERROR.
 CREATE OR REPLACE FUNCTION "ensure_daily_challenge"(
   p_date date,
   p_colors jsonb
