@@ -10,7 +10,7 @@ CREATE TABLE "achievements" (
 	CONSTRAINT "achievements_name_key" UNIQUE("name"),
 	CONSTRAINT "achievements_criteria_type_check" CHECK ("achievements"."criteria_type" in ('games_played', 'daily_streak', 'perfect_round', 'new_pb', 'first_daily', 'first_global')),
 	CONSTRAINT "achievements_threshold_check" CHECK ("achievements"."threshold" > 0)
-); --> statement breakpoint
+); --> statement-breakpoint
 -- Defines every achievement a player can unlock (name, description, and the rule to earn it).
 -- criteria_type says WHAT is measured (games played, streak, perfect round, new personal best, etc.).
 -- threshold is the number that must be reached (e.g. 10 games, 7-day streak). It is optional
@@ -30,7 +30,7 @@ CREATE TABLE "challenge_colors" (
 	CONSTRAINT "challenge_colors_hue_check" CHECK ("challenge_colors"."hue" between 0 and 360),
 	CONSTRAINT "challenge_colors_saturation_check" CHECK ("challenge_colors"."saturation" between 0 and 100),
 	CONSTRAINT "challenge_colors_value_check" CHECK ("challenge_colors"."value" between 0 and 100)
-); --> statement breakpoint
+); --> statement-breakpoint
 -- TABLE NOTES: challenge_colors
 -- Each daily challenge has 3 rounds, and each round has one target colour in HSV format.
 -- Primary key (daily_challenge_id, round_number) guarantees exactly one colour per round per challenge.
@@ -43,7 +43,7 @@ CREATE TABLE "daily_challenges" (
 	"challenge_date" date NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "daily_challenges_challenge_date_key" UNIQUE("challenge_date")
-); --> statement breakpoint
+); --> statement-breakpoint
 -- TABLE NOTES: daily_challenges
 -- Holds one row per day's challenge. The UNIQUE constraint on challenge_date ensures
 -- there can never be two different challenges for the same date.
@@ -58,7 +58,7 @@ CREATE TABLE "daily_personal_bests" (
 	"achieved_at" timestamp with time zone NOT NULL,
 	CONSTRAINT "daily_personal_bests_pkey" PRIMARY KEY("user_id","daily_challenge_id"),
 	CONSTRAINT "daily_personal_bests_best_score_check" CHECK ("daily_personal_bests"."best_score" between 0 and 30)
-); --> statement breakpoint
+); --> statement-breakpoint
 -- TABLE NOTES: daily_personal_bests
 -- Links a user to a daily challenge along with their top score for it (0 to 30, one decimal place).
 -- Primary key (user_id, daily_challenge_id) means a user has only one best-score row per challenge.
@@ -77,7 +77,7 @@ CREATE TABLE "room_colors" (
 	CONSTRAINT "room_colors_hue_check" CHECK ("room_colors"."hue" between 0 and 360),
 	CONSTRAINT "room_colors_saturation_check" CHECK ("room_colors"."saturation" between 0 and 100),
 	CONSTRAINT "room_colors_value_check" CHECK ("room_colors"."value" between 0 and 100)
-); --> statement breakpoint
+); --> statement-breakpoint
 -- TABLE NOTES: room_colors
 -- Same idea as challenge_colors, but for multiplayer rooms: 3 rounds per room, one HSV colour each.
 -- Primary key (room_id, round_number) guarantees one colour per round per room.
@@ -97,7 +97,7 @@ CREATE TABLE "room_players" (
 	CONSTRAINT "room_players_status_check" CHECK ("room_players"."status" in ('active', 'finished', 'left')),
 	CONSTRAINT "room_players_attempts_used_check" CHECK ("room_players"."attempts_used" >= 0),
 	CONSTRAINT "room_players_best_score_check" CHECK ("room_players"."best_score" between 0 and 30)
-); --> statement breakpoint
+); --> statement-breakpoint
 -- TABLE NOTES: room_players
 -- A junction table between rooms and users (many-to-many): one row per player per room.
 -- status tracks the player's state: 'active' (still playing), 'finished', or 'left'.
@@ -123,7 +123,7 @@ CREATE TABLE "rooms" (
 	CONSTRAINT "rooms_timer_seconds_check" CHECK ("rooms"."timer_seconds" in (5, 10, 15)),
 	CONSTRAINT "rooms_attempts_limit_check" CHECK ("rooms"."attempts_limit" in (3, 5)),
 	CONSTRAINT "rooms_status_check" CHECK ("rooms"."status" in ('lobby', 'in_progress', 'finished', 'cancelled'))
-); --> statement breakpoint
+); --> statement-breakpoint
 -- TABLE NOTES: rooms
 -- One row per multiplayer room. room_code is a short unique code (max 8 chars) players use to join.
 -- creator_id is the user who made the room.
@@ -140,7 +140,7 @@ CREATE TABLE "user_achievements" (
 	"achievement_id" bigint NOT NULL,
 	"earned_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "user_achievements_pkey" PRIMARY KEY("user_id","achievement_id")
-); --> statement breakpoint
+); --> statement-breakpoint
 -- TABLE NOTES: user_achievements
 -- A junction table between users and achievements (many-to-many).
 -- A row means "this user has earned this achievement", with earned_at as the timestamp.
@@ -169,7 +169,7 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_total_games_played_check" CHECK ("users"."total_games_played" >= 0),
 	CONSTRAINT "users_current_daily_streak_check" CHECK ("users"."current_daily_streak" >= 0),
 	CONSTRAINT "users_longest_daily_streak_check" CHECK ("users"."longest_daily_streak" >= 0)
-); --> statement breakpoint
+); --> statement-breakpoint
 -- TABLE NOTES: users
 -- Core account table. username and email must each be unique. Only a password hash is stored, never the raw password.
 -- role is either 'player' (default) or 'admin'; is_banned lets admins block an account.
@@ -187,30 +187,30 @@ CREATE TABLE "users" (
 
 -- FK: each challenge colour must belong to a real daily challenge.
 -- CASCADE: if a daily challenge is deleted, its 3 colour rows are removed automatically.
-ALTER TABLE "challenge_colors" ADD CONSTRAINT "challenge_colors_daily_challenge_id_daily_challenges_daily_challenge_id_fk" FOREIGN KEY ("daily_challenge_id") REFERENCES "public"."daily_challenges"("daily_challenge_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "challenge_colors" ADD CONSTRAINT "challenge_colors_daily_challenge_id_daily_challenges_daily_challenge_id_fk" FOREIGN KEY ("daily_challenge_id") REFERENCES "public"."daily_challenges"("daily_challenge_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 -- FK: each personal best must belong to a real user.
 -- CASCADE: if a user is deleted, their daily personal bests are removed too.
-ALTER TABLE "daily_personal_bests" ADD CONSTRAINT "daily_personal_bests_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "daily_personal_bests" ADD CONSTRAINT "daily_personal_bests_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 -- FK: each personal best must point to a real daily challenge.
 -- RESTRICT: a daily challenge can't be deleted while players still have scores recorded for it (protects score history).
-ALTER TABLE "daily_personal_bests" ADD CONSTRAINT "daily_personal_bests_daily_challenge_id_daily_challenges_daily_challenge_id_fk" FOREIGN KEY ("daily_challenge_id") REFERENCES "public"."daily_challenges"("daily_challenge_id") ON DELETE restrict ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "daily_personal_bests" ADD CONSTRAINT "daily_personal_bests_daily_challenge_id_daily_challenges_daily_challenge_id_fk" FOREIGN KEY ("daily_challenge_id") REFERENCES "public"."daily_challenges"("daily_challenge_id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 -- FK: each room colour must belong to a real room.
 -- CASCADE: if a room is deleted, its colour rows are removed automatically.
-ALTER TABLE "room_colors" ADD CONSTRAINT "room_colors_room_id_rooms_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."rooms"("room_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "room_colors" ADD CONSTRAINT "room_colors_room_id_rooms_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."rooms"("room_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 -- FK: each room_players row must belong to a real room.
 -- CASCADE: if a room is deleted, its player entries are removed automatically.
-ALTER TABLE "room_players" ADD CONSTRAINT "room_players_room_id_rooms_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."rooms"("room_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "room_players" ADD CONSTRAINT "room_players_room_id_rooms_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."rooms"("room_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 -- FK: each room_players row must belong to a real user.
 -- CASCADE: if a user is deleted, their room participation records are removed too.
-ALTER TABLE "room_players" ADD CONSTRAINT "room_players_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "room_players" ADD CONSTRAINT "room_players_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 -- FK: the room creator must be a real user.
 -- RESTRICT: a user can't be deleted while they still own (created) a room.
-ALTER TABLE "rooms" ADD CONSTRAINT "rooms_creator_id_users_user_id_fk" FOREIGN KEY ("creator_id") REFERENCES "public"."users"("user_id") ON DELETE restrict ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "rooms" ADD CONSTRAINT "rooms_creator_id_users_user_id_fk" FOREIGN KEY ("creator_id") REFERENCES "public"."users"("user_id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 -- FK: each earned achievement must belong to a real user.
 -- CASCADE: if a user is deleted, their earned achievements are removed too.
-ALTER TABLE "user_achievements" ADD CONSTRAINT "user_achievements_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "user_achievements" ADD CONSTRAINT "user_achievements_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 -- FK: each earned achievement must point to a real achievement definition.
 -- RESTRICT: an achievement can't be deleted while users have already earned it (protects user history).
-ALTER TABLE "user_achievements" ADD CONSTRAINT "user_achievements_achievement_id_achievements_achievement_id_fk" FOREIGN KEY ("achievement_id") REFERENCES "public"."achievements"("achievement_id") ON DELETE restrict ON UPDATE no action;--> statement breakpoint
+ALTER TABLE "user_achievements" ADD CONSTRAINT "user_achievements_achievement_id_achievements_achievement_id_fk" FOREIGN KEY ("achievement_id") REFERENCES "public"."achievements"("achievement_id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 
 -------------END OF DATABASE----------------
