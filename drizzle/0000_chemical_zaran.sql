@@ -187,30 +187,30 @@ CREATE TABLE "users" (
 
 -- FK: each challenge colour must belong to a real daily challenge.
 -- CASCADE: if a daily challenge is deleted, its 3 colour rows are removed automatically.
-ALTER TABLE "challenge_colors" ADD CONSTRAINT "challenge_colors_daily_challenge_id_daily_challenges_daily_challenge_id_fk" FOREIGN KEY ("daily_challenge_id") REFERENCES "public"."daily_challenges"("daily_challenge_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "challenge_colors" ADD CONSTRAINT "challenge_colors_daily_challenge_id_daily_challenges_daily_challenge_id_fk" FOREIGN KEY ("daily_challenge_id") REFERENCES "public"."daily_challenges"("daily_challenge_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
 -- FK: each personal best must belong to a real user.
 -- CASCADE: if a user is deleted, their daily personal bests are removed too.
-ALTER TABLE "daily_personal_bests" ADD CONSTRAINT "daily_personal_bests_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "daily_personal_bests" ADD CONSTRAINT "daily_personal_bests_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
 -- FK: each personal best must point to a real daily challenge.
 -- RESTRICT: a daily challenge can't be deleted while players still have scores recorded for it (protects score history).
-ALTER TABLE "daily_personal_bests" ADD CONSTRAINT "daily_personal_bests_daily_challenge_id_daily_challenges_daily_challenge_id_fk" FOREIGN KEY ("daily_challenge_id") REFERENCES "public"."daily_challenges"("daily_challenge_id") ON DELETE restrict ON UPDATE no action;
+ALTER TABLE "daily_personal_bests" ADD CONSTRAINT "daily_personal_bests_daily_challenge_id_daily_challenges_daily_challenge_id_fk" FOREIGN KEY ("daily_challenge_id") REFERENCES "public"."daily_challenges"("daily_challenge_id") ON DELETE restrict ON UPDATE no action;--> statement breakpoint
 -- FK: each room colour must belong to a real room.
 -- CASCADE: if a room is deleted, its colour rows are removed automatically.
-ALTER TABLE "room_colors" ADD CONSTRAINT "room_colors_room_id_rooms_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."rooms"("room_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "room_colors" ADD CONSTRAINT "room_colors_room_id_rooms_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."rooms"("room_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
 -- FK: each room_players row must belong to a real room.
 -- CASCADE: if a room is deleted, its player entries are removed automatically.
-ALTER TABLE "room_players" ADD CONSTRAINT "room_players_room_id_rooms_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."rooms"("room_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "room_players" ADD CONSTRAINT "room_players_room_id_rooms_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."rooms"("room_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
 -- FK: each room_players row must belong to a real user.
 -- CASCADE: if a user is deleted, their room participation records are removed too.
-ALTER TABLE "room_players" ADD CONSTRAINT "room_players_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "room_players" ADD CONSTRAINT "room_players_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
 -- FK: the room creator must be a real user.
 -- RESTRICT: a user can't be deleted while they still own (created) a room.
-ALTER TABLE "rooms" ADD CONSTRAINT "rooms_creator_id_users_user_id_fk" FOREIGN KEY ("creator_id") REFERENCES "public"."users"("user_id") ON DELETE restrict ON UPDATE no action;
+ALTER TABLE "rooms" ADD CONSTRAINT "rooms_creator_id_users_user_id_fk" FOREIGN KEY ("creator_id") REFERENCES "public"."users"("user_id") ON DELETE restrict ON UPDATE no action;--> statement breakpoint
 -- FK: each earned achievement must belong to a real user.
 -- CASCADE: if a user is deleted, their earned achievements are removed too.
-ALTER TABLE "user_achievements" ADD CONSTRAINT "user_achievements_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "user_achievements" ADD CONSTRAINT "user_achievements_user_id_users_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE cascade ON UPDATE no action;--> statement breakpoint
 -- FK: each earned achievement must point to a real achievement definition.
 -- RESTRICT: an achievement can't be deleted while users have already earned it (protects user history).
-ALTER TABLE "user_achievements" ADD CONSTRAINT "user_achievements_achievement_id_achievements_achievement_id_fk" FOREIGN KEY ("achievement_id") REFERENCES "public"."achievements"("achievement_id") ON DELETE restrict ON UPDATE no action;
+ALTER TABLE "user_achievements" ADD CONSTRAINT "user_achievements_achievement_id_achievements_achievement_id_fk" FOREIGN KEY ("achievement_id") REFERENCES "public"."achievements"("achievement_id") ON DELETE restrict ON UPDATE no action;--> statement breakpoint
 
 -------------END OF DATABASE----------------
