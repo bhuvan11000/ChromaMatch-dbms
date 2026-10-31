@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { apiError, json, parseBody } from "@/lib/api";
+import { apiError, json, parseBody, parseQuery } from "@/lib/api";
 import { AppError } from "@/lib/errors";
 
 describe("json()", () => {
@@ -66,5 +66,22 @@ describe("parseBody()", () => {
     await expect(parseBody(bodyRequest("{not json"), schema)).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
     });
+  });
+});
+
+describe("parseQuery()", () => {
+  const schema = z.object({ limit: z.coerce.number().int().positive().default(50) }).strict();
+
+  function queryRequest(query: string): Request {
+    return new Request(`http://localhost:3000/api/test${query}`);
+  }
+
+  it("validates query strings and applies schema defaults", () => {
+    expect(parseQuery(queryRequest(""), schema)).toEqual({ limit: 50 });
+    expect(parseQuery(queryRequest("?limit=10"), schema)).toEqual({ limit: 10 });
+  });
+
+  it("rejects unknown query keys", () => {
+    expect(() => parseQuery(queryRequest("?limit=10&page=2"), schema)).toThrow();
   });
 });

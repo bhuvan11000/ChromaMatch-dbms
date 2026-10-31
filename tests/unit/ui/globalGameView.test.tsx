@@ -133,6 +133,7 @@ describe("GlobalGameView", () => {
     expect(html).toContain("Your mix");
     expect(html).toContain("First Global Game");
     expect(html).toContain("Play again");
-    expect(html).toContain("Leaderboard");
+    expect(html).toContain("Global board");
+    expect(html).toContain("Daily board");
   });
 });

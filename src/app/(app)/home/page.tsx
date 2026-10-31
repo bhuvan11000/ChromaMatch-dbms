@@ -20,11 +20,17 @@ import { useSession } from "@/hooks/useSession";
 import { ApiError, apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 
+interface ModeLink {
+  label: string;
+  href: string;
+}
+
 interface ModeCard {
   name: string;
   description: string;
   kind: ModeGlyphKind;
   href?: string;
+  hrefs?: ModeLink[];
 }
 
 const MODES: ModeCard[] = [
@@ -48,6 +54,10 @@ const MODES: ModeCard[] = [
     kind: "boards",
     name: "Leaderboards",
     description: "Who's got the sharpest eye?",
+    hrefs: [
+      { label: "Global board", href: "/leaderboard/global" },
+      { label: "Daily board", href: "/leaderboard/daily" },
+    ],
   },
   {
     kind: "profile",
@@ -251,6 +261,38 @@ export default function HomePage() {
                   <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
                 </div>
                 <SoonLock />
+              </Card>
+            ) : mode.hrefs ? (
+              <Card key={mode.name} className="flex min-w-0 flex-col p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <ModeGlyph kind={mode.kind} />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-1 font-mono text-[9px] font-bold tracking-[0.14em] text-primary uppercase">
+                    <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
+                    Live
+                  </span>
+                </div>
+                <h2 className="mt-4 text-lg font-bold tracking-tight">{mode.name}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {mode.hrefs.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-[0.625rem] border border-border bg-muted px-3 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-foreground uppercase transition-colors hover:bg-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+                    >
+                      {link.label}
+                      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3">
+                        <path
+                          d="M4.5 10h10M10.5 6 14.5 10l-4 4"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Link>
+                  ))}
+                </div>
               </Card>
             ) : mode.href ? (
               <Link

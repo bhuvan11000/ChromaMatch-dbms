@@ -295,14 +295,18 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
         </Card>
       ) : null}
 
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button size="lg" onClick={onPlayAgain} className="sm:flex-1">
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Button size="lg" onClick={onPlayAgain}>
           <PlayIcon />
           Play again
         </Button>
-        <a href="/leaderboard/global" className={cn(OUTLINE_LINK_CLASSES, "sm:flex-1")}>
+        <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
           <TrophyIcon />
-          Leaderboard
+          Global board
+        </a>
+        <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
+          <TrophyIcon />
+          Daily board
         </a>
       </div>
     </section>

@@ -102,6 +102,37 @@ export async function createRoom(
   return roomId;
 }
 
+export async function setGlobalBest(
+  sql: SqlClient,
+  userId: number,
+  score: number,
+  achievedAt: string,
+): Promise<void> {
+  await sql`
+    update users
+    set global_best_score = ${score},
+        global_best_achieved_at = ${achievedAt}::timestamptz
+    where user_id = ${userId}
+  `;
+}
+
+export async function addDailyBest(
+  sql: SqlClient,
+  userId: number,
+  challengeId: number,
+  score: number,
+  achievedAt: string,
+): Promise<void> {
+  await sql`
+    insert into daily_personal_bests (user_id, daily_challenge_id, best_score, achieved_at)
+    values (${userId}, ${challengeId}, ${score}, ${achievedAt}::timestamptz)
+  `;
+}
+
+export async function banUser(sql: SqlClient, userId: number): Promise<void> {
+  await sql`update users set is_banned = true where user_id = ${userId}`;
+}
+
 export async function addRoomPlayer(sql: SqlClient, roomId: number, userId: number): Promise<void> {
   await sql`
     insert into room_players (room_id, user_id)

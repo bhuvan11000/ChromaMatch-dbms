@@ -103,6 +103,10 @@ they must not recreate their own stage background.
 | `ChannelDiffBars` | `components/game/ChannelDiffBars.tsx` | Result delta rows for H/S/V, each with a labelled value and bar. |
 | `GameResult` | `components/game/GameResult.tsx` | Result-screen score header, split target/guess wells, deltas, notices. |
 | `GlobalGameView` | `components/game/GlobalGameView.tsx` | Presentational phase shell for the Global mode; the pattern future modes reuse. |
+| `LeaderboardTable` | `components/leaderboard/LeaderboardTable.tsx` | Rank/player/score/date table; highlights the viewer row with a visible “You” label. |
+| `RankBadge` | `components/leaderboard/RankBadge.tsx` | Rank pill; top three add a medal cue, never colour alone. |
+| `YourRankCard` | `components/leaderboard/YourRankCard.tsx` | Compact viewer rank/score card, rendered only when `me` exists. |
+| `LeaderboardView` | `components/leaderboard/LeaderboardView.tsx` | Shared public Global/Daily screen: tabs, date picker, pagination and states. |
 | `Celebration` | `components/ui/Celebration.tsx` | Result-screen stamp: tag + shape + icon + text. |
 | `ScoreCountUp` | `components/ui/Celebration.tsx` | Integer-tenths count-up; instant final value under reduced motion / SSR. |
 

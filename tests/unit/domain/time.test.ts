@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addDays, nextUtcMidnight, utcDateString } from "@/lib/domain/time";
+import { addDays, isValidUtcDateString, nextUtcMidnight, utcDateString } from "@/lib/domain/time";
 
 describe("UTC date helpers (Architecture §5.4.5)", () => {
   it("formats the UTC calendar date around midnight", () => {
@@ -79,5 +79,14 @@ describe("UTC date helpers (Architecture §5.4.5)", () => {
   it("rejects non-integer day counts", () => {
     expect(() => addDays("2026-10-29", 1.5)).toThrow(RangeError);
     expect(() => addDays("2026-10-29", Number.NaN)).toThrow(RangeError);
+  });
+
+  it("validates real UTC calendar dates", () => {
+    expect(isValidUtcDateString("2026-10-29")).toBe(true);
+    expect(isValidUtcDateString("2028-02-29")).toBe(true);
+
+    for (const value of ["2026-02-30", "2026-13-01", "2026-1-01", "not-a-date"]) {
+      expect(isValidUtcDateString(value)).toBe(false);
+    }
   });
 });

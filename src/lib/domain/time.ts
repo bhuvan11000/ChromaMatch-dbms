@@ -44,6 +44,16 @@ function assertValidDate(date: Date): void {
   }
 }
 
+/** True when `value` is a real UTC calendar date in `YYYY-MM-DD` form. */
+export function isValidUtcDateString(value: string): boolean {
+  try {
+    parseUtcDate(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function parseUtcDate(dateString: string): Date {
   const match = UTC_DATE_PATTERN.exec(dateString);
 
