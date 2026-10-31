@@ -1,6 +1,26 @@
 -- Game result functions. Architecture §5.8.3 (orders 5).
 -- Domain errors use SQLSTATE CM000; the message is an §8.1 error code.
+--
+-- WHAT THIS FILE DOES
+-- Creates the two functions that run when a solo game (global or daily mode) ends:
+--   evaluate_achievements  -> works out which new achievements the player unlocked.
+--   submit_game_result     -> validates the scores, updates personal bests, streaks and
+--                             game counts, then calls evaluate_achievements.
 
+-- FUNCTION 1: evaluate_achievements
+-- INPUTS : user id, mode ('global' or 'daily'), highest single-round score,
+--          whether the player beat their existing personal best, whether this was
+--          their first game in this mode.
+-- RETURNS: a JSON array of the achievements newly unlocked, e.g.
+--          [{"achievement_id":1,"name":"...","description":"..."}] or [] if none.
+-- STEPS  :
+--   1. Validate the inputs (bad input -> VALIDATION_ERROR).
+--   2. Load the user's total games and current daily streak (missing user -> USER_NOT_FOUND).
+--   3. "eligible" = achievements the user does NOT have yet whose rule is now met
+--      (games_played, daily_streak, perfect_round, new_pb, first_daily, first_global).
+--   4. "inserted" = save them into user_achievements. ON CONFLICT DO NOTHING means a
+--      parallel request can't create duplicates.
+--   5. Return only the rows that were actually inserted, ordered by achievement id.
 CREATE OR REPLACE FUNCTION "evaluate_achievements"(
   p_user_id bigint,
   p_mode text,
@@ -81,6 +101,29 @@ BEGIN
 END;
 $$;--> statement-breakpoint
 
+-- FUNCTION 2: submit_game_result
+-- INPUTS : user id, mode ('global' or 'daily'), daily challenge id (daily mode only),
+--          the 3 round scores (each 0-10), and when the game was played.
+-- RETURNS: JSON with total_score, mode, total_games_played, a "pb" object
+--          (previous / current / updated / beat_existing), the newly "unlocked"
+--          achievements, and (daily mode only) the "streak" (current / longest).
+-- STEPS  :
+--   1. Validate: mode, exactly 3 scores each between 0 and 10, played_at present,
+--      and challenge id required for daily but not allowed for global.
+--      In daily mode the challenge must exist (else VALIDATION_ERROR).
+--   2. Lock the user's row (FOR UPDATE) so parallel submissions can't corrupt stats.
+--      Missing user -> USER_NOT_FOUND.
+--   3. Total = sum of the 3 rounds; max round = highest single round.
+--   4. Remember whether this is the player's FIRST game in this mode (done before any update).
+--   5. Add 1 to total games played.
+--   6. GLOBAL mode: if the total beats (or is the first) global best, save it as the new best.
+--   7. DAILY mode: insert or improve the personal best for that challenge, then update the streak:
+--        first ever daily -> 1 | same day again -> unchanged | next day -> +1 |
+--        gap of more than one day -> reset to 1 | older day played late -> unchanged.
+--      Longest streak = the larger of the old longest and the new current streak;
+--      last_daily_played_date only moves forward.
+--   8. Save all changes to the users row.
+--   9. Call evaluate_achievements and build the JSON response.
 CREATE OR REPLACE FUNCTION "submit_game_result"(
   p_user_id bigint,
   p_mode text,
