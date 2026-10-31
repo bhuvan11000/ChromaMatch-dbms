@@ -1,6 +1,18 @@
 -- Room rules that span rows/tables. Architecture §5.8.4.
 -- Domain errors use SQLSTATE CM000; the message is an §8.1 error code.
+--
+-- WHAT THIS FILE DOES
+-- A TRIGGER runs automatically whenever a row is inserted or updated, and can
+-- reject the change by raising an error. Each trigger needs a trigger FUNCTION
+-- (the logic) and a CREATE TRIGGER statement (which attaches the function to a table).
+-- This file creates 3 functions, then attaches them with 3 triggers.
+-- They protect room data even if some code writes to the tables directly.
 
+-- FUNCTION 1: room_players_before_insert
+-- Runs BEFORE a player is added to a room. It:
+--   1. Locks the room row (FOR UPDATE) so two people can't join at the exact same moment.
+--   2. Rejects the insert if the room is not in the 'lobby' state -> ROOM_NOT_LOBBY.
+--   3. Rejects the insert if the room already has room_size members -> ROOM_FULL.
 CREATE OR REPLACE FUNCTION "room_players_before_insert"()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -34,6 +46,13 @@ BEGIN
 END;
 $$;--> statement-breakpoint
 
+-- FUNCTION 2: room_players_before_update
+-- Runs BEFORE a room_players row is changed. It enforces four rules:
+--   1. attempts_used may never exceed the room's attempts_limit -> ATTEMPTS_EXHAUSTED.
+--   2. Only an 'active' member may use another attempt -> MEMBER_NOT_ACTIVE.
+--   3. Status can only stay the same or move forward: active -> finished or active -> left.
+--      'finished' and 'left' are final -> MEMBER_NOT_ACTIVE.
+--   4. best_score can never go down or be cleared once set -> VALIDATION_ERROR.
 CREATE OR REPLACE FUNCTION "room_players_before_update"()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -71,6 +90,14 @@ BEGIN
 END;
 $$;--> statement-breakpoint
 
+-- FUNCTION 3: rooms_before_update
+-- Runs BEFORE a room row is changed. It enforces the room life cycle:
+--   1. Status changes are limited to lobby -> in_progress, lobby -> cancelled,
+--      and in_progress -> finished. Anything else -> VALIDATION_ERROR.
+--   2. started_at / ended_at must match the new status:
+--        lobby = neither set | in_progress = started only
+--        finished = both set | cancelled = ended only
+--      (Same rule as the rooms_status_timestamps_check constraint in 0001.)
 CREATE OR REPLACE FUNCTION "rooms_before_update"()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -109,16 +136,22 @@ BEGIN
 END;
 $$;--> statement-breakpoint
 
+-- TRIGGER 1: attaches room_players_before_insert to the room_players table.
+-- Fires once for every row inserted, before the row is saved.
 CREATE TRIGGER "trg_room_players_before_insert"
   BEFORE INSERT ON "room_players"
   FOR EACH ROW
   EXECUTE FUNCTION "room_players_before_insert"();--> statement-breakpoint
 
+-- TRIGGER 2: attaches room_players_before_update to the room_players table.
+-- Fires once for every row updated, before the change is saved.
 CREATE TRIGGER "trg_room_players_before_update"
   BEFORE UPDATE ON "room_players"
   FOR EACH ROW
   EXECUTE FUNCTION "room_players_before_update"();--> statement-breakpoint
 
+-- TRIGGER 3: attaches rooms_before_update to the rooms table.
+-- Fires once for every room row updated, before the change is saved.
 CREATE TRIGGER "trg_rooms_before_update"
   BEFORE UPDATE ON "rooms"
   FOR EACH ROW
