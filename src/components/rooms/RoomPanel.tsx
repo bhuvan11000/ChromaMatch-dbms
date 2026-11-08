@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { Button, Card, EmptyState } from "@/components/ui";
 import type { RoomState } from "@/lib/schemas/rooms";
 import { ROOM_MIN_SIZE } from "@/lib/config/constants";
@@ -207,12 +209,12 @@ export function RoomPanel({
           title="This room was cancelled"
           description="The host left before the game started."
           action={
-            <a
+            <Link
               href="/rooms"
               className="font-semibold text-primary underline-offset-4 hover:underline"
             >
               Back to rooms
-            </a>
+            </Link>
           }
         />
       ) : null}
