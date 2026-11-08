@@ -5,6 +5,8 @@ export interface RevealCountdownProps {
   totalMs: number;
   /** Defaults to "Reveal window"; timed rooms pass "Guess window". */
   label?: string;
+  /** Short line under the label; defaults to the reveal copy. */
+  hint?: string;
   className?: string;
 }
 
@@ -24,6 +26,7 @@ export function RevealCountdown({
   remainingMs,
   totalMs,
   label = "Reveal window",
+  hint = "Memorise it.",
   className,
 }: RevealCountdownProps) {
   const progress = clampPercent((remainingMs / Math.max(1, totalMs)) * 100);
@@ -38,7 +41,7 @@ export function RevealCountdown({
             {label}
           </p>
           <p className="mt-0.5 font-display text-sm font-semibold tracking-tight text-stage-fg">
-            Memorise it.
+            {hint}
           </p>
         </div>
         <p

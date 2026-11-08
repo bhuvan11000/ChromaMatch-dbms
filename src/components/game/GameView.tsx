@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import {
   Button,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui";
 import { ROUNDS_PER_GAME } from "@/lib/config/constants";
 import type { Hsv } from "@/lib/domain/hsv";
-import type { GameMachineState } from "@/hooks/useGameMachine";
+import { getGuessCountdown, type GameMachineState } from "@/hooks/useGameMachine";
 import type { GameMode } from "@/lib/schemas/game";
 
 import { ColorSwatch } from "./ColorSwatch";
@@ -160,6 +160,13 @@ function GameFallback({ message, retry }: { message: string; retry: () => void }
 export interface GameViewProps {
   /** Which mode's copy to use. Layout, stage and result are shared. */
   mode: GameMode;
+  /** Room mode: shown in the stage HUD as "Room CODE". */
+  roomCode?: string;
+  /** Where the header back link goes; defaults to /home. */
+  backHref?: string;
+  backLabel?: string;
+  /** Replaces the default result screen (room attempts use `RoomResult`). */
+  renderResult?: (result: NonNullable<GameMachineState["result"]>) => ReactNode;
   state: GameMachineState;
   start: () => void;
   setGuess: (guess: Hsv) => void;
@@ -175,6 +182,10 @@ export interface GameViewProps {
  */
 export function GameView({
   mode,
+  roomCode,
+  backHref = "/home",
+  backLabel = "← Home",
+  renderResult,
   state,
   start,
   setGuess,
@@ -183,6 +194,8 @@ export function GameView({
   playAgain,
 }: GameViewProps) {
   const copy = MODE_COPY[mode];
+  const stageLabel = mode === "room" && roomCode ? `Room ${roomCode}` : copy.name;
+  const guessCountdown = getGuessCountdown(state);
 
   function renderPhase() {
     switch (state.phase) {
@@ -269,7 +282,7 @@ export function GameView({
             />
             <GameStage
               roundNumber={state.roundIndex + 1}
-              modeLabel={copy.name}
+              modeLabel={stageLabel}
               phaseLabel="Memorise swatch"
               countdown={{
                 remainingMs: state.revealRemainingMs,
@@ -314,8 +327,11 @@ export function GameView({
             />
             <GameStage
               roundNumber={state.roundIndex + 1}
-              modeLabel={copy.name}
+              modeLabel={stageLabel}
               phaseLabel="Recreate from memory"
+              countdown={
+                guessCountdown ? { ...guessCountdown, hint: "Lock it in." } : null
+              }
               footer={
                 <div className="flex justify-end">
                   <StageSubmitButton onClick={submitGuess} />
@@ -349,7 +365,11 @@ export function GameView({
 
       case "RESULT":
         return state.result ? (
-          <GameResult result={state.result} onPlayAgain={playAgain} />
+          renderResult ? (
+            renderResult(state.result)
+          ) : (
+            <GameResult result={state.result} onPlayAgain={playAgain} />
+          )
         ) : (
           <GameFallback message="The result could not be loaded." retry={retry} />
         );
@@ -392,7 +412,7 @@ export function GameView({
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <PageHeader mode={mode} title={copy.name} backHref="/home" backLabel="← Home" />
+      <PageHeader mode={mode} title={copy.name} backHref={backHref} backLabel={backLabel} />
       <div className="mt-6">{renderPhase()}</div>
     </div>
   );

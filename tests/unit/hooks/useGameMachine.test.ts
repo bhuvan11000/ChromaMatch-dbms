@@ -4,6 +4,7 @@ import {
   buildStartBody,
   buildSubmitBody,
   gameMachineReducer,
+  getGuessCountdown,
   initialGameMachineState,
   type GameMachineState,
 } from "@/hooks/useGameMachine";
@@ -276,5 +277,106 @@ describe("request builders", () => {
     expect(body).toEqual({ gameToken: "signed-game-token", guesses });
     expect(Object.keys(body).sort()).toEqual(["gameToken", "guesses"]);
     expect(body.guesses).not.toBe(guesses);
+  });
+});
+
+describe("room options", () => {
+  it("posts the room code for room mode only", () => {
+    expect(buildStartBody({ mode: "room", roomCode: "ABCD2345" })).toEqual({
+      mode: "room",
+      roomCode: "ABCD2345",
+    });
+    expect(buildStartBody({ mode: "global", roomCode: "ABCD2345" })).toEqual({ mode: "global" });
+  });
+
+  it("includes timedOut in the submit body only when provided", () => {
+    const guesses = [{ ...SLIDER_DEFAULTS }, { ...SLIDER_DEFAULTS }, { ...SLIDER_DEFAULTS }];
+
+    expect(buildSubmitBody("t", guesses, [false, true, false])).toEqual({
+      gameToken: "t",
+      guesses,
+      timedOut: [false, true, false],
+    });
+    expect(buildSubmitBody("t", guesses)).not.toHaveProperty("timedOut");
+  });
+});
+
+describe("timed room guess window", () => {
+  const TIMED: GameStartResponse = {
+    ...GAME,
+    mode: "room",
+    timerSeconds: 5,
+    roomCode: "ABCD2345",
+  };
+
+  function timedGuessing(): GameMachineState {
+    const reveal = gameMachineReducer(starting(), { type: "GAME_STARTED", game: TIMED });
+    return gameMachineReducer(reveal, { type: "REVEAL_ENDED" });
+  }
+
+  it("starts the guess countdown at ROUND_GUESS with timerSeconds * 1000", () => {
+    const reveal = gameMachineReducer(starting(), { type: "GAME_STARTED", game: TIMED });
+    expect(getGuessCountdown(reveal)).toBeNull();
+
+    const guessing = gameMachineReducer(reveal, { type: "REVEAL_ENDED" });
+    expect(guessing.guessRemainingMs).toBe(5000);
+    expect(getGuessCountdown(guessing)).toEqual({
+      remainingMs: 5000,
+      totalMs: 5000,
+      label: "Guess window",
+    });
+  });
+
+  it("ticks, clamps and ignores ticks outside ROUND_GUESS", () => {
+    const guessing = timedGuessing();
+
+    expect(gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: 1234 }).guessRemainingMs).toBe(1234);
+    expect(gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: -50 }).guessRemainingMs).toBe(0);
+    expect(gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: 99_999 }).guessRemainingMs).toBe(5000);
+
+    const reveal = gameMachineReducer(starting(), { type: "GAME_STARTED", game: TIMED });
+    expect(gameMachineReducer(reveal, { type: "GUESS_TICK", remainingMs: 10 })).toBe(reveal);
+  });
+
+  it("auto-submits the current slider values with timedOut=true and resets next round", () => {
+    let state = gameMachineReducer(timedGuessing(), {
+      type: "SET_GUESS",
+      guess: { h: 200, s: 50, v: 50 },
+    });
+    state = gameMachineReducer(state, { type: "GUESS_TICK", remainingMs: 0 });
+    state = gameMachineReducer(state, { type: "SUBMIT_GUESS", timedOut: true });
+
+    expect(state.phase).toBe("ROUND_REVEAL");
+    expect(state.guesses[0]?.h).toBe(200);
+    expect(state.timedOut).toEqual([true, false, false]);
+
+    // A duplicate expiry dispatch while revealing is a no-op (no second submit path).
+    expect(gameMachineReducer(state, { type: "SUBMIT_GUESS", timedOut: true })).toBe(state);
+
+    const next = gameMachineReducer(state, { type: "REVEAL_ENDED" });
+    expect(next.guessRemainingMs).toBe(5000);
+  });
+
+  it("collects timedOut flags for all three rounds then submits", () => {
+    let state = timedGuessing();
+    const flags = [true, false, true];
+
+    for (let round = 0; round < ROUNDS_PER_GAME; round += 1) {
+      state = gameMachineReducer(state, { type: "SUBMIT_GUESS", timedOut: flags[round] });
+      if (round < ROUNDS_PER_GAME - 1) {
+        state = gameMachineReducer(state, { type: "REVEAL_ENDED" });
+      }
+    }
+
+    expect(state.phase).toBe("SUBMITTING");
+    expect(state.timedOut).toEqual(flags);
+    expect(state.guessRemainingMs).toBe(0);
+  });
+
+  it("has no countdown for untimed games", () => {
+    const guessing = gameMachineReducer(revealing(), { type: "REVEAL_ENDED" });
+
+    expect(guessing.guessRemainingMs).toBe(0);
+    expect(getGuessCountdown(guessing)).toBeNull();
   });
 });
