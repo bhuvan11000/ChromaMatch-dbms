@@ -29,6 +29,12 @@ interface ResultNotice {
   detail?: string;
 }
 
+/** Daily streak lengths that earn a celebration (UI_THEME §5). */
+export const STREAK_MILESTONES = [3, 7, 30] as const;
+
+const EMPHASIZED_LINK_CLASSES =
+  "cm-keycap cm-keycap-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border-2 border-primary bg-primary/10 px-6 py-3 font-display text-base font-semibold tracking-tight text-foreground select-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
+
 const OUTLINE_LINK_CLASSES =
   "cm-keycap cm-keycap-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border-2 border-border bg-transparent px-6 py-3 font-display text-base font-semibold tracking-tight text-foreground select-none hover:border-muted-foreground/50 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
 
@@ -135,6 +141,7 @@ export interface GameResultProps {
  * them; this component never imports the scoring domain module.
  */
 export function GameResult({ result, onPlayAgain, className }: GameResultProps) {
+  const isDaily = result.mode === "daily";
   const pb = result.pb;
   const isFirstPb = pb !== null && pb.previous === null;
   const isNewPb = pb !== null && (pb.beatExisting || isFirstPb);
@@ -144,15 +151,32 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
   if (pb && isNewPb) {
     notices.push({
       kind: "pb",
-      title: isFirstPb ? "First Global benchmark" : "New personal best!",
+      title: isFirstPb
+        ? isDaily
+          ? "First Daily benchmark"
+          : "First Global benchmark"
+        : isDaily
+          ? "New daily best!"
+          : "New personal best!",
       subtitle: isFirstPb
-        ? "Your first score is on the board."
+        ? isDaily
+          ? "Your first score of the day is on the board."
+          : "Your first score is on the board."
         : `Previous best ${formatScore(pb.previous ?? 0)}.`,
       detail: isFirstPb
         ? `Set at ${formatScore(pb.current)} / ${MAX_GAME_SCORE}`
         : `+${formatScore(pb.current - (pb.previous ?? 0))} over your previous best`,
     });
   }
+
+  // The SQL result has no "previous streak", so celebrate only on the first run
+  // of the day (the only run that can extend a streak) and only at a milestone.
+  const streak = isDaily ? (result.streak ?? null) : null;
+  const streakMilestone =
+    streak !== null &&
+    isFirstPb &&
+    (STREAK_MILESTONES as readonly number[]).includes(streak.current);
+
 
   for (const achievement of result.achievements) {
     notices.push({
@@ -174,13 +198,13 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="min-w-0">
             <p className="font-mono text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
-              Global · Flash complete
+              {isDaily ? "Daily · Shared palette complete" : "Global · Flash complete"}
             </p>
             <h2
               id="game-result-heading"
               className="mt-2 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
             >
-              Palette logged.
+              {isDaily ? "Daily logged." : "Palette logged."}
             </h2>
           </div>
 
@@ -232,6 +256,34 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
             </div>
           ) : null}
         </div>
+      ) : null}
+
+      {streak && streakMilestone ? (
+        <Celebration
+          kind="streak"
+          title={`${streak.current}-day streak!`}
+          subtitle="You keep showing up."
+          detail={`Longest streak ${streak.longest}`}
+        />
+      ) : null}
+
+      {streak ? (
+        <Card data-testid="daily-streak" className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4 sm:p-5">
+          <h3 className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
+            Daily streak
+          </h3>
+          <p className="font-display text-lg font-bold tracking-tight tabular-nums">
+            {streak.current}
+            <span className="text-xs font-medium text-muted-foreground">
+              {" "}
+              {streak.current === 1 ? "day" : "days"} current
+            </span>
+          </p>
+          <p className="font-display text-lg font-bold tracking-tight tabular-nums">
+            {streak.longest}
+            <span className="text-xs font-medium text-muted-foreground"> longest</span>
+          </p>
+        </Card>
       ) : null}
 
       <div className="space-y-4">
@@ -300,14 +352,29 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
           <PlayIcon />
           Play again
         </Button>
-        <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
-          <TrophyIcon />
-          Global board
-        </a>
-        <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
-          <TrophyIcon />
-          Daily board
-        </a>
+        {isDaily ? (
+          <>
+            <a href="/leaderboard/daily" className={EMPHASIZED_LINK_CLASSES}>
+              <TrophyIcon />
+              Daily board
+            </a>
+            <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
+              <TrophyIcon />
+              Global board
+            </a>
+          </>
+        ) : (
+          <>
+            <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
+              <TrophyIcon />
+              Global board
+            </a>
+            <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
+              <TrophyIcon />
+              Daily board
+            </a>
+          </>
+        )}
       </div>
     </section>
   );

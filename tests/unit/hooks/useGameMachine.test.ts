@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildStartBody,
+  buildSubmitBody,
   gameMachineReducer,
   initialGameMachineState,
   type GameMachineState,
@@ -247,5 +249,32 @@ describe("gameMachineReducer", () => {
     expect(gameMachineReducer(start, { type: "START" })).toBe(start);
     expect(gameMachineReducer(start, { type: "RETRY" })).toBe(start);
     expect(gameMachineReducer(start, { type: "RESET" })).toBe(initialGameMachineState);
+  });
+});
+
+describe("request builders", () => {
+  it("posts mode global by default so existing Global callers are unchanged", () => {
+    expect(buildStartBody()).toEqual({ mode: "global" });
+    expect(buildStartBody({})).toEqual({ mode: "global" });
+  });
+
+  it("posts mode daily when the daily option is set, without a room code", () => {
+    const body = buildStartBody({ mode: "daily" });
+
+    expect(body).toEqual({ mode: "daily" });
+    expect(body).not.toHaveProperty("roomCode");
+  });
+
+  it("submits only the token and guesses (no timedOut, targets or scores)", () => {
+    const guesses = [
+      { h: 1, s: 2, v: 3 },
+      { h: 4, s: 5, v: 6 },
+      { h: 7, s: 8, v: 9 },
+    ];
+    const body = buildSubmitBody("signed-game-token", guesses);
+
+    expect(body).toEqual({ gameToken: "signed-game-token", guesses });
+    expect(Object.keys(body).sort()).toEqual(["gameToken", "guesses"]);
+    expect(body.guesses).not.toBe(guesses);
   });
 });
