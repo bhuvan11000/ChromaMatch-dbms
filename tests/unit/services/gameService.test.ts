@@ -2,8 +2,18 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 const mocks = vi.hoisted(() => ({
   submitGameResult: vi.fn(),
+  submitRoomAttempt: vi.fn(),
   insertGame: vi.fn(),
   getOrCreateToday: vi.fn(),
+  findRoomByCode: vi.fn(),
+  findRoomMember: vi.fn(),
+  listRoomColors: vi.fn(),
+}));
+
+vi.mock("@/lib/db/pg/queries/rooms", () => ({
+  findRoomByCode: mocks.findRoomByCode,
+  findRoomMember: mocks.findRoomMember,
+  listRoomColors: mocks.listRoomColors,
 }));
 
 vi.mock("@/lib/services/dailyChallengeService", () => ({
@@ -12,6 +22,7 @@ vi.mock("@/lib/services/dailyChallengeService", () => ({
 
 vi.mock("@/lib/db/pg/functions", () => ({
   submitGameResult: mocks.submitGameResult,
+  submitRoomAttempt: mocks.submitRoomAttempt,
 }));
 
 vi.mock("@/lib/db/mongo/historyRepo", async (importOriginal) => {
@@ -91,15 +102,6 @@ describe("startGame", () => {
       result.rounds.map((round) => round.target),
     );
     expect(result.expiresAt).toBe(new Date(claims.exp * 1000).toISOString());
-  });
-
-  it("keeps Room as a clear NOT_IMPLEMENTED internal error (Daily is implemented)", async () => {
-    await expect(
-      startGame(7, { mode: "room", roomCode: "ABCD2345" }, GAME_TEST_NOW),
-    ).rejects.toMatchObject({
-      code: "INTERNAL_ERROR",
-      message: expect.stringContaining("NOT_IMPLEMENTED"),
-    });
   });
 });
 
@@ -377,19 +379,6 @@ describe("submitGame", () => {
 
     expect(mocks.submitGameResult).not.toHaveBeenCalled();
   });
-
-  it("keeps Room submissions as NOT_IMPLEMENTED (Daily is implemented)", async () => {
-    const room = await mintGameToken({ mode: "room" });
-
-    await expect(
-      submitGame(7, { gameToken: room.token, guesses: FIXED_GUESSES }, GAME_TEST_NOW),
-    ).rejects.toMatchObject({
-      code: "INTERNAL_ERROR",
-      message: expect.stringContaining("NOT_IMPLEMENTED"),
-    });
-
-    expect(mocks.submitGameResult).not.toHaveBeenCalled();
-  });
 });
 
 describe("submitGame (Daily)", () => {
@@ -522,5 +511,315 @@ describe("submitGame (Daily)", () => {
       submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW),
     ).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
     expect(mocks.insertGame).not.toHaveBeenCalled();
+  });
+});
+
+/* ------------------------------ Room mode ------------------------------ */
+
+const ROOM_COLORS = [
+  { h: 214.6, s: 62, v: 80.5 },
+  { h: 12, s: 90, v: 70 },
+  { h: 301.3, s: 45.5, v: 33 },
+] as const;
+
+function roomRecord(overrides: Record<string, unknown> = {}) {
+  return {
+    roomId: 7,
+    code: "ABCD2345",
+    creatorId: 1,
+    roomSize: 4,
+    timerSeconds: 10,
+    attemptsLimit: 3,
+    status: "in_progress",
+    createdAt: new Date("2026-10-29T12:00:00.000Z"),
+    startedAt: new Date("2026-10-29T12:01:00.000Z"),
+    endedAt: null,
+    ...overrides,
+  };
+}
+
+function memberRecord(overrides: Record<string, unknown> = {}) {
+  return {
+    status: "active",
+    attemptsUsed: 0,
+    bestScore: null,
+    joinedAt: new Date("2026-10-29T12:00:00.000Z"),
+    ...overrides,
+  };
+}
+
+function roomSqlResult(overrides: Record<string, unknown> = {}) {
+  return {
+    attempt_number: 2,
+    total_score: EXPECTED_TOTAL,
+    best_score: 27.5,
+    is_new_best: false,
+    attempts_remaining: 1,
+    member_status: "active",
+    room_status: "in_progress",
+    ...overrides,
+  };
+}
+
+describe("startGame (Room)", () => {
+  beforeEach(() => {
+    mocks.findRoomByCode.mockResolvedValue(roomRecord());
+    mocks.findRoomMember.mockResolvedValue(memberRecord());
+    mocks.listRoomColors.mockResolvedValue([...ROOM_COLORS]);
+  });
+
+  it("signs a token with rid, tmr and a colour-number permutation", async () => {
+    const result = await startGame(
+      7,
+      { mode: "room", roomCode: " abcd2345 " },
+      GAME_TEST_NOW,
+    );
+
+    expect(mocks.findRoomByCode).toHaveBeenCalledWith("ABCD2345");
+    expect(result).toMatchObject({
+      mode: "room",
+      revealMs: REVEAL_MS,
+      timerSeconds: 10,
+      roomCode: "ABCD2345",
+      challengeDate: null,
+    });
+
+    const claims = await verifyGameToken(result.gameToken, {
+      userId: 7,
+      now: new Date(GAME_TEST_NOW.getTime() + 20_000),
+    });
+
+    expect(claims.mode).toBe("room");
+    expect(claims.rid).toBe(7);
+    expect(claims.tmr).toBe(10);
+    expect(claims.cid).toBeUndefined();
+    expect([...claims.rounds.map((round) => round.n)].sort()).toEqual([1, 2, 3]);
+
+    claims.rounds.forEach((round, playIndex) => {
+      expect({ h: round.h, s: round.s, v: round.v }).toEqual(ROOM_COLORS[(round.n ?? 0) - 1]);
+      expect(result.rounds[playIndex]?.target).toEqual(ROOM_COLORS[(round.n ?? 0) - 1]);
+    });
+  });
+
+  it("signs tmr null and returns timerSeconds null for untimed rooms", async () => {
+    mocks.findRoomByCode.mockResolvedValue(roomRecord({ timerSeconds: null }));
+
+    const result = await startGame(7, { mode: "room", roomCode: "ABCD2345" }, GAME_TEST_NOW);
+    const claims = await verifyGameToken(result.gameToken, {
+      userId: 7,
+      now: new Date(GAME_TEST_NOW.getTime() + 20_000),
+    });
+
+    expect(result.timerSeconds).toBeNull();
+    expect(claims.tmr).toBeNull();
+  });
+
+  it("checks in order: not found, non-member, status, member status, attempts", async () => {
+    const start = () => startGame(7, { mode: "room", roomCode: "ABCD2345" }, GAME_TEST_NOW);
+
+    mocks.findRoomByCode.mockResolvedValue(null);
+    await expect(start()).rejects.toMatchObject({ code: "ROOM_NOT_FOUND" });
+
+    // Non-members always get 403, even for a room that is not in progress.
+    mocks.findRoomByCode.mockResolvedValue(roomRecord({ status: "finished" }));
+    mocks.findRoomMember.mockResolvedValue(null);
+    await expect(start()).rejects.toMatchObject({ code: "NOT_ROOM_MEMBER" });
+
+    mocks.findRoomMember.mockResolvedValue(memberRecord());
+    mocks.findRoomByCode.mockResolvedValue(roomRecord({ status: "lobby" }));
+    await expect(start()).rejects.toMatchObject({ code: "ROOM_NOT_IN_PROGRESS" });
+
+    mocks.findRoomByCode.mockResolvedValue(roomRecord());
+    mocks.findRoomMember.mockResolvedValue(memberRecord({ status: "left" }));
+    await expect(start()).rejects.toMatchObject({ code: "MEMBER_NOT_ACTIVE" });
+
+    mocks.findRoomMember.mockResolvedValue(memberRecord({ attemptsUsed: 3 }));
+    await expect(start()).rejects.toMatchObject({ code: "ATTEMPTS_EXHAUSTED" });
+
+    expect(mocks.listRoomColors).not.toHaveBeenCalled();
+    expect(mocks.submitRoomAttempt).not.toHaveBeenCalled();
+  });
+
+  it("does not consume an attempt at start", async () => {
+    await startGame(7, { mode: "room", roomCode: "ABCD2345" }, GAME_TEST_NOW);
+
+    expect(mocks.submitRoomAttempt).not.toHaveBeenCalled();
+    expect(mocks.submitGameResult).not.toHaveBeenCalled();
+  });
+});
+
+describe("submitGame (Room)", () => {
+  beforeEach(() => {
+    mocks.submitRoomAttempt.mockResolvedValue(roomSqlResult());
+  });
+
+  it("calls submit_room_attempt exactly once and never submit_game_result", async () => {
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: null });
+
+    await submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW);
+
+    expect(mocks.submitRoomAttempt).toHaveBeenCalledTimes(1);
+    expect(mocks.submitRoomAttempt).toHaveBeenCalledWith({
+      userId: 7,
+      roomId: 7,
+      roundScores: [...EXPECTED_ROUND_SCORES],
+    });
+    expect(mocks.submitGameResult).not.toHaveBeenCalled();
+  });
+
+  it("returns the room response with null pb/streak/totalGamesPlayed and timedOut on every round", async () => {
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: null });
+
+    const result = await submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW);
+
+    expect(result).toMatchObject({
+      mode: "room",
+      totalScore: EXPECTED_TOTAL,
+      totalGamesPlayed: null,
+      pb: null,
+      streak: null,
+      achievements: [],
+      room: {
+        attemptNumber: 2,
+        bestScore: 27.5,
+        isNewBest: false,
+        attemptsRemaining: 1,
+        memberStatus: "active",
+        roomStatus: "in_progress",
+      },
+    });
+    expect(result.rounds.map((round) => round.timedOut)).toEqual([false, false, false]);
+    expect(result.rounds.map((round) => round.score)).toEqual([...EXPECTED_ROUND_SCORES]);
+  });
+
+  it("writes the Mongo room document with room_id, attempt_number and timed_out", async () => {
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: 10 });
+
+    await submitGame(
+      7,
+      { gameToken: token, guesses: FIXED_GUESSES, timedOut: [false, true, false] },
+      GAME_TEST_NOW,
+    );
+
+    expect(mocks.insertGame).toHaveBeenCalledTimes(1);
+    const document = mocks.insertGame.mock.calls[0]?.[0];
+
+    expect(document).toMatchObject({
+      user_id: 7,
+      mode: "room",
+      room_id: 7,
+      attempt_number: 2,
+      played_at: GAME_TEST_NOW,
+    });
+    expect(document).not.toHaveProperty("daily_challenge_id");
+    expect(document.rounds.map((round: { color_number: number }) => round.color_number)).toEqual([
+      3, 1, 2,
+    ]);
+    expect(document.rounds.map((round: { timed_out: boolean }) => round.timed_out)).toEqual([
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  it("defaults timed_out to all false when the client sends none", async () => {
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: 10 });
+
+    await submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW);
+
+    const document = mocks.insertGame.mock.calls[0]?.[0];
+    expect(document.rounds.map((round: { timed_out: boolean }) => round.timed_out)).toEqual([
+      false,
+      false,
+      false,
+    ]);
+  });
+
+  it("allows timedOut flags for timed rooms", async () => {
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: 5 });
+
+    const result = await submitGame(
+      7,
+      { gameToken: token, guesses: FIXED_GUESSES, timedOut: [true, true, false] },
+      GAME_TEST_NOW,
+    );
+
+    expect(result.rounds.map((round) => round.timedOut)).toEqual([true, true, false]);
+  });
+
+  it("rejects timedOut=true for untimed rooms but accepts all-false", async () => {
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: null });
+
+    await expect(
+      submitGame(
+        7,
+        { gameToken: token, guesses: FIXED_GUESSES, timedOut: [false, true, false] },
+        GAME_TEST_NOW,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.submitRoomAttempt).not.toHaveBeenCalled();
+
+    await expect(
+      submitGame(
+        7,
+        { gameToken: token, guesses: FIXED_GUESSES, timedOut: [false, false, false] },
+        GAME_TEST_NOW,
+      ),
+    ).resolves.toMatchObject({ mode: "room" });
+  });
+
+  it("rejects a timedOut array of the wrong length", async () => {
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: 10 });
+
+    await expect(
+      submitGame(
+        7,
+        { gameToken: token, guesses: FIXED_GUESSES, timedOut: [true] } as unknown as GameSubmitRequest,
+        GAME_TEST_NOW,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("does not write Mongo when the room SQL function throws", async () => {
+    mocks.submitRoomAttempt.mockRejectedValue(new AppError("ROOM_NOT_IN_PROGRESS"));
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: null });
+
+    await expect(
+      submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW),
+    ).rejects.toMatchObject({ code: "ROOM_NOT_IN_PROGRESS" });
+    expect(mocks.insertGame).not.toHaveBeenCalled();
+  });
+
+  it("still succeeds when Mongo fails", async () => {
+    mocks.insertGame.mockRejectedValue(new Error("mongo down"));
+    vi.spyOn(logger, "warn").mockImplementation(() => {});
+    vi.spyOn(logger, "error").mockImplementation(() => {});
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: null });
+
+    const result = await submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW);
+
+    expect(result.room?.attemptNumber).toBe(2);
+    expect(mocks.insertGame).toHaveBeenCalledTimes(2);
+  });
+
+  it("reflects a finished room in the response", async () => {
+    mocks.submitRoomAttempt.mockResolvedValue(
+      roomSqlResult({
+        attempts_remaining: 0,
+        member_status: "finished",
+        room_status: "finished",
+        is_new_best: true,
+      }),
+    );
+    const { token } = await mintGameToken({ mode: "room", rid: 7, tmr: null });
+
+    const result = await submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW);
+
+    expect(result.room).toMatchObject({
+      attemptsRemaining: 0,
+      memberStatus: "finished",
+      roomStatus: "finished",
+      isNewBest: true,
+    });
   });
 });

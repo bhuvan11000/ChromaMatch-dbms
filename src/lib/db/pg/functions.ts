@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { AppError } from "@/lib/errors";
 
 import { getDb } from "./client";
-import { mapPgError } from "./errors";
+import { isRoomCodeConflict, mapPgError } from "./errors";
 
 /**
  * Typed wrappers around the PostgreSQL game/daily functions.
@@ -130,7 +130,19 @@ export interface CreateRoomResult {
   room_code: string;
 }
 
-/** Calls `create_room`. A duplicate code raises `23505`; the service retries. */
+/**
+ * Thrown by `createRoom` when the generated code already exists
+ * (`23505` on `rooms_room_code_key`). `roomService` catches it and retries
+ * with a fresh code; every other failure still goes through `mapPgError`.
+ */
+export class RoomCodeConflictError extends Error {
+  constructor() {
+    super("Room code already exists.");
+    this.name = "RoomCodeConflictError";
+  }
+}
+
+/** Calls `create_room`. A duplicate code throws `RoomCodeConflictError`. */
 export async function createRoom(input: CreateRoomInput): Promise<CreateRoomResult> {
   try {
     const rows = await getDb().execute<{ result: unknown }>(sql`
@@ -150,6 +162,9 @@ export async function createRoom(input: CreateRoomInput): Promise<CreateRoomResu
 
     return parseJsonb<CreateRoomResult>(raw);
   } catch (error) {
+    if (isRoomCodeConflict(error)) {
+      throw new RoomCodeConflictError();
+    }
     throw mapPgError(error);
   }
 }
