@@ -1,0 +1,3157 @@
+From 7888afdbf6bd0e6ae2723a56c6db2ccbc138a308 Mon Sep 17 00:00:00 2001
+From: ChromaMatch Dev <dev@chromamatch.local>
+Date: Sun, 8 Nov 2026 00:43:10 +0000
+Subject: [PATCH] feat(daily): daily challenge service, routes and UI
+
+Lazy race-safe challenge creation, Daily branch of start/submit,
+GET /api/daily/today, /play/daily, live Home Daily card, Daily result copy
+and streak, plus unit and integration tests.
+---
+ AGENTS.md                                     |   7 +-
+ UNCERTAINTIES.md                              |  10 +-
+ src/app/(app)/home/page.tsx                   |   5 +-
+ src/app/(app)/play/daily/page.tsx             |  23 +
+ src/app/api/daily/today/route.ts              |  18 +
+ src/components/game/DailyGameView.tsx         |  10 +
+ src/components/game/GameResult.tsx            |  91 +++-
+ src/components/game/GameView.tsx              | 399 ++++++++++++++++++
+ src/components/game/GlobalGameView.tsx        | 339 +--------------
+ src/components/game/index.ts                  |   6 +
+ src/components/home/DailyCard.tsx             | 112 +++++
+ src/hooks/useDailyToday.ts                    |  80 ++++
+ src/hooks/useGameMachine.ts                   |  33 +-
+ src/lib/db/pg/queries/daily.ts                | 160 +++++++
+ src/lib/format/countdown.ts                   |  30 ++
+ src/lib/schemas/daily.ts                      |  30 ++
+ src/lib/services/dailyChallengeService.ts     | 106 +++++
+ src/lib/services/gameService.ts               |  71 +++-
+ tests/integration/daily-service.test.ts       | 375 ++++++++++++++++
+ tests/unit/api/daily.test.ts                  | 100 +++++
+ tests/unit/format/countdown.test.ts           |  41 ++
+ tests/unit/hooks/useGameMachine.test.ts       |  29 ++
+ .../services/dailyChallengeService.test.ts    | 239 +++++++++++
+ tests/unit/services/gameService.test.ts       | 219 +++++++++-
+ tests/unit/ui/dailyGameView.test.tsx          | 163 +++++++
+ 25 files changed, 2322 insertions(+), 374 deletions(-)
+ create mode 100644 src/app/(app)/play/daily/page.tsx
+ create mode 100644 src/app/api/daily/today/route.ts
+ create mode 100644 src/components/game/DailyGameView.tsx
+ create mode 100644 src/components/game/GameView.tsx
+ create mode 100644 src/components/home/DailyCard.tsx
+ create mode 100644 src/hooks/useDailyToday.ts
+ create mode 100644 src/lib/db/pg/queries/daily.ts
+ create mode 100644 src/lib/format/countdown.ts
+ create mode 100644 src/lib/schemas/daily.ts
+ create mode 100644 src/lib/services/dailyChallengeService.ts
+ create mode 100644 tests/integration/daily-service.test.ts
+ create mode 100644 tests/unit/api/daily.test.ts
+ create mode 100644 tests/unit/format/countdown.test.ts
+ create mode 100644 tests/unit/services/dailyChallengeService.test.ts
+ create mode 100644 tests/unit/ui/dailyGameView.test.tsx
+
+diff --git a/AGENTS.md b/AGENTS.md
+index 6c198c0..38f1ae2 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -11,7 +11,8 @@ Repo-specific rules for AI coding agents. The design docs are the contract; this
+ ## Current status
+ - The repository is scaffolded, not docs-only. Next.js 16 App Router, TypeScript strict, Tailwind 4, the TanStack Query provider, ESLint, Prettier, Vitest, Docker Compose, `.env.example`, and GitHub Actions CI are in place.
+ - Implemented: the app shell (`src/app`), root configuration, exact-pinned dependencies, the §5.1 folder skeleton, CI (`lint → typecheck → test → build`), §5.3 constants and validated env (`src/lib/config`), `AppError` + the full §8.1 catalog (`src/lib/errors.ts`), structured JSON logging (`src/lib/logger.ts`), the Origin/Content-Type check (`src/lib/auth/origin.ts`), the API wrapper (`withHandler`, `json`, `apiError`, `parseBody`, rate-limit hook in `src/lib/api`), Docker Compose for PostgreSQL 16 + MongoDB 7, the postgres.js/Drizzle client (`src/lib/db/pg/client.ts`), the PostgreSQL schema + migration 1 (`src/lib/db/pg/schema.ts`, `drizzle/0000_chemical_zaran.sql`: 9 tables with PKs/FKs/UNIQUEs/simple CHECKs) plus custom migrations 2–9 (`0001_cross_column_checks.sql`, `0002_indexes.sql`, `0003_triggers.sql`, `0004_game_functions.sql`, `0005_daily_function.sql`, `0006_room_functions.sql`, `0007_admin_procedures.sql`, `0008_views.sql`: cross-column checks, §9 indexes, room triggers, `evaluate_achievements`/`submit_game_result`, `ensure_daily_challenge`, the six room functions, the two admin procedures, and the three leaderboard/scoreboard views), numeric mappers (`src/lib/db/pg/mappers.ts`), typed function/procedure wrappers (`src/lib/db/pg/functions.ts`), leaderboard/scoreboard view readers (`src/lib/db/pg/queries/leaderboards.ts`, `src/lib/db/pg/queries/rooms.ts`), the Postgres error mapper (`src/lib/db/pg/errors.ts`), idempotent achievement/admin seeds (`scripts/seed-achievements.ts`, `scripts/seed-admin.ts`), the MongoClient singleton (`src/lib/db/mongo/client.ts`), idempotent Mongo collection/validator/index setup (`scripts/init-mongo.ts`: §7.6 JSON Schema and the four §7.4 indexes), the Mongo history builder/repository (`src/lib/db/mongo/historyRepo.ts`), the §5.9.5 aggregation catalog (`src/lib/db/mongo/aggregations.ts`), and `GET /api/health` returning `{ postgres: "ok" | "down", mongo: "ok" | "down" }` via `healthService` with 1.5 s pings, and the §5.4 pure domain modules (`src/lib/domain/{hsv,scoring,colors,shuffle,time,streak}.ts`): HSV validation/normalization/tenths/CSS conversion, server-authoritative round/game scoring, crypto random colours, xmur3 + mulberry32 Daily colours, Fisher–Yates permutations, UTC date helpers, and the display streak. Auth/session code is implemented too: argon2id hashing with a dummy verify for unknown emails (`src/lib/auth/password.ts`), HS256 `cm_session` sign/verify plus cookie helpers (`src/lib/auth/session.ts`), `getSession`/`requireUser`/`requireAdmin` with a fresh Postgres role lookup (`src/lib/auth/guards.ts`), auth Zod schemas (`src/lib/schemas/auth.ts`), parameterized user queries (`src/lib/db/pg/queries/users.ts`), `authService` (`register`, `login`, `getMe`), `POST /api/auth/{register,login,logout}` and `GET /api/me`, and an in-memory login/register limiter (10 per 15 min per IP+email) behind the `withHandler` hook. The frontend foundation is implemented: Tailwind 4 light/dark semantic theme (`src/app/globals.css`), the root layout and providers (TanStack Query defaults plus toasts), the `(auth)`/`(app)` route groups, the UI kit (`src/components/ui`: Button, Input, Card, Modal, Toast, Spinner, ErrorMessage), the typed browser fetch wrapper (`src/lib/api-client.ts` + `src/types/api.ts`), `useSession` (`src/hooks/useSession.ts`), the `(auth)/login` and `(auth)/register` forms with shared Zod inline validation and focus handling, the `(app)/home` mode-select screen (Global is linked to `/play/global`; other modes remain placeholders) and logout, and `src/middleware.ts` cookie-signature gating. The **Darkroom Arcade: Studio Console** design system is in place: semantic tokens, tactile keycap utilities and the film-strip brand flourish in `src/app/globals.css`, `Wordmark`, `TestStrip`, the enamel-pin `ModeGlyph` arcade tokens (64 px on `/home`, 48 px in the styleguide), `Celebration`/`ScoreCountUp` and `EmptyState` in `src/components/ui`, the fixed neutral `<GameStage>` (`src/components/game/GameStage.tsx`, `#1e1e1e` in every theme), and the dev-only `/styleguide` showcase (`src/app/styleguide`, 404 in production) documented in `docs/UI_THEME.md`. The Global game screen is implemented at `(app)/play/global`: a pure `useGameMachine` reducer with a small effect layer (start/submit requests, a `performance.now()` rAF reveal window, and `beforeunload`), the six game components (`ColorSwatch`, `RevealCountdown`, `HsvSliders`, `RoundProgress`, `ChannelDiffBars`, `GameResult`) plus the presentational `GlobalGameView`, a dialed.gg-inspired full-canvas reveal, a vertical HSV ramp dock with a live guess canvas, a split target/guess result well, server-returned round scores/deltas, PB/achievement notices and replay/leaderboard actions. The intro, Home mode grid and auth cards use the same playful studio-console treatment; `docs/UI_THEME.md` §7 records the reusable game-round pattern for future modes. The leaderboards are implemented: `leaderboardService` (`getGlobal`, `getDaily`) reads only the `global_leaderboard` and `daily_leaderboard` views, clamps page size to 100, validates daily dates (`INVALID_DATE` for malformed/future dates), defaults the daily date to today UTC, and returns `me` only when the view has a row for the optional viewer; public `GET /api/leaderboards/{global,daily}` routes use `parseQuery` plus optional `getSession`; the public `/leaderboard/{global,daily}` pages use TanStack Query, a UTC-bounded date picker, pagination, empty/loading/error states, a viewer-row highlight, and a `Your rank` card. `/home` links both boards and the Global result screen links to both. Unit tests cover constants, env parsing, the error catalog, Origin checks, API helpers/wrapper, logging, both DB clients, numeric mappers, the health service, the health route, Postgres error mapping, the domain modules, auth password/session/guard behavior, auth schemas, auth service behavior, the auth rate limiter, auth route responses, the API client, middleware routing, the design-system components (`GameStage`, `Celebration`, `ScoreCountUp`, `TestStrip`, wordmark, mode tokens, form/feedback states), the §5.6 game-token module (`src/lib/tokens/gameToken.ts`), the §5.10.4 game schemas (`src/lib/schemas/game.ts`), the Global `gameService` (`src/lib/services/gameService.ts`), `POST /api/games/{start,submit}`, and the Global game-machine reducer/view (`src/hooks/useGameMachine.ts`, `src/components/game/GlobalGameView.tsx`) (`npm test`: 39 files, 321 tests). The integration runner (`vitest.integration.config.ts`) runs schema, constraint, index, trigger, game/daily/room function, admin procedure, view/reader, real error-mapping, seed, Mongo validator/index, history repository, aggregation, auth user-query/registration, service-level Global PB/history, and leaderboard-service tests against the local Docker Postgres and Mongo (`npm run test:int`: 17 files, 126 tests).
+-- Not implemented yet: Daily/Room branches of `gameService` (they throw a clear `INTERNAL_ERROR` with a `NOT_IMPLEMENTED` message), the remaining feature services (`dailyChallengeService`, `roomService`, `statsService`, `adminService`), Zod request/response schemas for those features, their API route handlers, Daily/Room gameplay, room/profile/admin pages, and Playwright.
++- **Daily mode is implemented (step 15):** `queries/daily.ts` readers (`findChallengeByDate`, `listChallengeColors`, `findDailyBest`, `findUserDailyStreak`), `dailyChallengeService` (`getOrCreateToday` lazy race-safe creation that always re-reads the stored colours, `getTodaySummary` which never creates, `getChallengeByDate(date, now)`), the Daily branch of `gameService` (`n = originalIndex + 1`, token `cid`/`cdate`, one `submit_game_result` call with `mode: "daily"`), `src/lib/schemas/daily.ts`, `GET /api/daily/today`, `useDailyToday`/`useResetCountdown` (offset-corrected `resets in` countdown that refetches at zero), the live Home `DailyCard`, `/play/daily` (`DailyGameView` over the shared `GameView`), and Daily copy/streak in `GameResult`. `useGameMachine({ mode })` defaults to `"global"`.
++- Not implemented yet: the Room branch of `gameService` (it throws a clear `INTERNAL_ERROR` with a `NOT_IMPLEMENTED` message), the remaining feature services (`roomService`, `statsService`, `adminService`), room request/response schemas and route handlers, Room gameplay, room/profile/admin pages, and Playwright.
+ - Stub script: `test:e2e` prints `not implemented yet` and exits 0. `db:seed` and `db:seed-admin` run real standalone scripts using `DATABASE_URL_DIRECT`; both load `.env.local` when needed. `mongo:init` runs the real idempotent validator/index setup. `db:generate`, `db:custom`, and `db:migrate` are wired to drizzle-kit; migrations 1–9 exist and `test:int` runs Vitest against the local Docker Postgres and Mongo. Use `npm run db:custom -- --name=<name>` (the script passes the name through).
+ - Tooling pin: exact versions are used. TypeScript 5.9.3 and ESLint 9.39.5 are intentional; the current latest majors conflict with `eslint-config-next@16.4.3`.
+ - Known warnings: Next 16 deprecates `src/middleware.ts` in favour of `src/proxy.ts` (kept per §5.1); ESLint 9.39.5 reports its own end-of-support notice.
+@@ -50,8 +51,8 @@ Next.js App Router + TypeScript strict on the Node runtime; Tailwind; TanStack Q
+ - Submit body is guesses (+ room `timedOut`) and the signed game token only. Targets, color numbers, and play order come only from the verified token — never the request body.
+ - One completed 3-round game is submitted at once. Incomplete games are never persisted. Guesses and `timedOut` live in React state; no `localStorage`, `sessionStorage`, or cookies.
+ - Verify token signature/`typ`/`aud`/`exp`, `sub` = session user, exactly 3 rounds, and elapsed ≥ `GAME_MIN_ELAPSED_SECONDS` (13 s). Token TTL is 2 h. `typ` is a payload claim (`"game"`), not the JWT protected-header `typ`.
+-- `src/lib/tokens/gameToken.ts` already carries the full Daily/Room claim shape (`cid`, `cdate`, `rid`, `tmr`, `n`), but `gameService` only implements Global; Daily/Room throw `AppError("INTERNAL_ERROR", "NOT_IMPLEMENTED: ...")` until steps 15/17.
+-- Daily: the DB row is the source of truth for the day's colors; use the date-seeded generator only when creating a missing day. Room: attempts are consumed at submit, not at start.
++- `src/lib/tokens/gameToken.ts` already carries the full Daily/Room claim shape (`cid`, `cdate`, `rid`, `tmr`, `n`), but `gameService` implements Global and Daily; Room throws `AppError("INTERNAL_ERROR", "NOT_IMPLEMENTED: ...")` until the Rooms step.
++- Daily: the DB row is the source of truth for the day's colors; use the date-seeded generator only when creating a missing day. `ensure_daily_challenge` compares the date with the **DB** clock and rejects any other date, so tests for other days must use fixture challenges (direct SQL), never `ensure_daily_challenge` with a past date. Room: attempts are consumed at submit, not at start.
+ - For submissions, Postgres is authoritative and written first in one SQL function call; Mongo history is written after, best-effort (log + one retry + swallow). Mongo failure must never fail the request or roll back Postgres.
+ - Banned players may log in/play by default (`BANNED_CAN_PLAY`), but are excluded from global/daily leaderboards; room scoreboards show them.
+ - Use Node `crypto` for colors, shuffles, room codes, and tokens. `Math.random()` is forbidden; the daily seeded PRNG is the only exception.
+diff --git a/UNCERTAINTIES.md b/UNCERTAINTIES.md
+index 6cd8453..40f6df4 100644
+--- a/UNCERTAINTIES.md
++++ b/UNCERTAINTIES.md
+@@ -6,7 +6,7 @@
+ > docs, assumptions made while implementing, and follow-ups that need a human
+ > decision. Design-level open items still live in `docs/ChromaMatch_Database_Design.md` §11.
+ 
+-Last updated: 2026-10-30
++Last updated: 2026-11-08
+ 
+ ## How to use
+ 
+@@ -54,12 +54,18 @@ Last updated: 2026-10-30
+ | U-031 | Daily date validation | §5.4.3 types `dateUtc` as `'YYYY-MM-DD'` but does not require `generateDailyColors` to validate it. | The function uses the string verbatim as part of the seed and does not validate the calendar date; callers are expected to pass `utcDateString`/DB dates. | Add strict format/real-date validation if this function can ever receive user input. |
+ | U-032 | PRNG helper visibility | §5.4.3 names xmur3 and mulberry32 but only requires the `generateDailyColors` API. | Both helpers are module-local; Daily determinism is tested through a fixed output snapshot of `generateDailyColors`. | Export them if direct reuse or separate PRNG tests are needed. |
+ | U-033 | Injected RNG validation | §5.4.2 says `generateRandomColor(rng)` takes an RNG but does not define the RNG contract. | The type is `(maxExclusive) => number`; the default is `crypto.randomInt`. The function trusts injected RNG output, so a bad test/injected RNG can produce out-of-range or non-integer tenths. | Add runtime checks if custom RNGs are used outside tests. |
+-| U-034 | `NOT_IMPLEMENTED` error representation | Architecture §8.1 has no `NOT_IMPLEMENTED` code, but Daily/Room `gameService` branches must signal that they are pending steps 15/17. | `gameService` throws `AppError("INTERNAL_ERROR", "NOT_IMPLEMENTED: <mode> mode is not available yet.")`. The HTTP status is 500 and the message is explicit. | Add a dedicated error code or keep the internal-error representation. |
++| U-034 | `NOT_IMPLEMENTED` error representation | Architecture §8.1 has no `NOT_IMPLEMENTED` code, but unfinished `gameService` branches must signal that they are pending. | **Daily is now implemented (step 15).** Room still throws `AppError("INTERNAL_ERROR", "NOT_IMPLEMENTED: room mode is not available yet.")` (HTTP 500, explicit message) until step 16/17. | Add a dedicated error code or keep the internal-error representation. |
+ | U-035 | Game-token `typ` location | §5.6.1 lists `typ: "game"` as a claim, while JWT also has a protected-header `typ` parameter. | `gameToken.ts` writes `typ: "game"` in the **payload** and leaves the protected header as the standard `JWT`. Verification checks the payload claim. | Confirm no intermediary expects a protected-header `typ`. |
+ | U-036 | Global `streak` response | §5.10.4 says Global has `streak` absent/`null`. | `gameService` always returns `streak: null` for Global so the response shape is stable; the Zod response schema allows `null` or absence. | Confirm clients prefer `null` over omitting the key. |
+ | U-037 | Request validation before auth | Architecture §4.7 and the existing auth routes validate the body before resolving the session. | An unauthenticated request with an invalid body receives 400 `VALIDATION_ERROR`, not 401 `UNAUTHENTICATED`. This is consistent with the existing route pattern. | Confirm whether auth should be checked first on game routes. |
+ | U-038 | Game-stage framing | The theme brief says the stage has "no borders"; the approved Direction 1 plan allowed flat neutral `#363636` structural rules and a neutral stage border. | `GameStage` keeps a 1px `--stage-border` frame, a flat header rule, and a flat countdown track outline. No coloured, gradient, glowing or decorative framing exists. | Confirm the strict zero-border reading versus the approved neutral instrument framing. |
+ | U-039 | Styleguide in the production route list | The dev-only page calls `notFound()` when `NODE_ENV=production`. | Verified `/styleguide` returns 404 under `next start`; the route still appears as a static route in the build output. | Confirm the build-output artifact is acceptable. |
++| U-040 | `getChallengeByDate` signature | §5.7.2 lists `getChallengeByDate(date)` but §5.4.5/AGENTS forbid implicit `Date.now()`; a future-date check needs "today". | Implemented as `getChallengeByDate(date, now)`. Malformed or future dates are `INVALID_DATE`; a valid day without a challenge returns `null`. It never creates a row. | Confirm the extra `now` parameter (the leaderboard service already validates its own dates). |
++| U-041 | App/DB clock agreement for Daily creation | `ensure_daily_challenge` compares `p_date` with the **database** `now() AT TIME ZONE 'utc'` and rejects any other date, while `getOrCreateToday` passes `utcDateString(now)` from the **app** clock. | Production assumes both clocks agree on the UTC date. Within a few seconds of 00:00 UTC they could disagree and creation would fail with `INVALID_DATE`; the request is retried naturally by the player. Tests for other days use fixture challenges (direct SQL), never `ensure_daily_challenge` with a past date. | Decide whether `getOrCreateToday` should map an `INVALID_DATE` from SQL to a retry or a clearer error. |
++| U-042 | Daily streak celebration trigger | UI_THEME §5 says the `streak` celebration is for 3/7/30 milestones, but the SQL result carries only the *new* `{current, longest}`, not the previous streak. | `GameResult` celebrates only when `streak.current ∈ {3, 7, 30}` **and** this was the first run of the day (`pb.previous === null`), the only run that can extend a streak. The streak card is always shown for Daily results. | Return the previous streak from `submit_game_result` if exact change detection is wanted (needs a new migration, out of scope). |
++| U-043 | Missing user in `findUserDailyStreak` | The brief types the reader as returning a streak object, not nullable. | It throws `AppError("USER_NOT_FOUND")` if the user row is gone (a signed session can outlive an account). | Confirm 404 vs treating a missing user as an empty streak. |
++| U-044 | Shared game view | The brief allows adding a mode prop to `GlobalGameView` or renaming it. | The implementation moved to `GameView` (mode copy table); `GlobalGameView` and `DailyGameView` are thin wrappers so existing imports/tests are unchanged. | Confirm keeping the wrapper names. |
++| U-045 | Home countdown retry at zero | §5.11.4 says refetch `['daily','today']` at zero. A refetch right at midnight can still return the previous `resetsAt` if clocks differ slightly. | `useResetCountdown` fires `onZero` once per `resetsAt` and retries every 5 s while the countdown stays at zero. | None; revisit if the retry is noisy. |
+ 
+ ## Resolved during implementation
+ 
+diff --git a/src/app/(app)/home/page.tsx b/src/app/(app)/home/page.tsx
+index b2aea3e..7467f03 100644
+--- a/src/app/(app)/home/page.tsx
++++ b/src/app/(app)/home/page.tsx
+@@ -5,6 +5,7 @@ import Link from "next/link";
+ import { useRouter } from "next/navigation";
+ import { useEffect } from "react";
+ 
++import { DailyCard } from "@/components/home/DailyCard";
+ import {
+   Button,
+   Card,
+@@ -250,7 +251,9 @@ export default function HomePage() {
+ 
+         <div className="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+           {MODES.map((mode) =>
+-            mode.kind === "profile" ? (
++            mode.kind === "daily" ? (
++              <DailyCard key={mode.name} />
++            ) : mode.kind === "profile" ? (
+               <Card
+                 key={mode.name}
+                 className="flex min-w-0 items-center gap-4 p-5 sm:col-span-2 lg:col-span-2"
+diff --git a/src/app/(app)/play/daily/page.tsx b/src/app/(app)/play/daily/page.tsx
+new file mode 100644
+index 0000000..7e704d4
+--- /dev/null
++++ b/src/app/(app)/play/daily/page.tsx
+@@ -0,0 +1,23 @@
++"use client";
++
++import { useQueryClient } from "@tanstack/react-query";
++import { useEffect } from "react";
++
++import { DailyGameView } from "@/components/game";
++import { dailyTodayKey } from "@/hooks/useDailyToday";
++import { useGameMachine } from "@/hooks/useGameMachine";
++
++export default function DailyPlayPage() {
++  const machine = useGameMachine({ mode: "daily" });
++  const queryClient = useQueryClient();
++  const result = machine.state.result;
++
++  useEffect(() => {
++    // A finished Daily changes today's best and the streak shown on /home.
++    if (result !== null) {
++      void queryClient.invalidateQueries({ queryKey: dailyTodayKey });
++    }
++  }, [result, queryClient]);
++
++  return <DailyGameView {...machine} />;
++}
+diff --git a/src/app/api/daily/today/route.ts b/src/app/api/daily/today/route.ts
+new file mode 100644
+index 0000000..34c04b0
+--- /dev/null
++++ b/src/app/api/daily/today/route.ts
+@@ -0,0 +1,18 @@
++import { json, withHandler } from "@/lib/api";
++import { requireUser } from "@/lib/auth/guards";
++import { getTodaySummary } from "@/lib/services/dailyChallengeService";
++
++export const runtime = "nodejs";
++export const dynamic = "force-dynamic";
++
++/**
++ * Today's Daily info for the signed-in player — Architecture §5.10.3.
++ *
++ * Read-only: it never creates the challenge and never returns colours.
++ */
++export const GET = withHandler(async (request) => {
++  const session = await requireUser(request);
++  const summary = await getTodaySummary(session.userId, new Date());
++
++  return json(summary);
++});
+diff --git a/src/components/game/DailyGameView.tsx b/src/components/game/DailyGameView.tsx
+new file mode 100644
+index 0000000..535050c
+--- /dev/null
++++ b/src/components/game/DailyGameView.tsx
+@@ -0,0 +1,10 @@
++"use client";
++
++import { GameView, type GameViewProps } from "./GameView";
++
++export type DailyGameViewProps = Omit<GameViewProps, "mode">;
++
++/** Daily game screen: the shared `GameView` with Daily copy and result. */
++export function DailyGameView(props: DailyGameViewProps) {
++  return <GameView mode="daily" {...props} />;
++}
+diff --git a/src/components/game/GameResult.tsx b/src/components/game/GameResult.tsx
+index 38bfc95..675dcea 100644
+--- a/src/components/game/GameResult.tsx
++++ b/src/components/game/GameResult.tsx
+@@ -29,6 +29,12 @@ interface ResultNotice {
+   detail?: string;
+ }
+ 
++/** Daily streak lengths that earn a celebration (UI_THEME §5). */
++export const STREAK_MILESTONES = [3, 7, 30] as const;
++
++const EMPHASIZED_LINK_CLASSES =
++  "cm-keycap cm-keycap-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border-2 border-primary bg-primary/10 px-6 py-3 font-display text-base font-semibold tracking-tight text-foreground select-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
++
+ const OUTLINE_LINK_CLASSES =
+   "cm-keycap cm-keycap-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border-2 border-border bg-transparent px-6 py-3 font-display text-base font-semibold tracking-tight text-foreground select-none hover:border-muted-foreground/50 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
+ 
+@@ -135,6 +141,7 @@ export interface GameResultProps {
+  * them; this component never imports the scoring domain module.
+  */
+ export function GameResult({ result, onPlayAgain, className }: GameResultProps) {
++  const isDaily = result.mode === "daily";
+   const pb = result.pb;
+   const isFirstPb = pb !== null && pb.previous === null;
+   const isNewPb = pb !== null && (pb.beatExisting || isFirstPb);
+@@ -144,9 +151,17 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps)
+   if (pb && isNewPb) {
+     notices.push({
+       kind: "pb",
+-      title: isFirstPb ? "First Global benchmark" : "New personal best!",
++      title: isFirstPb
++        ? isDaily
++          ? "First Daily benchmark"
++          : "First Global benchmark"
++        : isDaily
++          ? "New daily best!"
++          : "New personal best!",
+       subtitle: isFirstPb
+-        ? "Your first score is on the board."
++        ? isDaily
++          ? "Your first score of the day is on the board."
++          : "Your first score is on the board."
+         : `Previous best ${formatScore(pb.previous ?? 0)}.`,
+       detail: isFirstPb
+         ? `Set at ${formatScore(pb.current)} / ${MAX_GAME_SCORE}`
+@@ -154,6 +169,15 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps)
+     });
+   }
+ 
++  // The SQL result has no "previous streak", so celebrate only on the first run
++  // of the day (the only run that can extend a streak) and only at a milestone.
++  const streak = isDaily ? (result.streak ?? null) : null;
++  const streakMilestone =
++    streak !== null &&
++    isFirstPb &&
++    (STREAK_MILESTONES as readonly number[]).includes(streak.current);
++
++
+   for (const achievement of result.achievements) {
+     notices.push({
+       kind: "achievement",
+@@ -174,13 +198,13 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps)
+         <div className="flex flex-wrap items-end justify-between gap-5">
+           <div className="min-w-0">
+             <p className="font-mono text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
+-              Global · Flash complete
++              {isDaily ? "Daily · Shared palette complete" : "Global · Flash complete"}
+             </p>
+             <h2
+               id="game-result-heading"
+               className="mt-2 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
+             >
+-              Palette logged.
++              {isDaily ? "Daily logged." : "Palette logged."}
+             </h2>
+           </div>
+ 
+@@ -234,6 +258,34 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps)
+         </div>
+       ) : null}
+ 
++      {streak && streakMilestone ? (
++        <Celebration
++          kind="streak"
++          title={`${streak.current}-day streak!`}
++          subtitle="You keep showing up."
++          detail={`Longest streak ${streak.longest}`}
++        />
++      ) : null}
++
++      {streak ? (
++        <Card data-testid="daily-streak" className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4 sm:p-5">
++          <h3 className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
++            Daily streak
++          </h3>
++          <p className="font-display text-lg font-bold tracking-tight tabular-nums">
++            {streak.current}
++            <span className="text-xs font-medium text-muted-foreground">
++              {" "}
++              {streak.current === 1 ? "day" : "days"} current
++            </span>
++          </p>
++          <p className="font-display text-lg font-bold tracking-tight tabular-nums">
++            {streak.longest}
++            <span className="text-xs font-medium text-muted-foreground"> longest</span>
++          </p>
++        </Card>
++      ) : null}
++
+       <div className="space-y-4">
+         {result.rounds.map((round) => (
+           <Card key={round.roundNumber} className="overflow-hidden p-0">
+@@ -300,14 +352,29 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps)
+           <PlayIcon />
+           Play again
+         </Button>
+-        <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
+-          <TrophyIcon />
+-          Global board
+-        </a>
+-        <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
+-          <TrophyIcon />
+-          Daily board
+-        </a>
++        {isDaily ? (
++          <>
++            <a href="/leaderboard/daily" className={EMPHASIZED_LINK_CLASSES}>
++              <TrophyIcon />
++              Daily board
++            </a>
++            <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
++              <TrophyIcon />
++              Global board
++            </a>
++          </>
++        ) : (
++          <>
++            <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
++              <TrophyIcon />
++              Global board
++            </a>
++            <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
++              <TrophyIcon />
++              Daily board
++            </a>
++          </>
++        )}
+       </div>
+     </section>
+   );
+diff --git a/src/components/game/GameView.tsx b/src/components/game/GameView.tsx
+new file mode 100644
+index 0000000..44abdc6
+--- /dev/null
++++ b/src/components/game/GameView.tsx
+@@ -0,0 +1,399 @@
++"use client";
++
++import type { CSSProperties } from "react";
++
++import {
++  Button,
++  Card,
++  ErrorMessage,
++  ModeGlyph,
++  Spinner,
++  TestStrip,
++  Wordmark,
++} from "@/components/ui";
++import { ROUNDS_PER_GAME } from "@/lib/config/constants";
++import type { Hsv } from "@/lib/domain/hsv";
++import type { GameMachineState } from "@/hooks/useGameMachine";
++import type { GameMode } from "@/lib/schemas/game";
++
++import { ColorSwatch } from "./ColorSwatch";
++import { GameResult } from "./GameResult";
++import { GameStage } from "./GameStage";
++import { HsvSliders } from "./HsvSliders";
++import { RoundProgress } from "./RoundProgress";
++
++const STAGE_KEYCAP_STYLE = { "--keycap-lip": "var(--stage-border)" } as CSSProperties;
++
++interface ModeCopy {
++  name: string;
++  kicker: string;
++  title: string;
++  blurb: string;
++  cta: string;
++  startingHint: string;
++  chips: readonly string[];
++  note: string;
++}
++
++/** Per-mode copy. Only words differ between modes; the layout is shared. */
++const MODE_COPY: Record<GameMode, ModeCopy> = {
++  global: {
++    name: "Global",
++    kicker: "Global · random palette",
++    title: "Flash. Mix. Repeat.",
++    blurb: "Three random colours. Five seconds each. Rebuild them from memory.",
++    cta: "Play Global",
++    startingHint: "Three random colours incoming",
++    chips: ["3 rounds", "5s flash", "Score /30"],
++    note: "Guesses stay in this tab until you submit.",
++  },
++  daily: {
++    name: "Daily",
++    kicker: "Daily · one shared palette",
++    title: "Same mix. Everyone.",
++    blurb: "Same palette for everyone today. One shared daily mix, five seconds each.",
++    cta: "Play Daily",
++    startingHint: "Today's shared palette incoming",
++    chips: ["3 rounds", "5s flash", "Best of the day"],
++    note: "Your best score of the day counts. Play as often as you like.",
++  },
++  room: {
++    name: "Room",
++    kicker: "Room · shared palette",
++    title: "Same mix. Your room.",
++    blurb: "Everyone in the room gets the same three colours, in their own order.",
++    cta: "Play attempt",
++    startingHint: "Your room's palette incoming",
++    chips: ["3 rounds", "5s flash", "Score /30"],
++    note: "Guesses stay in this tab until you submit.",
++  },
++};
++
++function PageHeader({
++  mode,
++  title,
++  backHref,
++  backLabel,
++}: {
++  mode: GameMode;
++  title: string;
++  backHref: string;
++  backLabel: string;
++}) {
++  return (
++    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
++      <div className="flex min-w-0 items-center gap-3">
++        <ModeGlyph kind={mode} size="md" />
++        <div className="min-w-0">
++          <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
++            Mode
++          </p>
++          <h1 className="truncate text-xl font-bold tracking-tight">{title}</h1>
++        </div>
++      </div>
++
++      <div className="flex items-center gap-3">
++        <a
++          href={backHref}
++          className="inline-flex min-h-9 items-center rounded-[0.625rem] px-2 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
++        >
++          {backLabel}
++        </a>
++        <Wordmark size="sm" />
++      </div>
++    </header>
++  );
++}
++
++function StageSubmitButton({ onClick }: { onClick: () => void }) {
++  return (
++    <button
++      type="button"
++      onClick={onClick}
++      style={STAGE_KEYCAP_STYLE}
++      className="cm-keycap cm-keycap-secondary inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border border-stage-fg/20 bg-stage-fg px-6 py-3 font-display text-base font-semibold tracking-tight text-stage-bg select-none hover:bg-white focus-visible:ring-2 focus-visible:ring-stage-fg focus-visible:ring-offset-2 focus-visible:ring-offset-stage-bg focus-visible:outline-none sm:w-auto"
++    >
++      Submit guess
++      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
++        <path
++          d="M4.5 10h10M10.5 6 14.5 10l-4 4"
++          stroke="currentColor"
++          strokeWidth="1.8"
++          strokeLinecap="round"
++          strokeLinejoin="round"
++        />
++      </svg>
++    </button>
++  );
++}
++
++function PlayArrowIcon() {
++  return (
++    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
++      <path
++        d="M4.5 10h10M10.5 6 14.5 10l-4 4"
++        stroke="currentColor"
++        strokeWidth="1.8"
++        strokeLinecap="round"
++        strokeLinejoin="round"
++      />
++    </svg>
++  );
++}
++
++function GameFallback({ message, retry }: { message: string; retry: () => void }) {
++  return (
++    <div className="mx-auto max-w-xl">
++      <ErrorMessage title="Game unavailable" message={message} onRetry={retry} />
++      <p className="mt-4 text-center text-sm text-muted-foreground">
++        <a
++          href="/home"
++          className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
++        >
++          Back to home
++        </a>
++      </p>
++    </div>
++  );
++}
++
++export interface GameViewProps {
++  /** Which mode's copy to use. Layout, stage and result are shared. */
++  mode: GameMode;
++  state: GameMachineState;
++  start: () => void;
++  setGuess: (guess: Hsv) => void;
++  submitGuess: () => void;
++  retry: () => void;
++  playAgain: () => void;
++}
++
++/**
++ * Presentational game screen shared by Global and Daily. All transitions come
++ * from the reducer, so the reveal/guess/result states can be rendered directly
++ * in component tests.
++ */
++export function GameView({
++  mode,
++  state,
++  start,
++  setGuess,
++  submitGuess,
++  retry,
++  playAgain,
++}: GameViewProps) {
++  const copy = MODE_COPY[mode];
++
++  function renderPhase() {
++    switch (state.phase) {
++      case "IDLE":
++        return (
++          <Card elevated className="relative overflow-hidden p-0">
++            <div aria-hidden="true" className="cm-spectrum-bar h-1.5 w-full" />
++
++            <div className="p-6 sm:p-8">
++              <div className="flex flex-wrap items-start justify-between gap-6">
++                <div className="flex min-w-0 items-start gap-4">
++                  <ModeGlyph kind={mode} size="lg" />
++                  <div className="min-w-0">
++                    <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
++                      {copy.kicker}
++                    </p>
++                    <h2 className="mt-1 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
++                      {copy.title}
++                    </h2>
++                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
++                      {copy.blurb}
++                    </p>
++                  </div>
++                </div>
++
++                <div className="w-full max-w-[11rem] shrink-0">
++                  <TestStrip size="md" mystery className="-rotate-1" />
++                  <p className="mt-2 text-center font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
++                    Three wells. No peeking.
++                  </p>
++                </div>
++              </div>
++
++              <ul className="mt-6 grid gap-2 sm:grid-cols-3">
++                {copy.chips.map((item) => (
++                  <li
++                    key={item}
++                    className="rounded-[0.875rem] border border-border bg-muted/60 px-3 py-2.5 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase"
++                  >
++                    {item}
++                  </li>
++                ))}
++              </ul>
++
++              <div className="mt-6 flex flex-wrap items-center gap-3">
++                <Button size="lg" onClick={start}>
++                  {copy.cta}
++                  <PlayArrowIcon />
++                </Button>
++                <p className="text-xs text-muted-foreground">{copy.note}</p>
++              </div>
++            </div>
++          </Card>
++        );
++
++      case "STARTING":
++        return (
++          <Card elevated className="p-6 sm:p-8">
++            <div className="flex min-h-40 flex-col items-center justify-center gap-3 text-center">
++              <Spinner size="lg" label="Mixing colours" />
++              <p className="font-display text-lg font-bold tracking-tight">
++                Calibrating the stage…
++              </p>
++              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
++                {copy.startingHint}
++              </p>
++            </div>
++          </Card>
++        );
++
++      case "ROUND_REVEAL": {
++        const target = state.game?.rounds[state.roundIndex]?.target;
++
++        if (!state.game || !target) {
++          return <GameFallback message="The round could not be loaded." retry={retry} />;
++        }
++
++        return (
++          <>
++            <RoundProgress
++              currentRound={state.roundIndex + 1}
++              completedRounds={state.guesses.length}
++              className="mb-3"
++            />
++            <GameStage
++              roundNumber={state.roundIndex + 1}
++              modeLabel={copy.name}
++              phaseLabel="Memorise swatch"
++              countdown={{
++                remainingMs: state.revealRemainingMs,
++                totalMs: state.game.revealMs,
++                label: "Reveal window",
++              }}
++            >
++              <div className="relative overflow-hidden rounded-[0.875rem] border-2 border-stage-border">
++                <ColorSwatch
++                  hsv={target}
++                  label={`Round ${state.roundIndex + 1} target colour`}
++                  size="canvas"
++                  tone="stage"
++                  frame="none"
++                  testId="target-swatch"
++                />
++                <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
++                  <span className="self-start rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.18em] text-white uppercase">
++                    Target colour
++                  </span>
++                  <span className="self-end rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] tracking-[0.14em] text-white/80 uppercase">
++                    Hold it
++                  </span>
++                </div>
++              </div>
++            </GameStage>
++          </>
++        );
++      }
++
++      case "ROUND_GUESS": {
++        if (!state.game) {
++          return <GameFallback message="The round could not be loaded." retry={retry} />;
++        }
++
++        return (
++          <>
++            <RoundProgress
++              currentRound={state.roundIndex + 1}
++              completedRounds={state.guesses.length}
++              className="mb-3"
++            />
++            <GameStage
++              roundNumber={state.roundIndex + 1}
++              modeLabel={copy.name}
++              phaseLabel="Recreate from memory"
++              footer={
++                <div className="flex justify-end">
++                  <StageSubmitButton onClick={submitGuess} />
++                </div>
++              }
++            >
++              <HsvSliders
++                value={state.currentGuess}
++                onChange={setGuess}
++                roundLabel={`${String(state.roundIndex + 1).padStart(2, "0")} / ${String(
++                  ROUNDS_PER_GAME,
++                ).padStart(2, "0")}`}
++              />
++            </GameStage>
++          </>
++        );
++      }
++
++      case "SUBMITTING":
++        return (
++          <Card elevated className="p-6 sm:p-8">
++            <div className="flex min-h-40 flex-col items-center justify-center gap-3 text-center">
++              <Spinner size="lg" label="Scoring your guesses" />
++              <p className="font-display text-lg font-bold tracking-tight">Developing your mix…</p>
++              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
++                Three rounds, one honest score
++              </p>
++            </div>
++          </Card>
++        );
++
++      case "RESULT":
++        return state.result ? (
++          <GameResult result={state.result} onPlayAgain={playAgain} />
++        ) : (
++          <GameFallback message="The result could not be loaded." retry={retry} />
++        );
++
++      case "ERROR":
++        return state.error ? (
++          <div className="mx-auto max-w-xl">
++            <ErrorMessage
++              title={
++                state.error.retry === "start"
++                  ? "Couldn't start the game"
++                  : "Couldn't score the game"
++              }
++              message={state.error.message}
++              onRetry={retry}
++              retryLabel="Try again"
++            />
++            {state.error.retry === "submit" ? (
++              <p className="mt-3 text-center text-sm text-muted-foreground">
++                Your guesses are still in this tab.
++              </p>
++            ) : null}
++            <p className="mt-4 text-center text-sm text-muted-foreground">
++              <a
++                href="/home"
++                className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
++              >
++                Back to home
++              </a>
++            </p>
++          </div>
++        ) : (
++          <GameFallback message="The game could not be recovered." retry={retry} />
++        );
++
++      default:
++        return <GameFallback message="The game state is unavailable." retry={retry} />;
++    }
++  }
++
++  return (
++    <div className="mx-auto w-full max-w-3xl">
++      <PageHeader mode={mode} title={copy.name} backHref="/home" backLabel="← Home" />
++      <div className="mt-6">{renderPhase()}</div>
++    </div>
++  );
++}
+diff --git a/src/components/game/GlobalGameView.tsx b/src/components/game/GlobalGameView.tsx
+index 806383e..cc5e9b9 100644
+--- a/src/components/game/GlobalGameView.tsx
++++ b/src/components/game/GlobalGameView.tsx
+@@ -1,339 +1,14 @@
+ "use client";
+ 
+-import type { CSSProperties } from "react";
++import { GameView, type GameViewProps } from "./GameView";
+ 
+-import {
+-  Button,
+-  Card,
+-  ErrorMessage,
+-  ModeGlyph,
+-  Spinner,
+-  TestStrip,
+-  Wordmark,
+-} from "@/components/ui";
+-import { ROUNDS_PER_GAME } from "@/lib/config/constants";
+-import type { Hsv } from "@/lib/domain/hsv";
+-import type { GameMachineState } from "@/hooks/useGameMachine";
+-
+-import { ColorSwatch } from "./ColorSwatch";
+-import { GameResult } from "./GameResult";
+-import { GameStage } from "./GameStage";
+-import { HsvSliders } from "./HsvSliders";
+-import { RoundProgress } from "./RoundProgress";
+-
+-const STAGE_KEYCAP_STYLE = { "--keycap-lip": "var(--stage-border)" } as CSSProperties;
+-
+-function PageHeader() {
+-  return (
+-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+-      <div className="flex min-w-0 items-center gap-3">
+-        <ModeGlyph kind="global" size="md" />
+-        <div className="min-w-0">
+-          <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+-            Mode
+-          </p>
+-          <h1 className="truncate text-xl font-bold tracking-tight">Global</h1>
+-        </div>
+-      </div>
+-
+-      <div className="flex items-center gap-3">
+-        <a
+-          href="/home"
+-          className="inline-flex min-h-9 items-center rounded-[0.625rem] px-2 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+-        >
+-          ← Home
+-        </a>
+-        <Wordmark size="sm" />
+-      </div>
+-    </header>
+-  );
+-}
+-
+-function StageSubmitButton({ onClick }: { onClick: () => void }) {
+-  return (
+-    <button
+-      type="button"
+-      onClick={onClick}
+-      style={STAGE_KEYCAP_STYLE}
+-      className="cm-keycap cm-keycap-secondary inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border border-stage-fg/20 bg-stage-fg px-6 py-3 font-display text-base font-semibold tracking-tight text-stage-bg select-none hover:bg-white focus-visible:ring-2 focus-visible:ring-stage-fg focus-visible:ring-offset-2 focus-visible:ring-offset-stage-bg focus-visible:outline-none sm:w-auto"
+-    >
+-      Submit guess
+-      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
+-        <path
+-          d="M4.5 10h10M10.5 6 14.5 10l-4 4"
+-          stroke="currentColor"
+-          strokeWidth="1.8"
+-          strokeLinecap="round"
+-          strokeLinejoin="round"
+-        />
+-      </svg>
+-    </button>
+-  );
+-}
+-
+-function PlayArrowIcon() {
+-  return (
+-    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
+-      <path
+-        d="M4.5 10h10M10.5 6 14.5 10l-4 4"
+-        stroke="currentColor"
+-        strokeWidth="1.8"
+-        strokeLinecap="round"
+-        strokeLinejoin="round"
+-      />
+-    </svg>
+-  );
+-}
+-
+-function GameFallback({ message, retry }: { message: string; retry: () => void }) {
+-  return (
+-    <div className="mx-auto max-w-xl">
+-      <ErrorMessage title="Game unavailable" message={message} onRetry={retry} />
+-      <p className="mt-4 text-center text-sm text-muted-foreground">
+-        <a
+-          href="/home"
+-          className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+-        >
+-          Back to home
+-        </a>
+-      </p>
+-    </div>
+-  );
+-}
+-
+-export interface GlobalGameViewProps {
+-  state: GameMachineState;
+-  start: () => void;
+-  setGuess: (guess: Hsv) => void;
+-  submitGuess: () => void;
+-  retry: () => void;
+-  playAgain: () => void;
+-}
++export type GlobalGameViewProps = Omit<GameViewProps, "mode">;
+ 
+ /**
+- * Presentational Global game screen. All transitions come from the reducer, so
+- * the reveal/guess/result states can be rendered directly in component tests.
++ * Global game screen. The shared implementation lives in `GameView`; this thin
++ * wrapper keeps the original export so existing imports and tests are
++ * unchanged.
+  */
+-export function GlobalGameView({
+-  state,
+-  start,
+-  setGuess,
+-  submitGuess,
+-  retry,
+-  playAgain,
+-}: GlobalGameViewProps) {
+-  function renderPhase() {
+-    switch (state.phase) {
+-      case "IDLE":
+-        return (
+-          <Card elevated className="relative overflow-hidden p-0">
+-            <div aria-hidden="true" className="cm-spectrum-bar h-1.5 w-full" />
+-
+-            <div className="p-6 sm:p-8">
+-              <div className="flex flex-wrap items-start justify-between gap-6">
+-                <div className="flex min-w-0 items-start gap-4">
+-                  <ModeGlyph kind="global" size="lg" />
+-                  <div className="min-w-0">
+-                    <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
+-                      Global · random palette
+-                    </p>
+-                    <h2 className="mt-1 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+-                      Flash. Mix. Repeat.
+-                    </h2>
+-                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
+-                      Three random colours. Five seconds each. Rebuild them from memory.
+-                    </p>
+-                  </div>
+-                </div>
+-
+-                <div className="w-full max-w-[11rem] shrink-0">
+-                  <TestStrip size="md" mystery className="-rotate-1" />
+-                  <p className="mt-2 text-center font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
+-                    Three wells. No peeking.
+-                  </p>
+-                </div>
+-              </div>
+-
+-              <ul className="mt-6 grid gap-2 sm:grid-cols-3">
+-                {["3 rounds", "5s flash", "Score /30"].map((item) => (
+-                  <li
+-                    key={item}
+-                    className="rounded-[0.875rem] border border-border bg-muted/60 px-3 py-2.5 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase"
+-                  >
+-                    {item}
+-                  </li>
+-                ))}
+-              </ul>
+-
+-              <div className="mt-6 flex flex-wrap items-center gap-3">
+-                <Button size="lg" onClick={start}>
+-                  Play Global
+-                  <PlayArrowIcon />
+-                </Button>
+-                <p className="text-xs text-muted-foreground">
+-                  Guesses stay in this tab until you submit.
+-                </p>
+-              </div>
+-            </div>
+-          </Card>
+-        );
+-
+-      case "STARTING":
+-        return (
+-          <Card elevated className="p-6 sm:p-8">
+-            <div className="flex min-h-40 flex-col items-center justify-center gap-3 text-center">
+-              <Spinner size="lg" label="Mixing colours" />
+-              <p className="font-display text-lg font-bold tracking-tight">
+-                Calibrating the stage…
+-              </p>
+-              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+-                Three random colours incoming
+-              </p>
+-            </div>
+-          </Card>
+-        );
+-
+-      case "ROUND_REVEAL": {
+-        const target = state.game?.rounds[state.roundIndex]?.target;
+-
+-        if (!state.game || !target) {
+-          return <GameFallback message="The round could not be loaded." retry={retry} />;
+-        }
+-
+-        return (
+-          <>
+-            <RoundProgress
+-              currentRound={state.roundIndex + 1}
+-              completedRounds={state.guesses.length}
+-              className="mb-3"
+-            />
+-            <GameStage
+-              roundNumber={state.roundIndex + 1}
+-              modeLabel="Global"
+-              phaseLabel="Memorise swatch"
+-              countdown={{
+-                remainingMs: state.revealRemainingMs,
+-                totalMs: state.game.revealMs,
+-                label: "Reveal window",
+-              }}
+-            >
+-              <div className="relative overflow-hidden rounded-[0.875rem] border-2 border-stage-border">
+-                <ColorSwatch
+-                  hsv={target}
+-                  label={`Round ${state.roundIndex + 1} target colour`}
+-                  size="canvas"
+-                  tone="stage"
+-                  frame="none"
+-                  testId="target-swatch"
+-                />
+-                <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 sm:p-4">
+-                  <span className="self-start rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.18em] text-white uppercase">
+-                    Target colour
+-                  </span>
+-                  <span className="self-end rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] tracking-[0.14em] text-white/80 uppercase">
+-                    Hold it
+-                  </span>
+-                </div>
+-              </div>
+-            </GameStage>
+-          </>
+-        );
+-      }
+-
+-      case "ROUND_GUESS": {
+-        if (!state.game) {
+-          return <GameFallback message="The round could not be loaded." retry={retry} />;
+-        }
+-
+-        return (
+-          <>
+-            <RoundProgress
+-              currentRound={state.roundIndex + 1}
+-              completedRounds={state.guesses.length}
+-              className="mb-3"
+-            />
+-            <GameStage
+-              roundNumber={state.roundIndex + 1}
+-              modeLabel="Global"
+-              phaseLabel="Recreate from memory"
+-              footer={
+-                <div className="flex justify-end">
+-                  <StageSubmitButton onClick={submitGuess} />
+-                </div>
+-              }
+-            >
+-              <HsvSliders
+-                value={state.currentGuess}
+-                onChange={setGuess}
+-                roundLabel={`${String(state.roundIndex + 1).padStart(2, "0")} / ${String(
+-                  ROUNDS_PER_GAME,
+-                ).padStart(2, "0")}`}
+-              />
+-            </GameStage>
+-          </>
+-        );
+-      }
+-
+-      case "SUBMITTING":
+-        return (
+-          <Card elevated className="p-6 sm:p-8">
+-            <div className="flex min-h-40 flex-col items-center justify-center gap-3 text-center">
+-              <Spinner size="lg" label="Scoring your guesses" />
+-              <p className="font-display text-lg font-bold tracking-tight">Developing your mix…</p>
+-              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+-                Three rounds, one honest score
+-              </p>
+-            </div>
+-          </Card>
+-        );
+-
+-      case "RESULT":
+-        return state.result ? (
+-          <GameResult result={state.result} onPlayAgain={playAgain} />
+-        ) : (
+-          <GameFallback message="The result could not be loaded." retry={retry} />
+-        );
+-
+-      case "ERROR":
+-        return state.error ? (
+-          <div className="mx-auto max-w-xl">
+-            <ErrorMessage
+-              title={
+-                state.error.retry === "start"
+-                  ? "Couldn't start the game"
+-                  : "Couldn't score the game"
+-              }
+-              message={state.error.message}
+-              onRetry={retry}
+-              retryLabel="Try again"
+-            />
+-            {state.error.retry === "submit" ? (
+-              <p className="mt-3 text-center text-sm text-muted-foreground">
+-                Your guesses are still in this tab.
+-              </p>
+-            ) : null}
+-            <p className="mt-4 text-center text-sm text-muted-foreground">
+-              <a
+-                href="/home"
+-                className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+-              >
+-                Back to home
+-              </a>
+-            </p>
+-          </div>
+-        ) : (
+-          <GameFallback message="The game could not be recovered." retry={retry} />
+-        );
+-
+-      default:
+-        return <GameFallback message="The game state is unavailable." retry={retry} />;
+-    }
+-  }
+-
+-  return (
+-    <div className="mx-auto w-full max-w-3xl">
+-      <PageHeader />
+-      <div className="mt-6">{renderPhase()}</div>
+-    </div>
+-  );
++export function GlobalGameView(props: GlobalGameViewProps) {
++  return <GameView mode="global" {...props} />;
+ }
+diff --git a/src/components/game/index.ts b/src/components/game/index.ts
+index 720c091..0970495 100644
+--- a/src/components/game/index.ts
++++ b/src/components/game/index.ts
+@@ -4,12 +4,18 @@ export type { ChannelDiff, ChannelDiffBarsProps } from "./ChannelDiffBars";
+ export { ColorSwatch } from "./ColorSwatch";
+ export type { ColorSwatchProps, ColorSwatchSize, ColorSwatchTone } from "./ColorSwatch";
+ 
++export { DailyGameView } from "./DailyGameView";
++export type { DailyGameViewProps } from "./DailyGameView";
++
+ export { GameResult } from "./GameResult";
+ export type { GameResultProps } from "./GameResult";
+ 
+ export { GameStage, GAME_STAGE_HEX, GAME_STAGE_NEUTRAL_TOKEN } from "./GameStage";
+ export type { GameStageCountdown, GameStageProps } from "./GameStage";
+ 
++export { GameView } from "./GameView";
++export type { GameViewProps } from "./GameView";
++
+ export { GlobalGameView } from "./GlobalGameView";
+ export type { GlobalGameViewProps } from "./GlobalGameView";
+ 
+diff --git a/src/components/home/DailyCard.tsx b/src/components/home/DailyCard.tsx
+new file mode 100644
+index 0000000..0dc9195
+--- /dev/null
++++ b/src/components/home/DailyCard.tsx
+@@ -0,0 +1,112 @@
++"use client";
++
++import Link from "next/link";
++
++import { Card, ModeGlyph } from "@/components/ui";
++import { useDailyToday, useResetCountdown } from "@/hooks/useDailyToday";
++
++const PLACEHOLDER = "--:--:--";
++
++function Stat({ label, value }: { label: string; value: string }) {
++  return (
++    <div className="min-w-0">
++      <dt className="font-mono text-[9px] font-bold tracking-[0.14em] text-muted-foreground uppercase">
++        {label}
++      </dt>
++      <dd className="mt-0.5 font-display text-base font-bold tracking-tight tabular-nums">
++        {value}
++      </dd>
++    </div>
++  );
++}
++
++/**
++ * Live Daily card for /home: today's best, streak and the reset countdown.
++ * The countdown renders a stable placeholder until the first client tick.
++ */
++export function DailyCard() {
++  const query = useDailyToday();
++  const { data, dataUpdatedAt, refetch } = query;
++
++  const countdown = useResetCountdown(data, dataUpdatedAt, () => {
++    void refetch();
++  });
++
++  return (
++    <Link
++      href="/play/daily"
++      className="group block min-w-0 rounded-[1.25rem] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
++    >
++      <Card
++        interactive
++        elevated
++        className="relative flex h-full min-w-0 flex-col overflow-hidden p-5 pt-6 ring-1 ring-primary/30"
++      >
++        <div aria-hidden="true" className="cm-spectrum-bar absolute inset-x-0 top-0 h-1" />
++        <div className="flex items-start justify-between gap-2">
++          <ModeGlyph kind="daily" />
++          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-1 font-mono text-[9px] font-bold tracking-[0.14em] text-primary uppercase">
++            <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
++            Live
++          </span>
++        </div>
++
++        <h2 className="mt-4 text-lg font-bold tracking-tight">Daily</h2>
++        <p className="mt-1 text-sm text-muted-foreground">
++          Same palette for everyone, every day.
++        </p>
++
++        {query.isError ? (
++          <p className="mt-3 text-xs text-muted-foreground">
++            Today&rsquo;s stats are unavailable right now. You can still play.
++          </p>
++        ) : (
++          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
++            <Stat
++              label="Today"
++              value={
++                query.isPending
++                  ? "…"
++                  : data?.myBest
++                    ? `${data.myBest.score.toFixed(1)} / 30`
++                    : "No run yet"
++              }
++            />
++            <Stat
++              label="Streak"
++              value={
++                query.isPending || !data
++                  ? "…"
++                  : `${data.streak.current} · best ${data.streak.longest}`
++              }
++            />
++            <div className="col-span-2">
++              <dt className="font-mono text-[9px] font-bold tracking-[0.14em] text-muted-foreground uppercase">
++                Resets in
++              </dt>
++              <dd
++                data-testid="daily-reset-countdown"
++                className="mt-0.5 font-mono text-sm font-bold tabular-nums"
++              >
++                {countdown.label ?? PLACEHOLDER}
++              </dd>
++            </div>
++          </dl>
++        )}
++
++        <span className="mt-4 inline-flex items-center gap-1.5 font-mono text-[10px] font-bold tracking-[0.16em] text-foreground uppercase">
++          Play today
++          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3.5">
++            <path
++              d="M4.5 10h10M10.5 6 14.5 10l-4 4"
++              stroke="currentColor"
++              strokeWidth="1.8"
++              strokeLinecap="round"
++              strokeLinejoin="round"
++            />
++          </svg>
++        </span>
++      </Card>
++    </Link>
++  );
++}
+diff --git a/src/hooks/useDailyToday.ts b/src/hooks/useDailyToday.ts
+new file mode 100644
+index 0000000..0285cf2
+--- /dev/null
++++ b/src/hooks/useDailyToday.ts
+@@ -0,0 +1,80 @@
++"use client";
++
++import { useQuery } from "@tanstack/react-query";
++import { useEffect, useRef, useState } from "react";
++
++import { apiClient } from "@/lib/api-client";
++import { clockOffsetMs, formatCountdown, remainingUntilMs } from "@/lib/format/countdown";
++import { dailyTodayResponseSchema, type DailyTodayResponse } from "@/lib/schemas/daily";
++
++/** Query key from Architecture §5.11.4. */
++export const dailyTodayKey = ["daily", "today"] as const;
++
++const ZERO_RETRY_MS = 5000;
++
++/** TanStack Query wrapper for `GET /api/daily/today`. */
++export function useDailyToday() {
++  return useQuery<DailyTodayResponse>({
++    queryKey: dailyTodayKey,
++    queryFn: ({ signal }) =>
++      apiClient.get<DailyTodayResponse>("/daily/today", {
++        schema: dailyTodayResponseSchema,
++        signal,
++      }),
++  });
++}
++
++export interface ResetCountdown {
++  /** `hh:mm:ss`, or null until mounted/data (render a stable placeholder). */
++  label: string | null;
++  remainingMs: number | null;
++}
++
++/**
++ * Offset-corrected "resets in" countdown. Returns `null` values until the
++ * first client tick so server and client markup match during hydration.
++ * Calls `onZero` when the countdown reaches zero (once per `resetsAt`, retried
++ * every 5 s if the refetch still returns the same reset time).
++ */
++export function useResetCountdown(
++  data: DailyTodayResponse | undefined,
++  receivedAtMs: number,
++  onZero: () => void,
++): ResetCountdown {
++  const [nowMs, setNowMs] = useState<number | null>(null);
++  const lastFiredRef = useRef<{ resetsAt: string; at: number } | null>(null);
++  const onZeroRef = useRef(onZero);
++
++  useEffect(() => {
++    onZeroRef.current = onZero;
++  }, [onZero]);
++
++  useEffect(() => {
++    const first = setTimeout(() => setNowMs(Date.now()), 0);
++    const interval = setInterval(() => setNowMs(Date.now()), 1000);
++
++    return () => {
++      clearTimeout(first);
++      clearInterval(interval);
++    };
++  }, []);
++
++  const offset = data ? clockOffsetMs(data.serverTime, receivedAtMs) : 0;
++  const remainingMs = data && nowMs !== null ? remainingUntilMs(data.resetsAt, nowMs, offset) : null;
++
++  const resetsAt = data?.resetsAt ?? null;
++  useEffect(() => {
++    if (resetsAt === null || remainingMs === null || remainingMs > 0 || nowMs === null) return;
++
++    const last = lastFiredRef.current;
++    if (last && last.resetsAt === resetsAt && nowMs - last.at < ZERO_RETRY_MS) return;
++
++    lastFiredRef.current = { resetsAt, at: nowMs };
++    onZeroRef.current();
++  }, [remainingMs, resetsAt, nowMs]);
++
++  return {
++    label: remainingMs === null ? null : formatCountdown(remainingMs),
++    remainingMs,
++  };
++}
+diff --git a/src/hooks/useGameMachine.ts b/src/hooks/useGameMachine.ts
+index 9fb049f..2cce478 100644
+--- a/src/hooks/useGameMachine.ts
++++ b/src/hooks/useGameMachine.ts
+@@ -9,7 +9,10 @@ import type { ErrorCode } from "@/lib/errors";
+ import {
+   gameStartResponseSchema,
+   gameSubmitResponseSchema,
++  type GameMode,
++  type GameStartRequest,
+   type GameStartResponse,
++  type GameSubmitRequest,
+   type GameSubmitResponse,
+ } from "@/lib/schemas/game";
+ 
+@@ -257,6 +260,27 @@ function toMachineError(error: unknown): { code: ErrorCode; message: string } {
+   };
+ }
+ 
++export interface GameMachineOptions {
++  /** Defaults to "global" so existing callers keep their behaviour. */
++  mode?: GameMode;
++}
++
++/** Body for `POST /api/games/start`. Pure so it can be unit-tested. */
++export function buildStartBody(options: GameMachineOptions = {}): GameStartRequest {
++  return { mode: options.mode ?? "global" };
++}
++
++/**
++ * Body for `POST /api/games/submit`: the signed token and the guesses only.
++ * Targets and scores are never sent; Global/Daily never send `timedOut`.
++ */
++export function buildSubmitBody(
++  gameToken: string,
++  guesses: readonly Hsv[],
++): GameSubmitRequest {
++  return { gameToken, guesses: [...guesses] };
++}
++
+ export interface UseGameMachineResult {
+   state: GameMachineState;
+   start: () => void;
+@@ -275,7 +299,8 @@ export interface UseGameMachineResult {
+  * Guesses, token and result all live in React state only. Nothing is written
+  * to localStorage, sessionStorage or cookies.
+  */
+-export function useGameMachine(): UseGameMachineResult {
++export function useGameMachine(options: GameMachineOptions = {}): UseGameMachineResult {
++  const mode = options.mode ?? "global";
+   const [state, dispatch] = useReducer(gameMachineReducer, initialGameMachineState);
+ 
+   const startRequestRef = useRef<string | null>(null);
+@@ -297,7 +322,7 @@ export function useGameMachine(): UseGameMachineResult {
+     apiClient
+       .post<GameStartResponse>(
+         "/games/start",
+-        { mode: "global" },
++        buildStartBody({ mode }),
+         { schema: gameStartResponseSchema },
+       )
+       .then((game) => dispatch({ type: "GAME_STARTED", game }))
+@@ -305,7 +330,7 @@ export function useGameMachine(): UseGameMachineResult {
+         const mapped = toMachineError(error);
+         dispatch({ type: "START_FAILED", code: mapped.code, message: mapped.message });
+       });
+-  }, [state.phase, state.startNonce]);
++  }, [state.phase, state.startNonce, mode]);
+ 
+   useEffect(() => {
+     if (state.phase !== "SUBMITTING" || !state.game || state.guesses.length !== ROUNDS_PER_GAME) {
+@@ -319,7 +344,7 @@ export function useGameMachine(): UseGameMachineResult {
+     apiClient
+       .post<GameSubmitResponse>(
+         "/games/submit",
+-        { gameToken: state.game.gameToken, guesses: state.guesses },
++        buildSubmitBody(state.game.gameToken, state.guesses),
+         { schema: gameSubmitResponseSchema },
+       )
+       .then((result) => dispatch({ type: "SUBMIT_SUCCEEDED", result }))
+diff --git a/src/lib/db/pg/queries/daily.ts b/src/lib/db/pg/queries/daily.ts
+new file mode 100644
+index 0000000..4407b49
+--- /dev/null
++++ b/src/lib/db/pg/queries/daily.ts
+@@ -0,0 +1,160 @@
++import { sql } from "drizzle-orm";
++
++import { AppError } from "@/lib/errors";
++
++import { getDb } from "../client";
++import { mapPgError } from "../errors";
++
++/**
++ * Read-only access to Daily challenge data — Architecture §5.7.2 / §5.8.
++ *
++ * Every reader is parameterized and normalizes PostgreSQL types at this
++ * boundary: `DATE` → `YYYY-MM-DD` string, `NUMERIC`/`BIGINT` → number,
++ * `TIMESTAMPTZ` → `Date`. Services never see driver-specific shapes.
++ */
++
++export interface DailyChallengeRecord {
++  challengeId: number;
++  /** `YYYY-MM-DD` (UTC). */
++  date: string;
++}
++
++export interface DailyChallengeColor {
++  h: number;
++  s: number;
++  v: number;
++}
++
++export interface DailyBestRecord {
++  score: number;
++  achievedAt: Date;
++}
++
++export interface UserDailyStreakRecord {
++  current: number;
++  longest: number;
++  /** `YYYY-MM-DD` or null if the user never played a Daily. */
++  lastPlayedDate: string | null;
++}
++
++function toDate(value: Date | string): Date {
++  return value instanceof Date ? value : new Date(value);
++}
++
++/** Looks up the challenge for a UTC date. Never creates one. */
++export async function findChallengeByDate(date: string): Promise<DailyChallengeRecord | null> {
++  try {
++    const rows = await getDb().execute<{
++      daily_challenge_id: string | number;
++      challenge_date: string;
++    }>(sql`
++      select "daily_challenge_id", "challenge_date"::text as "challenge_date"
++      from "daily_challenges"
++      where "challenge_date" = ${date}::date
++    `);
++
++    const row = rows[0];
++    return row
++      ? { challengeId: Number(row.daily_challenge_id), date: row.challenge_date }
++      : null;
++  } catch (error) {
++    throw mapPgError(error);
++  }
++}
++
++/** The three colours of a challenge in colour-number order (1, 2, 3). */
++export async function listChallengeColors(
++  challengeId: number,
++): Promise<[DailyChallengeColor, DailyChallengeColor, DailyChallengeColor]> {
++  let rows: Array<{ hue: string | number; saturation: string | number; value: string | number }>;
++
++  try {
++    rows = await getDb().execute<{
++      hue: string | number;
++      saturation: string | number;
++      value: string | number;
++    }>(sql`
++      select "hue", "saturation", "value"
++      from "challenge_colors"
++      where "daily_challenge_id" = ${challengeId}::bigint
++      order by "round_number" asc
++    `);
++  } catch (error) {
++    throw mapPgError(error);
++  }
++
++  if (rows.length !== 3) {
++    throw new AppError("INTERNAL_ERROR", "A daily challenge must have exactly 3 colors.");
++  }
++
++  const colors = rows.map(
++    (row): DailyChallengeColor => ({
++      h: Number(row.hue),
++      s: Number(row.saturation),
++      v: Number(row.value),
++    }),
++  );
++
++  return [colors[0], colors[1], colors[2]];
++}
++
++/** The user's best score for one challenge, or null if they have not played it. */
++export async function findDailyBest(
++  userId: number,
++  challengeId: number,
++): Promise<DailyBestRecord | null> {
++  try {
++    const rows = await getDb().execute<{
++      best_score: string | number;
++      achieved_at: Date | string;
++    }>(sql`
++      select "best_score", "achieved_at"
++      from "daily_personal_bests"
++      where "user_id" = ${userId}::bigint
++        and "daily_challenge_id" = ${challengeId}::bigint
++    `);
++
++    const row = rows[0];
++    return row ? { score: Number(row.best_score), achievedAt: toDate(row.achieved_at) } : null;
++  } catch (error) {
++    throw mapPgError(error);
++  }
++}
++
++/** The stored (not display-adjusted) Daily streak columns of a user. */
++export async function findUserDailyStreak(userId: number): Promise<UserDailyStreakRecord> {
++  let row:
++    | {
++        current_daily_streak: string | number;
++        longest_daily_streak: string | number;
++        last_daily_played_date: string | null;
++      }
++    | undefined;
++
++  try {
++    const rows = await getDb().execute<{
++      current_daily_streak: string | number;
++      longest_daily_streak: string | number;
++      last_daily_played_date: string | null;
++    }>(sql`
++      select "current_daily_streak",
++             "longest_daily_streak",
++             "last_daily_played_date"::text as "last_daily_played_date"
++      from "users"
++      where "user_id" = ${userId}::bigint
++    `);
++    row = rows[0];
++  } catch (error) {
++    throw mapPgError(error);
++  }
++
++  if (!row) {
++    throw new AppError("USER_NOT_FOUND");
++  }
++
++  return {
++    current: Number(row.current_daily_streak),
++    longest: Number(row.longest_daily_streak),
++    lastPlayedDate: row.last_daily_played_date,
++  };
++}
+diff --git a/src/lib/format/countdown.ts b/src/lib/format/countdown.ts
+new file mode 100644
+index 0000000..4ba66cc
+--- /dev/null
++++ b/src/lib/format/countdown.ts
+@@ -0,0 +1,30 @@
++/**
++ * Pure helpers for the Daily "resets in" countdown — Architecture §5.11.4.
++ *
++ * The countdown is computed from the server-provided `resetsAt`/`serverTime`
++ * so a wrong client clock does not skew it: the offset between the server's
++ * clock and the client's clock at fetch time is applied to every tick.
++ */
++
++/** `serverTime − clientTime` at the moment the response was received. */
++export function clockOffsetMs(serverTimeIso: string, clientReceivedAtMs: number): number {
++  const server = Date.parse(serverTimeIso);
++  return Number.isFinite(server) ? server - clientReceivedAtMs : 0;
++}
++
++/** Milliseconds until `resetsAt`, never negative, using the corrected clock. */
++export function remainingUntilMs(resetsAtIso: string, clientNowMs: number, offsetMs: number): number {
++  const resetsAt = Date.parse(resetsAtIso);
++  if (!Number.isFinite(resetsAt)) return 0;
++  return Math.max(0, resetsAt - (clientNowMs + offsetMs));
++}
++
++/** `hh:mm:ss`, rounding up so the display reaches 00:00:00 exactly at zero. */
++export function formatCountdown(remainingMs: number): string {
++  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
++  const hours = Math.floor(totalSeconds / 3600);
++  const minutes = Math.floor((totalSeconds % 3600) / 60);
++  const seconds = totalSeconds % 60;
++
++  return [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
++}
+diff --git a/src/lib/schemas/daily.ts b/src/lib/schemas/daily.ts
+new file mode 100644
+index 0000000..f2629d6
+--- /dev/null
++++ b/src/lib/schemas/daily.ts
+@@ -0,0 +1,30 @@
++import { z } from "zod";
++
++/**
++ * Daily info response — Architecture §5.10.3.
++ *
++ * `myBest` is null until the player has played today's challenge. The response
++ * never carries colours: this endpoint must not reveal today's palette.
++ */
++export const dailyTodayResponseSchema = z
++  .object({
++    date: z.iso.date(),
++    resetsAt: z.iso.datetime(),
++    serverTime: z.iso.datetime(),
++    myBest: z
++      .object({
++        score: z.number().finite().min(0).max(30),
++        achievedAt: z.iso.datetime(),
++      })
++      .strict()
++      .nullable(),
++    streak: z
++      .object({
++        current: z.number().int().nonnegative(),
++        longest: z.number().int().nonnegative(),
++      })
++      .strict(),
++  })
++  .strict();
++
++export type DailyTodayResponse = z.infer<typeof dailyTodayResponseSchema>;
+diff --git a/src/lib/services/dailyChallengeService.ts b/src/lib/services/dailyChallengeService.ts
+new file mode 100644
+index 0000000..7d541a8
+--- /dev/null
++++ b/src/lib/services/dailyChallengeService.ts
+@@ -0,0 +1,106 @@
++import { getEnv } from "@/lib/config/env";
++import {
++  findChallengeByDate,
++  findDailyBest,
++  findUserDailyStreak,
++  listChallengeColors,
++  type DailyChallengeColor,
++} from "@/lib/db/pg/queries/daily";
++import { ensureDailyChallenge } from "@/lib/db/pg/functions";
++import { generateDailyColors } from "@/lib/domain/colors";
++import { displayStreak } from "@/lib/domain/streak";
++import { isValidUtcDateString, nextUtcMidnight, utcDateString } from "@/lib/domain/time";
++import { AppError } from "@/lib/errors";
++import type { DailyTodayResponse } from "@/lib/schemas/daily";
++
++/**
++ * Daily challenge use-cases — Architecture §5.7.2.
++ *
++ * Only today (UTC) can be created or played. The database row is always the
++ * source of truth for the colours; the date-seeded generator is used solely to
++ * propose colours when today's row does not exist yet.
++ */
++
++export type DailyColors = [DailyChallengeColor, DailyChallengeColor, DailyChallengeColor];
++
++export interface DailyChallenge {
++  challengeId: number;
++  /** `YYYY-MM-DD` (UTC). */
++  date: string;
++  colors: DailyColors;
++}
++
++async function readChallenge(date: string): Promise<DailyChallenge | null> {
++  const challenge = await findChallengeByDate(date);
++  if (!challenge) return null;
++
++  const colors = await listChallengeColors(challenge.challengeId);
++  return { challengeId: challenge.challengeId, date: challenge.date, colors };
++}
++
++/**
++ * Returns today's challenge, creating it lazily. `ensure_daily_challenge` is
++ * race-safe; we always re-read afterwards so every caller returns the colours
++ * that actually got stored (another request may have won the race).
++ *
++ * `ensure_daily_challenge` compares the date with the DB clock, so this
++ * assumes the application and database clocks agree on the UTC date.
++ */
++export async function getOrCreateToday(now: Date): Promise<DailyChallenge> {
++  const date = utcDateString(now);
++
++  const existing = await readChallenge(date);
++  if (existing) return existing;
++
++  const colors = generateDailyColors(date, getEnv().DAILY_SEED_SECRET);
++  await ensureDailyChallenge(date, colors);
++
++  const stored = await readChallenge(date);
++  if (!stored) {
++    throw new AppError("INTERNAL_ERROR", "Today's daily challenge could not be loaded.");
++  }
++
++  return stored;
++}
++
++/**
++ * Today's summary for one player. Never creates a challenge and never returns
++ * colours (§5.10.3).
++ */
++export async function getTodaySummary(userId: number, now: Date): Promise<DailyTodayResponse> {
++  const date = utcDateString(now);
++
++  const challenge = await findChallengeByDate(date);
++  const best = challenge ? await findDailyBest(userId, challenge.challengeId) : null;
++  const streak = await findUserDailyStreak(userId);
++
++  return {
++    date,
++    resetsAt: nextUtcMidnight(now).toISOString(),
++    serverTime: now.toISOString(),
++    myBest: best ? { score: best.score, achievedAt: best.achievedAt.toISOString() } : null,
++    streak: {
++      current: displayStreak(streak.current, streak.lastPlayedDate, date),
++      // The longest streak is a historical record; it is never display-adjusted.
++      longest: streak.longest,
++    },
++  };
++}
++
++/**
++ * Read-only lookup used by past-day views. Malformed or future dates are
++ * `INVALID_DATE`; a valid day without a challenge returns null.
++ *
++ * Architecture §5.7.2 lists `getChallengeByDate(date)`; `now` is added so the
++ * future-date check is testable without an implicit `Date.now()` (§5.4.5).
++ */
++export async function getChallengeByDate(
++  date: string,
++  now: Date,
++): Promise<DailyChallenge | null> {
++  if (!isValidUtcDateString(date) || date > utcDateString(now)) {
++    throw new AppError("INVALID_DATE");
++  }
++
++  return readChallenge(date);
++}
+diff --git a/src/lib/services/gameService.ts b/src/lib/services/gameService.ts
+index c0a31fb..05ce18b 100644
+--- a/src/lib/services/gameService.ts
++++ b/src/lib/services/gameService.ts
+@@ -4,6 +4,7 @@ import { submitGameResult } from "@/lib/db/pg/functions";
+ import { generateRandomColors } from "@/lib/domain/colors";
+ import { isValidHsv, normalizeHsv, type Hsv } from "@/lib/domain/hsv";
+ import { scoreGame, type GameResult } from "@/lib/domain/scoring";
++import { randomPermutation } from "@/lib/domain/shuffle";
+ import { AppError } from "@/lib/errors";
+ import { logger } from "@/lib/logger";
+ import type {
+@@ -13,20 +14,30 @@ import type {
+   GameSubmitRequest,
+   GameSubmitResponse,
+ } from "@/lib/schemas/game";
+-import { signGameToken, verifyGameToken, type GameTokenClaims } from "@/lib/tokens/gameToken";
++import {
++  signGameToken,
++  verifyGameToken,
++  type GameTokenClaims,
++  type GameTokenRound,
++} from "@/lib/tokens/gameToken";
++
++import { getOrCreateToday } from "./dailyChallengeService";
+ 
+ /**
+  * Game use-cases — Architecture §5.7.3 and §5.12.1.
+  *
+- * Only Global is implemented in this step. Daily and Room are explicit
+- * branches so later steps can add them without changing the submit pipeline.
++ * Global and Daily are implemented. Room is still an explicit branch so a
++ * later step can add it without changing the submit pipeline.
+  */
+ 
+ interface StartContext {
+-  rounds: [Hsv, Hsv, Hsv];
++  /** Targets in play order; Daily/Room rounds carry their 1-based colour number. */
++  rounds: [GameTokenRound, GameTokenRound, GameTokenRound];
+   timerSeconds: 5 | 10 | 15 | null;
+   challengeDate: string | null;
+   roomCode: string | null;
++  /** Extra signed claims for the token (Daily `cid`/`cdate`). */
++  tokenContext: { cid?: number; cdate?: string };
+ }
+ 
+ function notImplemented(mode: GameMode): never {
+@@ -45,16 +56,47 @@ function startGlobal(): StartContext {
+     timerSeconds: null,
+     challengeDate: null,
+     roomCode: null,
++    tokenContext: {},
+   };
+ }
+ 
+-function startContextForMode(mode: GameMode): StartContext {
+-  switch (mode) {
++/**
++ * Daily: the stored challenge row is the source of truth. The play order is a
++ * fresh crypto shuffle per game; `n` is the 1-based colour number of the
++ * stored colour (the shuffle helper returns 0-based indices — U-027).
++ */
++async function startDaily(now: Date): Promise<StartContext> {
++  const challenge = await getOrCreateToday(now);
++  const order = randomPermutation(ROUNDS_PER_GAME);
++
++  const rounds = order.map((originalIndex): GameTokenRound => {
++    const color = challenge.colors[originalIndex];
++    if (!color) {
++      throw new AppError("INTERNAL_ERROR", "Could not order the Daily colors.");
++    }
++    return { h: color.h, s: color.s, v: color.v, n: (originalIndex + 1) as 1 | 2 | 3 };
++  });
++
++  return {
++    rounds: [rounds[0], rounds[1], rounds[2]],
++    timerSeconds: null,
++    challengeDate: challenge.date,
++    roomCode: null,
++    tokenContext: { cid: challenge.challengeId, cdate: challenge.date },
++  };
++}
++
++async function startContextForMode(
++  input: GameStartRequest,
++  now: Date,
++): Promise<StartContext> {
++  switch (input.mode) {
+     case "global":
+       return startGlobal();
+     case "daily":
++      return startDaily(now);
+     case "room":
+-      return notImplemented(mode);
++      return notImplemented(input.mode);
+   }
+ }
+ 
+@@ -179,12 +221,13 @@ export async function startGame(
+   input: GameStartRequest,
+   now: Date,
+ ): Promise<GameStartResponse> {
+-  const context = startContextForMode(input.mode);
++  const context = await startContextForMode(input, now);
+   const signed = await signGameToken(
+     {
+       userId,
+       mode: input.mode,
+       rounds: context.rounds,
++      ...context.tokenContext,
+     },
+     now,
+   );
+@@ -215,7 +258,7 @@ export async function submitGame(
+ ): Promise<GameSubmitResponse> {
+   const claims = await verifyGameToken(input.gameToken, { userId, now });
+ 
+-  if (claims.mode !== "global") {
++  if (claims.mode === "room") {
+     notImplemented(claims.mode);
+   }
+ 
+@@ -223,10 +266,16 @@ export async function submitGame(
+   const timedOut = normalizeTimedOut(claims.mode, input.timedOut);
+   const game = scoreGame(claims.rounds, guesses);
+ 
++  // Daily tokens always carry `cid` (verifyGameToken enforces it); the id comes
++  // only from the signed token, never from the request body.
++  if (claims.mode === "daily" && claims.cid === undefined) {
++    throw new AppError("TOKEN_INVALID", "Daily tokens require a challenge id.");
++  }
++
+   const sqlResult = await submitGameResult({
+     userId,
+-    mode: "global",
+-    challengeId: null,
++    mode: claims.mode,
++    challengeId: claims.mode === "daily" ? (claims.cid ?? null) : null,
+     roundScores: [game.rounds[0].score, game.rounds[1].score, game.rounds[2].score],
+     playedAt: now,
+   });
+diff --git a/tests/integration/daily-service.test.ts b/tests/integration/daily-service.test.ts
+new file mode 100644
+index 0000000..b8e4a76
+--- /dev/null
++++ b/tests/integration/daily-service.test.ts
+@@ -0,0 +1,375 @@
++import { Long } from "mongodb";
++import { afterAll, beforeAll, describe, expect, it } from "vitest";
++
++import { getGameHistoryCollection, getMongoClient, getMongoDb } from "@/lib/db/mongo/client";
++import { getSqlClient } from "@/lib/db/pg/client";
++import { ensureDailyChallenge } from "@/lib/db/pg/functions";
++import { scoreGame } from "@/lib/domain/scoring";
++import { utcDateString } from "@/lib/domain/time";
++import {
++  getChallengeByDate,
++  getOrCreateToday,
++  getTodaySummary,
++} from "@/lib/services/dailyChallengeService";
++import { startGame, submitGame } from "@/lib/services/gameService";
++import { signGameToken, verifyGameToken } from "@/lib/tokens/gameToken";
++
++import { initMongo } from "../../scripts/init-mongo";
++
++import {
++  cleanupFixtures,
++  createChallenge,
++  createFixtures,
++  createUser,
++  readChallengeColors,
++  readDailyBest,
++  readUserStats,
++} from "./support/fixtures";
++import { cleanupHistory } from "./support/mongo";
++
++/**
++ * Daily mode against real Postgres + Mongo.
++ *
++ * `ensure_daily_challenge` only accepts the DB's current UTC date, so tests of
++ * other days use pre-created fixture challenges (direct SQL) plus tokens signed
++ * against them; they never call `ensure_daily_challenge` with a past date.
++ */
++
++const sql = getSqlClient();
++const fixtures = createFixtures();
++const collection = getGameHistoryCollection();
++const userIds: number[] = [];
++
++let todayExistedBefore = true;
++
++const FIXTURE_COLORS = [
++  { h: 12, s: 50, v: 50 },
++  { h: 120, s: 60, v: 70 },
++  { h: 300, s: 40, v: 30 },
++] as const;
++
++function addDays(date: string, days: number): string {
++  const d = new Date(`${date}T00:00:00.000Z`);
++  d.setUTCDate(d.getUTCDate() + days);
++  return d.toISOString().slice(0, 10);
++}
++
++/** A random far-past base date so repeated runs do not collide. */
++function randomPastBase(): string {
++  const offset = Math.floor(Math.random() * 20_000);
++  return addDays("1900-01-01", offset);
++}
++
++function issuedAt(now: Date): Date {
++  return new Date(now.getTime() - 20_000);
++}
++
++async function newUser(): Promise<number> {
++  const userId = await createUser(sql, fixtures);
++  userIds.push(userId);
++  return userId;
++}
++
++/** Plays a fixture challenge with a token whose play order is 3, 1, 2. */
++async function playFixture(
++  userId: number,
++  challenge: { challengeId: number; date: string },
++  guessesOffset: number,
++  now: Date,
++) {
++  const order = [2, 0, 1];
++  const rounds = order.map((index) => ({
++    ...FIXTURE_COLORS[index]!,
++    n: (index + 1) as 1 | 2 | 3,
++  }));
++  const signed = await signGameToken(
++    {
++      userId,
++      mode: "daily",
++      rounds,
++      cid: challenge.challengeId,
++      cdate: challenge.date,
++    },
++    issuedAt(now),
++  );
++
++  const guesses = rounds.map((round) => ({
++    h: (round.h + guessesOffset) % 360,
++    s: round.s,
++    v: round.v,
++  }));
++  const expected = scoreGame(rounds, guesses);
++  const result = await submitGame(userId, { gameToken: signed.token, guesses }, now);
++
++  return { result, expectedTotal: expected.total };
++}
++
++beforeAll(async () => {
++  await initMongo(getMongoDb());
++
++  const rows = await sql<{ daily_challenge_id: number }[]>`
++    select daily_challenge_id
++    from daily_challenges
++    where challenge_date = (now() at time zone 'utc')::date
++  `;
++  todayExistedBefore = rows.length > 0;
++});
++
++afterAll(async () => {
++  try {
++    if (!todayExistedBefore) {
++      const rows = await sql<{ daily_challenge_id: number }[]>`
++        select daily_challenge_id
++        from daily_challenges
++        where challenge_date = (now() at time zone 'utc')::date
++      `;
++      for (const row of rows) {
++        fixtures.challengeIds.push(Number(row.daily_challenge_id));
++      }
++    }
++    await cleanupHistory(userIds);
++    await cleanupFixtures(sql, fixtures);
++  } finally {
++    await Promise.allSettled([getMongoClient().close(), sql.end()]);
++  }
++});
++
++describe("dailyChallengeService against real databases", () => {
++  // First on purpose: on a clean day this is the real creation race.
++  it("two concurrent first calls yield one challenge with exactly 3 colours", async () => {
++    const now = new Date();
++    const [a, b] = await Promise.all([getOrCreateToday(now), getOrCreateToday(now)]);
++
++    expect(a.challengeId).toBe(b.challengeId);
++    expect(a.colors).toEqual(b.colors);
++    expect(a.date).toBe(utcDateString(now));
++
++    const challenges = await sql<{ n: string }[]>`
++      select count(*)::text as n from daily_challenges where challenge_date = ${a.date}::date
++    `;
++    expect(Number(challenges[0]?.n)).toBe(1);
++
++    const stored = await readChallengeColors(sql, a.challengeId);
++    expect(stored).toHaveLength(3);
++    expect(stored.map(({ h, s, v }) => ({ h, s, v }))).toEqual(a.colors);
++  });
++
++  it("repeated calls return identical stored colours", async () => {
++    const now = new Date();
++    const first = await getOrCreateToday(now);
++    const second = await getOrCreateToday(now);
++
++    expect(second).toEqual(first);
++  });
++
++  it("two users get the same 3 colours on the same day (order may differ)", async () => {
++    const alice = await newUser();
++    const bob = await newUser();
++    const now = new Date();
++
++    const aliceGame = await startGame(alice, { mode: "daily" }, now);
++    const bobGame = await startGame(bob, { mode: "daily" }, now);
++
++    const verifyAt = new Date(now.getTime() + 20_000);
++    const aliceClaims = await verifyGameToken(aliceGame.gameToken, { userId: alice, now: verifyAt });
++    const bobClaims = await verifyGameToken(bobGame.gameToken, { userId: bob, now: verifyAt });
++
++    expect(aliceClaims.cid).toBe(bobClaims.cid);
++    expect(aliceClaims.cdate).toBe(utcDateString(now));
++    expect(aliceGame.challengeDate).toBe(utcDateString(now));
++    expect(aliceGame.timerSeconds).toBeNull();
++    expect(aliceGame.roomCode).toBeNull();
++
++    const byNumber = (rounds: typeof aliceClaims.rounds) =>
++      [...rounds]
++        .sort((x, y) => (x.n ?? 0) - (y.n ?? 0))
++        .map(({ h, s, v, n }) => ({ h, s, v, n }));
++
++    expect(byNumber(aliceClaims.rounds)).toEqual(byNumber(bobClaims.rounds));
++
++    const stored = await readChallengeColors(sql, aliceClaims.cid ?? 0);
++    expect(byNumber(aliceClaims.rounds).map(({ h, s, v }) => ({ h, s, v }))).toEqual(
++      stored.map(({ h, s, v }) => ({ h, s, v })),
++    );
++  });
++
++  it("plays today's real challenge, reports it in the summary and never creates from the summary", async () => {
++    const userId = await newUser();
++    const startedAt = new Date();
++
++    const before = await getTodaySummary(userId, startedAt);
++    expect(before.myBest).toBeNull();
++    expect(before.streak).toEqual({ current: 0, longest: 0 });
++    expect(before.resetsAt > before.serverTime).toBe(true);
++
++    const game = await startGame(userId, { mode: "daily" }, startedAt);
++    const guesses = game.rounds.map((round) => ({ ...round.target }));
++    const submitAt = new Date(startedAt.getTime() + 20_000);
++
++    const result = await submitGame(userId, { gameToken: game.gameToken, guesses }, submitAt);
++
++    expect(result.mode).toBe("daily");
++    expect(result.totalScore).toBe(30);
++    expect(result.pb).toMatchObject({ scope: "daily", previous: null, current: 30, updated: true });
++    expect(result.streak).toEqual({ current: 1, longest: 1 });
++    expect(result.room).toBeNull();
++
++    const after = await getTodaySummary(userId, submitAt);
++    expect(after.myBest).toEqual({ score: 30, achievedAt: submitAt.toISOString() });
++    expect(after.streak).toEqual({ current: 1, longest: 1 });
++
++    // A lapsed streak is displayed as 0 while the longest streak is untouched.
++    await sql`update users set last_daily_played_date = '1900-01-01' where user_id = ${userId}`;
++    const lapsed = await getTodaySummary(userId, submitAt);
++    expect(lapsed.streak).toEqual({ current: 0, longest: 1 });
++  });
++
++  it("stores Daily history with daily_challenge_id and color_number", async () => {
++    const userId = await newUser();
++    const base = randomPastBase();
++    const challenge = await createChallenge(sql, fixtures, base);
++    const now = new Date("2026-10-29T12:00:20.000Z");
++
++    await playFixture(userId, challenge, 0, now);
++
++    const documents = await collection.find({ user_id: Long.fromNumber(userId) }).toArray();
++    expect(documents).toHaveLength(1);
++
++    const document = documents[0]!;
++    expect(document).toMatchObject({ mode: "daily", total_score: 30 });
++    expect(Number(document.daily_challenge_id)).toBe(challenge.challengeId);
++    expect(document).not.toHaveProperty("room_id");
++    expect(document).not.toHaveProperty("attempt_number");
++
++    const rounds = document.rounds as Array<Record<string, unknown>>;
++    expect(rounds.map((round) => Number(round.color_number))).toEqual([3, 1, 2]);
++    for (const round of rounds) {
++      expect(round).not.toHaveProperty("timed_out");
++    }
++  });
++});
++
++describe("Daily personal best and streak (fixture challenges)", () => {
++  it("applies first, higher and equal daily personal bests", async () => {
++    const userId = await newUser();
++    const challenge = await createChallenge(sql, fixtures, randomPastBase());
++    const t0 = new Date("2026-10-29T12:00:20.000Z");
++    const t1 = new Date("2026-10-29T13:00:20.000Z");
++    const t2 = new Date("2026-10-29T14:00:20.000Z");
++
++    const first = await playFixture(userId, challenge, 30, t0);
++    expect(first.result.pb).toEqual({
++      scope: "daily",
++      previous: null,
++      current: first.expectedTotal,
++      updated: true,
++      beatExisting: false,
++    });
++
++    const higher = await playFixture(userId, challenge, 0, t1);
++    expect(higher.result.totalScore).toBe(30);
++    expect(higher.result.pb).toEqual({
++      scope: "daily",
++      previous: first.expectedTotal,
++      current: 30,
++      updated: true,
++      beatExisting: true,
++    });
++
++    const equal = await playFixture(userId, challenge, 0, t2);
++    expect(equal.result.pb).toEqual({
++      scope: "daily",
++      previous: 30,
++      current: 30,
++      updated: false,
++      beatExisting: false,
++    });
++
++    const best = await readDailyBest(sql, userId, challenge.challengeId);
++    expect(best?.bestScore).toBe(30);
++    // An equal score does not move achieved_at.
++    expect(best?.achievedAt.toISOString()).toBe(t1.toISOString());
++
++    const stats = await readUserStats(sql, userId);
++    expect(stats.totalGamesPlayed).toBe(3);
++    // Daily games do not touch the Global personal best.
++    expect(stats.globalBestScore).toBeNull();
++  });
++
++  it("handles first, same-day, consecutive, gap and out-of-order streaks", async () => {
++    const userId = await newUser();
++    const base = randomPastBase();
++    const [d0, d1, d2, d3] = await Promise.all(
++      [0, 1, 2, 3].map((offset) => createChallenge(sql, fixtures, addDays(base, offset))),
++    );
++    const now = new Date("2026-10-29T12:00:20.000Z");
++
++    // First ever daily -> 1.
++    const first = await playFixture(userId, d0!, 0, now);
++    expect(first.result.streak).toEqual({ current: 1, longest: 1 });
++
++    // Same day again -> unchanged.
++    const same = await playFixture(userId, d0!, 0, now);
++    expect(same.result.streak).toEqual({ current: 1, longest: 1 });
++
++    // Next day -> +1.
++    const consecutive = await playFixture(userId, d1!, 0, now);
++    expect(consecutive.result.streak).toEqual({ current: 2, longest: 2 });
++
++    // Gap of more than one day -> reset to 1, longest kept.
++    const gap = await playFixture(userId, d3!, 0, now);
++    expect(gap.result.streak).toEqual({ current: 1, longest: 2 });
++
++    // Older day finished late -> unchanged; last_daily_played_date only moves forward.
++    const outOfOrder = await playFixture(userId, d2!, 0, now);
++    expect(outOfOrder.result.streak).toEqual({ current: 1, longest: 2 });
++
++    const stats = await readUserStats(sql, userId);
++    expect(stats.currentDailyStreak).toBe(1);
++    expect(stats.longestDailyStreak).toBe(2);
++    expect(stats.lastDailyPlayedDate).toBe(d3!.date);
++  });
++});
++
++describe("Past days are read-only", () => {
++  it("never creates a past challenge", async () => {
++    const pastDate = "1899-12-30";
++    const before = await sql<{ n: string }[]>`
++      select count(*)::text as n from daily_challenges where challenge_date = ${pastDate}::date
++    `;
++
++    await expect(
++      ensureDailyChallenge(pastDate, [
++        { h: 1, s: 1, v: 1 },
++        { h: 2, s: 2, v: 2 },
++        { h: 3, s: 3, v: 3 },
++      ]),
++    ).rejects.toMatchObject({ code: "INVALID_DATE" });
++
++    await expect(getChallengeByDate(pastDate, new Date())).resolves.toBeNull();
++
++    const after = await sql<{ n: string }[]>`
++      select count(*)::text as n from daily_challenges where challenge_date = ${pastDate}::date
++    `;
++    expect(after[0]?.n).toBe(before[0]?.n);
++  });
++
++  it("rejects future and malformed dates", async () => {
++    const now = new Date();
++    await expect(getChallengeByDate(addDays(utcDateString(now), 1), now)).rejects.toMatchObject({
++      code: "INVALID_DATE",
++    });
++    await expect(getChallengeByDate("2026-02-31", now)).rejects.toMatchObject({
++      code: "INVALID_DATE",
++    });
++  });
++
++  it("returns a fixture past challenge read-only with its colours", async () => {
++    const challenge = await createChallenge(sql, fixtures, randomPastBase());
++
++    const found = await getChallengeByDate(challenge.date, new Date());
++
++    expect(found?.challengeId).toBe(challenge.challengeId);
++    expect(found?.colors).toEqual([...FIXTURE_COLORS]);
++  });
++});
+diff --git a/tests/unit/api/daily.test.ts b/tests/unit/api/daily.test.ts
+new file mode 100644
+index 0000000..f14ccf7
+--- /dev/null
++++ b/tests/unit/api/daily.test.ts
+@@ -0,0 +1,100 @@
++import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
++
++const mocks = vi.hoisted(() => ({
++  getTodaySummary: vi.fn(),
++}));
++
++vi.mock("@/lib/services/dailyChallengeService", () => ({
++  getTodaySummary: mocks.getTodaySummary,
++}));
++
++import { GET } from "@/app/api/daily/today/route";
++import { signSession } from "@/lib/auth/session";
++import { AppError } from "@/lib/errors";
++import { dailyTodayResponseSchema } from "@/lib/schemas/daily";
++
++import { makeGetRequest, resetAuthEnv, sessionCookieHeader, stubAuthEnv } from "../support/auth";
++
++beforeAll(() => {
++  stubAuthEnv();
++});
++
++afterAll(() => {
++  resetAuthEnv();
++});
++
++beforeEach(() => {
++  mocks.getTodaySummary.mockReset();
++});
++
++const SUMMARY = {
++  date: "2026-10-29",
++  resetsAt: "2026-10-30T00:00:00.000Z",
++  serverTime: "2026-10-29T09:15:00.000Z",
++  myBest: { score: 25.3, achievedAt: "2026-10-29T08:02:11.000Z" },
++  streak: { current: 3, longest: 7 },
++};
++
++describe("GET /api/daily/today", () => {
++  it("returns 401 without a session and does not call the service", async () => {
++    const response = await GET(makeGetRequest("/api/daily/today"), undefined);
++
++    expect(response.status).toBe(401);
++    expect(mocks.getTodaySummary).not.toHaveBeenCalled();
++  });
++
++  it("returns the §5.10.3 shape with no-store and exactly one service call", async () => {
++    mocks.getTodaySummary.mockResolvedValue(SUMMARY);
++    const token = await signSession({ userId: 7, role: "player" });
++
++    const response = await GET(
++      makeGetRequest("/api/daily/today", sessionCookieHeader(token)),
++      undefined,
++    );
++    const body = await response.json();
++
++    expect(response.status).toBe(200);
++    expect(response.headers.get("cache-control")).toBe("no-store");
++    expect(body).toEqual(SUMMARY);
++    expect(dailyTodayResponseSchema.safeParse(body).success).toBe(true);
++    expect(mocks.getTodaySummary).toHaveBeenCalledTimes(1);
++    expect(mocks.getTodaySummary).toHaveBeenCalledWith(7, expect.any(Date));
++  });
++
++  it("never exposes colours", async () => {
++    mocks.getTodaySummary.mockResolvedValue({ ...SUMMARY, myBest: null });
++    const token = await signSession({ userId: 7, role: "player" });
++
++    const response = await GET(
++      makeGetRequest("/api/daily/today", sessionCookieHeader(token)),
++      undefined,
++    );
++    const text = JSON.stringify(await response.json());
++
++    expect(text).not.toMatch(/colou?rs?|"h"|hue/i);
++  });
++
++  it("maps service errors to the standard envelope", async () => {
++    mocks.getTodaySummary.mockRejectedValue(new AppError("SERVICE_UNAVAILABLE"));
++    const token = await signSession({ userId: 7, role: "player" });
++
++    const response = await GET(
++      makeGetRequest("/api/daily/today", sessionCookieHeader(token)),
++      undefined,
++    );
++
++    expect(response.status).toBe(503);
++    expect((await response.json()).error.code).toBe("SERVICE_UNAVAILABLE");
++  });
++});
++
++describe("dailyTodayResponseSchema", () => {
++  it("accepts a null myBest and rejects unknown keys", () => {
++    expect(dailyTodayResponseSchema.safeParse({ ...SUMMARY, myBest: null }).success).toBe(true);
++    expect(dailyTodayResponseSchema.safeParse({ ...SUMMARY, colors: [] }).success).toBe(false);
++    expect(
++      dailyTodayResponseSchema.safeParse({ ...SUMMARY, streak: { current: -1, longest: 0 } })
++        .success,
++    ).toBe(false);
++  });
++});
+diff --git a/tests/unit/format/countdown.test.ts b/tests/unit/format/countdown.test.ts
+new file mode 100644
+index 0000000..7065151
+--- /dev/null
++++ b/tests/unit/format/countdown.test.ts
+@@ -0,0 +1,41 @@
++import { describe, expect, it } from "vitest";
++
++import { clockOffsetMs, formatCountdown, remainingUntilMs } from "@/lib/format/countdown";
++
++describe("formatCountdown", () => {
++  it("formats hh:mm:ss with zero padding", () => {
++    expect(formatCountdown(0)).toBe("00:00:00");
++    expect(formatCountdown(1000)).toBe("00:00:01");
++    expect(formatCountdown(61_000)).toBe("00:01:01");
++    expect(formatCountdown(3_661_000)).toBe("01:01:01");
++    expect(formatCountdown(23 * 3_600_000 + 59 * 60_000 + 59_000)).toBe("23:59:59");
++  });
++
++  it("rounds partial seconds up and clamps negatives", () => {
++    expect(formatCountdown(1)).toBe("00:00:01");
++    expect(formatCountdown(999)).toBe("00:00:01");
++    expect(formatCountdown(-5000)).toBe("00:00:00");
++  });
++});
++
++describe("clock offset correction", () => {
++  it("applies the server/client offset to the remaining time", () => {
++    const serverTime = "2026-10-29T23:00:00.000Z";
++    const clientReceivedAt = Date.parse("2026-10-29T22:00:00.000Z"); // client 1h behind
++    const offset = clockOffsetMs(serverTime, clientReceivedAt);
++
++    expect(offset).toBe(3_600_000);
++
++    // 30 s later on the client clock, the server is 30 s further along too.
++    const clientNow = clientReceivedAt + 30_000;
++    expect(remainingUntilMs("2026-10-30T00:00:00.000Z", clientNow, offset)).toBe(
++      3_600_000 - 30_000,
++    );
++  });
++
++  it("never returns a negative remaining time and tolerates bad input", () => {
++    expect(remainingUntilMs("2026-10-30T00:00:00.000Z", Date.parse("2026-10-31T00:00:00Z"), 0)).toBe(0);
++    expect(remainingUntilMs("not-a-date", 0, 0)).toBe(0);
++    expect(clockOffsetMs("not-a-date", 123)).toBe(0);
++  });
++});
+diff --git a/tests/unit/hooks/useGameMachine.test.ts b/tests/unit/hooks/useGameMachine.test.ts
+index 506946e..f995f17 100644
+--- a/tests/unit/hooks/useGameMachine.test.ts
++++ b/tests/unit/hooks/useGameMachine.test.ts
+@@ -1,6 +1,8 @@
+ import { describe, expect, it } from "vitest";
+ 
+ import {
++  buildStartBody,
++  buildSubmitBody,
+   gameMachineReducer,
+   initialGameMachineState,
+   type GameMachineState,
+@@ -249,3 +251,30 @@ describe("gameMachineReducer", () => {
+     expect(gameMachineReducer(start, { type: "RESET" })).toBe(initialGameMachineState);
+   });
+ });
++
++describe("request builders", () => {
++  it("posts mode global by default so existing Global callers are unchanged", () => {
++    expect(buildStartBody()).toEqual({ mode: "global" });
++    expect(buildStartBody({})).toEqual({ mode: "global" });
++  });
++
++  it("posts mode daily when the daily option is set, without a room code", () => {
++    const body = buildStartBody({ mode: "daily" });
++
++    expect(body).toEqual({ mode: "daily" });
++    expect(body).not.toHaveProperty("roomCode");
++  });
++
++  it("submits only the token and guesses (no timedOut, targets or scores)", () => {
++    const guesses = [
++      { h: 1, s: 2, v: 3 },
++      { h: 4, s: 5, v: 6 },
++      { h: 7, s: 8, v: 9 },
++    ];
++    const body = buildSubmitBody("signed-game-token", guesses);
++
++    expect(body).toEqual({ gameToken: "signed-game-token", guesses });
++    expect(Object.keys(body).sort()).toEqual(["gameToken", "guesses"]);
++    expect(body.guesses).not.toBe(guesses);
++  });
++});
+diff --git a/tests/unit/services/dailyChallengeService.test.ts b/tests/unit/services/dailyChallengeService.test.ts
+new file mode 100644
+index 0000000..74055ee
+--- /dev/null
++++ b/tests/unit/services/dailyChallengeService.test.ts
+@@ -0,0 +1,239 @@
++import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
++
++const mocks = vi.hoisted(() => ({
++  findChallengeByDate: vi.fn(),
++  listChallengeColors: vi.fn(),
++  findDailyBest: vi.fn(),
++  findUserDailyStreak: vi.fn(),
++  ensureDailyChallenge: vi.fn(),
++  generateDailyColors: vi.fn(),
++}));
++
++vi.mock("@/lib/db/pg/queries/daily", () => ({
++  findChallengeByDate: mocks.findChallengeByDate,
++  listChallengeColors: mocks.listChallengeColors,
++  findDailyBest: mocks.findDailyBest,
++  findUserDailyStreak: mocks.findUserDailyStreak,
++}));
++
++vi.mock("@/lib/db/pg/functions", () => ({
++  ensureDailyChallenge: mocks.ensureDailyChallenge,
++}));
++
++vi.mock("@/lib/domain/colors", async (importOriginal) => {
++  const actual = await importOriginal<typeof import("@/lib/domain/colors")>();
++  return { ...actual, generateDailyColors: mocks.generateDailyColors };
++});
++
++import { AUTH_TEST_ENV, resetAuthEnv, stubAuthEnv } from "../support/auth";
++import {
++  getChallengeByDate,
++  getOrCreateToday,
++  getTodaySummary,
++} from "@/lib/services/dailyChallengeService";
++
++const NOW = new Date("2026-10-29T09:15:00.000Z");
++const TODAY = "2026-10-29";
++
++const GENERATED = [
++  { h: 1, s: 2, v: 3 },
++  { h: 4, s: 5, v: 6 },
++  { h: 7, s: 8, v: 9 },
++] as const;
++
++const STORED = [
++  { h: 214.6, s: 62, v: 80.5 },
++  { h: 12, s: 90, v: 70 },
++  { h: 301.3, s: 45.5, v: 33 },
++] as const;
++
++beforeAll(() => {
++  stubAuthEnv();
++});
++
++afterAll(() => {
++  resetAuthEnv();
++});
++
++beforeEach(() => {
++  for (const mock of Object.values(mocks)) {
++    mock.mockReset();
++  }
++  mocks.generateDailyColors.mockReturnValue([...GENERATED]);
++});
++
++describe("getOrCreateToday", () => {
++  it("returns the stored challenge without generating or ensuring", async () => {
++    mocks.findChallengeByDate.mockResolvedValue({ challengeId: 118, date: TODAY });
++    mocks.listChallengeColors.mockResolvedValue([...STORED]);
++
++    const result = await getOrCreateToday(NOW);
++
++    expect(result).toEqual({ challengeId: 118, date: TODAY, colors: [...STORED] });
++    expect(mocks.findChallengeByDate).toHaveBeenCalledWith(TODAY);
++    expect(mocks.generateDailyColors).not.toHaveBeenCalled();
++    expect(mocks.ensureDailyChallenge).not.toHaveBeenCalled();
++  });
++
++  it("generates, ensures and re-reads the stored colours when missing", async () => {
++    mocks.findChallengeByDate
++      .mockResolvedValueOnce(null)
++      .mockResolvedValueOnce({ challengeId: 119, date: TODAY });
++    mocks.ensureDailyChallenge.mockResolvedValue(119);
++    // Another request won the race: the stored colours differ from ours.
++    mocks.listChallengeColors.mockResolvedValue([...STORED]);
++
++    const result = await getOrCreateToday(NOW);
++
++    expect(mocks.generateDailyColors).toHaveBeenCalledWith(TODAY, AUTH_TEST_ENV.DAILY_SEED_SECRET);
++    expect(mocks.ensureDailyChallenge).toHaveBeenCalledTimes(1);
++    expect(mocks.ensureDailyChallenge).toHaveBeenCalledWith(TODAY, [...GENERATED]);
++    expect(mocks.findChallengeByDate).toHaveBeenCalledTimes(2);
++    expect(result.colors).toEqual([...STORED]);
++    expect(result.challengeId).toBe(119);
++  });
++
++  it("throws INTERNAL_ERROR when nothing is stored after ensure", async () => {
++    mocks.findChallengeByDate.mockResolvedValue(null);
++    mocks.ensureDailyChallenge.mockResolvedValue(120);
++
++    await expect(getOrCreateToday(NOW)).rejects.toMatchObject({ code: "INTERNAL_ERROR" });
++  });
++
++  it("uses the UTC date of `now`, not the local date", async () => {
++    mocks.findChallengeByDate.mockResolvedValue({ challengeId: 1, date: "2026-12-31" });
++    mocks.listChallengeColors.mockResolvedValue([...STORED]);
++
++    await getOrCreateToday(new Date("2026-12-31T23:59:59.000Z"));
++
++    expect(mocks.findChallengeByDate).toHaveBeenCalledWith("2026-12-31");
++  });
++});
++
++describe("getTodaySummary", () => {
++  it("never creates a challenge and returns null myBest when there is none", async () => {
++    mocks.findChallengeByDate.mockResolvedValue(null);
++    mocks.findUserDailyStreak.mockResolvedValue({
++      current: 0,
++      longest: 0,
++      lastPlayedDate: null,
++    });
++
++    const summary = await getTodaySummary(7, NOW);
++
++    expect(summary).toEqual({
++      date: TODAY,
++      resetsAt: "2026-10-30T00:00:00.000Z",
++      serverTime: NOW.toISOString(),
++      myBest: null,
++      streak: { current: 0, longest: 0 },
++    });
++    expect(mocks.ensureDailyChallenge).not.toHaveBeenCalled();
++    expect(mocks.generateDailyColors).not.toHaveBeenCalled();
++    expect(mocks.findDailyBest).not.toHaveBeenCalled();
++    expect(mocks.listChallengeColors).not.toHaveBeenCalled();
++  });
++
++  it("returns null myBest when the player has not played today's challenge", async () => {
++    mocks.findChallengeByDate.mockResolvedValue({ challengeId: 118, date: TODAY });
++    mocks.findDailyBest.mockResolvedValue(null);
++    mocks.findUserDailyStreak.mockResolvedValue({
++      current: 2,
++      longest: 5,
++      lastPlayedDate: "2026-10-28",
++    });
++
++    const summary = await getTodaySummary(7, NOW);
++
++    expect(mocks.findDailyBest).toHaveBeenCalledWith(7, 118);
++    expect(summary.myBest).toBeNull();
++    expect(summary.streak).toEqual({ current: 2, longest: 5 });
++  });
++
++  it("serializes today's best as ISO", async () => {
++    mocks.findChallengeByDate.mockResolvedValue({ challengeId: 118, date: TODAY });
++    mocks.findDailyBest.mockResolvedValue({
++      score: 25.3,
++      achievedAt: new Date("2026-10-29T08:02:11.000Z"),
++    });
++    mocks.findUserDailyStreak.mockResolvedValue({
++      current: 3,
++      longest: 7,
++      lastPlayedDate: TODAY,
++    });
++
++    const summary = await getTodaySummary(7, NOW);
++
++    expect(summary.myBest).toEqual({ score: 25.3, achievedAt: "2026-10-29T08:02:11.000Z" });
++    expect(summary.streak).toEqual({ current: 3, longest: 7 });
++  });
++
++  it("displays a lapsed streak as 0 but keeps the longest streak unchanged", async () => {
++    mocks.findChallengeByDate.mockResolvedValue(null);
++    mocks.findUserDailyStreak.mockResolvedValue({
++      current: 4,
++      longest: 9,
++      lastPlayedDate: "2026-10-20",
++    });
++
++    const summary = await getTodaySummary(7, NOW);
++
++    expect(summary.streak).toEqual({ current: 0, longest: 9 });
++  });
++
++  it("keeps a streak whose last play was yesterday", async () => {
++    mocks.findChallengeByDate.mockResolvedValue(null);
++    mocks.findUserDailyStreak.mockResolvedValue({
++      current: 4,
++      longest: 9,
++      lastPlayedDate: "2026-10-28",
++    });
++
++    const summary = await getTodaySummary(7, NOW);
++
++    expect(summary.streak.current).toBe(4);
++  });
++});
++
++describe("getChallengeByDate", () => {
++  it("rejects malformed dates", async () => {
++    for (const date of ["", "2026-13-01", "2026-02-30", "29-10-2026", "tomorrow"]) {
++      await expect(getChallengeByDate(date, NOW)).rejects.toMatchObject({
++        code: "INVALID_DATE",
++      });
++    }
++    expect(mocks.findChallengeByDate).not.toHaveBeenCalled();
++  });
++
++  it("rejects future dates", async () => {
++    await expect(getChallengeByDate("2026-10-30", NOW)).rejects.toMatchObject({
++      code: "INVALID_DATE",
++    });
++    expect(mocks.findChallengeByDate).not.toHaveBeenCalled();
++  });
++
++  it("returns null for a past day without a challenge and never creates one", async () => {
++    mocks.findChallengeByDate.mockResolvedValue(null);
++
++    await expect(getChallengeByDate("2026-10-01", NOW)).resolves.toBeNull();
++    expect(mocks.ensureDailyChallenge).not.toHaveBeenCalled();
++  });
++
++  it("returns an existing past challenge with its colours", async () => {
++    mocks.findChallengeByDate.mockResolvedValue({ challengeId: 5, date: "2026-10-01" });
++    mocks.listChallengeColors.mockResolvedValue([...STORED]);
++
++    await expect(getChallengeByDate("2026-10-01", NOW)).resolves.toEqual({
++      challengeId: 5,
++      date: "2026-10-01",
++      colors: [...STORED],
++    });
++  });
++
++  it("accepts today", async () => {
++    mocks.findChallengeByDate.mockResolvedValue(null);
++
++    await expect(getChallengeByDate(TODAY, NOW)).resolves.toBeNull();
++    expect(mocks.findChallengeByDate).toHaveBeenCalledWith(TODAY);
++  });
++});
+diff --git a/tests/unit/services/gameService.test.ts b/tests/unit/services/gameService.test.ts
+index 3ab4d05..891d864 100644
+--- a/tests/unit/services/gameService.test.ts
++++ b/tests/unit/services/gameService.test.ts
+@@ -3,6 +3,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi }
+ const mocks = vi.hoisted(() => ({
+   submitGameResult: vi.fn(),
+   insertGame: vi.fn(),
++  getOrCreateToday: vi.fn(),
++}));
++
++vi.mock("@/lib/services/dailyChallengeService", () => ({
++  getOrCreateToday: mocks.getOrCreateToday,
+ }));
+ 
+ vi.mock("@/lib/db/pg/functions", () => ({
+@@ -88,12 +93,7 @@ describe("startGame", () => {
+     expect(result.expiresAt).toBe(new Date(claims.exp * 1000).toISOString());
+   });
+ 
+-  it("rejects Daily and Room with a clear NOT_IMPLEMENTED internal error", async () => {
+-    await expect(startGame(7, { mode: "daily" }, GAME_TEST_NOW)).rejects.toMatchObject({
+-      code: "INTERNAL_ERROR",
+-      message: expect.stringContaining("NOT_IMPLEMENTED"),
+-    });
+-
++  it("keeps Room as a clear NOT_IMPLEMENTED internal error (Daily is implemented)", async () => {
+     await expect(
+       startGame(7, { mode: "room", roomCode: "ABCD2345" }, GAME_TEST_NOW),
+     ).rejects.toMatchObject({
+@@ -103,6 +103,74 @@ describe("startGame", () => {
+   });
+ });
+ 
++const DAILY_COLORS = [
++  { h: 214.6, s: 62, v: 80.5 },
++  { h: 12, s: 90, v: 70 },
++  { h: 301.3, s: 45.5, v: 33 },
++] as const;
++
++describe("startGame (Daily)", () => {
++  beforeEach(() => {
++    mocks.getOrCreateToday.mockResolvedValue({
++      challengeId: 118,
++      date: "2026-10-29",
++      colors: [...DAILY_COLORS],
++    });
++  });
++
++  it("returns the stored colours in a permuted order with the right claims", async () => {
++    const result = await startGame(7, { mode: "daily" }, GAME_TEST_NOW);
++
++    expect(mocks.getOrCreateToday).toHaveBeenCalledWith(GAME_TEST_NOW);
++    expect(result).toMatchObject({
++      mode: "daily",
++      revealMs: REVEAL_MS,
++      timerSeconds: null,
++      roomCode: null,
++      challengeDate: "2026-10-29",
++    });
++    expect(result.rounds).toHaveLength(3);
++
++    const claims = await verifyGameToken(result.gameToken, {
++      userId: 7,
++      now: new Date(GAME_TEST_NOW.getTime() + 20_000),
++    });
++
++    expect(claims.mode).toBe("daily");
++    expect(claims.cid).toBe(118);
++    expect(claims.cdate).toBe("2026-10-29");
++    expect(claims.rid).toBeUndefined();
++    expect(claims.tmr).toBeUndefined();
++
++    // `n` is the 1-based index of the stored colour, whatever the play order.
++    const numbers = claims.rounds.map((round) => round.n);
++    expect([...numbers].sort()).toEqual([1, 2, 3]);
++
++    claims.rounds.forEach((round, playIndex) => {
++      const stored = DAILY_COLORS[(round.n ?? 0) - 1];
++      expect({ h: round.h, s: round.s, v: round.v }).toEqual(stored);
++      expect(result.rounds[playIndex]?.roundNumber).toBe(playIndex + 1);
++      expect(result.rounds[playIndex]?.target).toEqual(stored);
++    });
++  });
++
++  it("does not leak colour numbers in the start response", async () => {
++    const result = await startGame(7, { mode: "daily" }, GAME_TEST_NOW);
++
++    for (const round of result.rounds) {
++      expect(Object.keys(round).sort()).toEqual(["roundNumber", "target"]);
++    }
++  });
++
++  it("propagates failures from the Daily challenge service", async () => {
++    mocks.getOrCreateToday.mockRejectedValue(new AppError("SERVICE_UNAVAILABLE"));
++
++    await expect(startGame(7, { mode: "daily" }, GAME_TEST_NOW)).rejects.toMatchObject({
++      code: "SERVICE_UNAVAILABLE",
++    });
++  });
++});
++
+ describe("submitGame", () => {
+   it("scores against token targets and calls Postgres exactly once", async () => {
+     const { token } = await mintGameToken();
+@@ -310,11 +378,11 @@ describe("submitGame", () => {
+     expect(mocks.submitGameResult).not.toHaveBeenCalled();
+   });
+ 
+-  it("rejects Daily and Room submissions with NOT_IMPLEMENTED", async () => {
+-    const daily = await mintGameToken({ mode: "daily" });
++  it("keeps Room submissions as NOT_IMPLEMENTED (Daily is implemented)", async () => {
++    const room = await mintGameToken({ mode: "room" });
+ 
+     await expect(
+-      submitGame(7, { gameToken: daily.token, guesses: FIXED_GUESSES }, GAME_TEST_NOW),
++      submitGame(7, { gameToken: room.token, guesses: FIXED_GUESSES }, GAME_TEST_NOW),
+     ).rejects.toMatchObject({
+       code: "INTERNAL_ERROR",
+       message: expect.stringContaining("NOT_IMPLEMENTED"),
+@@ -323,3 +391,136 @@ describe("submitGame", () => {
+     expect(mocks.submitGameResult).not.toHaveBeenCalled();
+   });
+ });
++
++describe("submitGame (Daily)", () => {
++  function dailySqlResult(overrides: Parameters<typeof makeSubmitGameResult>[0] = {}) {
++    return makeSubmitGameResult({
++      mode: "daily",
++      pb: {
++        scope: "daily",
++        previous: null,
++        current: EXPECTED_TOTAL,
++        updated: true,
++        beat_existing: false,
++      },
++      streak: { current: 3, longest: 7 },
++      ...overrides,
++    });
++  }
++
++  it("calls submit_game_result exactly once with the token's challenge id", async () => {
++    mocks.submitGameResult.mockResolvedValue(dailySqlResult());
++    const { token } = await mintGameToken({ mode: "daily", cid: 118, cdate: "2026-10-29" });
++
++    const result = await submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW);
++
++    expect(mocks.submitGameResult).toHaveBeenCalledTimes(1);
++    expect(mocks.submitGameResult).toHaveBeenCalledWith({
++      userId: 7,
++      mode: "daily",
++      challengeId: 118,
++      roundScores: [...EXPECTED_ROUND_SCORES],
++      playedAt: GAME_TEST_NOW,
++    });
++
++    expect(result).toMatchObject({
++      mode: "daily",
++      totalScore: EXPECTED_TOTAL,
++      totalGamesPlayed: 1,
++      streak: { current: 3, longest: 7 },
++      room: null,
++      achievements: [],
++      pb: { scope: "daily", previous: null, current: EXPECTED_TOTAL, updated: true },
++    });
++    // Daily rounds never carry `timedOut`.
++    for (const round of result.rounds) {
++      expect(round).not.toHaveProperty("timedOut");
++    }
++  });
++
++  it("writes a Daily history document with daily_challenge_id and color_number", async () => {
++    mocks.submitGameResult.mockResolvedValue(dailySqlResult());
++    const { token } = await mintGameToken({ mode: "daily", cid: 118, cdate: "2026-10-29" });
++
++    await submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW);
++
++    expect(mocks.insertGame).toHaveBeenCalledTimes(1);
++    const document = mocks.insertGame.mock.calls[0]?.[0];
++
++    expect(document).toMatchObject({
++      user_id: 7,
++      mode: "daily",
++      daily_challenge_id: 118,
++      played_at: GAME_TEST_NOW,
++      total_score: EXPECTED_TOTAL,
++    });
++    expect(document).not.toHaveProperty("room_id");
++    expect(document).not.toHaveProperty("attempt_number");
++    expect(document.rounds.map((round: { color_number: number }) => round.color_number)).toEqual([
++      3, 1, 2,
++    ]);
++    for (const round of document.rounds as Array<Record<string, unknown>>) {
++      expect(round).not.toHaveProperty("timed_out");
++    }
++  });
++
++  it("maps a higher daily personal best", async () => {
++    mocks.submitGameResult.mockResolvedValue(
++      dailySqlResult({
++        total_score: 30,
++        pb: { scope: "daily", previous: EXPECTED_TOTAL, current: 30, updated: true, beat_existing: true },
++      }),
++    );
++    const { token } = await mintGameToken({ mode: "daily" });
++
++    const result = await submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW);
++
++    expect(result.pb).toEqual({
++      scope: "daily",
++      previous: EXPECTED_TOTAL,
++      current: 30,
++      updated: true,
++      beatExisting: true,
++    });
++  });
++
++  it("ignores a client-supplied challenge id", async () => {
++    mocks.submitGameResult.mockResolvedValue(dailySqlResult());
++    const { token } = await mintGameToken({ mode: "daily", cid: 118 });
++    const body = {
++      gameToken: token,
++      guesses: FIXED_GUESSES,
++      cid: 1,
++      challengeId: 1,
++    } as unknown as GameSubmitRequest;
++
++    await submitGame(7, body, GAME_TEST_NOW);
++
++    expect(mocks.submitGameResult).toHaveBeenCalledWith(
++      expect.objectContaining({ challengeId: 118 }),
++    );
++  });
++
++  it("rejects timedOut=true for Daily", async () => {
++    const { token } = await mintGameToken({ mode: "daily" });
++
++    await expect(
++      submitGame(
++        7,
++        { gameToken: token, guesses: FIXED_GUESSES, timedOut: [false, true, false] },
++        GAME_TEST_NOW,
++      ),
++    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
++    expect(mocks.submitGameResult).not.toHaveBeenCalled();
++  });
++
++  it("does not write Mongo when Postgres fails", async () => {
++    mocks.submitGameResult.mockRejectedValue(new AppError("SERVICE_UNAVAILABLE"));
++    const { token } = await mintGameToken({ mode: "daily" });
++
++    await expect(
++      submitGame(7, { gameToken: token, guesses: FIXED_GUESSES }, GAME_TEST_NOW),
++    ).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
++    expect(mocks.insertGame).not.toHaveBeenCalled();
++  });
++});
+diff --git a/tests/unit/ui/dailyGameView.test.tsx b/tests/unit/ui/dailyGameView.test.tsx
+new file mode 100644
+index 0000000..1efbbec
+--- /dev/null
++++ b/tests/unit/ui/dailyGameView.test.tsx
+@@ -0,0 +1,163 @@
++import { renderToStaticMarkup } from "react-dom/server";
++import { describe, expect, it } from "vitest";
++
++import { DailyGameView } from "@/components/game";
++import {
++  gameMachineReducer,
++  initialGameMachineState,
++  type GameMachineState,
++} from "@/hooks/useGameMachine";
++import { REVEAL_MS, ROUNDS_PER_GAME, SLIDER_DEFAULTS } from "@/lib/config/constants";
++import type { GameStartResponse, GameSubmitResponse } from "@/lib/schemas/game";
++
++import {
++  EXPECTED_ROUND_SCORES,
++  EXPECTED_TOTAL,
++  FIXED_GUESSES,
++  FIXED_TARGETS,
++} from "../support/game";
++
++const GAME: GameStartResponse = {
++  gameToken: "signed-daily-token",
++  mode: "daily",
++  revealMs: REVEAL_MS,
++  timerSeconds: null,
++  expiresAt: "2026-10-30T12:00:00.000Z",
++  challengeDate: "2026-10-29",
++  roomCode: null,
++  rounds: FIXED_TARGETS.map((target, index) => ({
++    roundNumber: index + 1,
++    target: { h: target.h, s: target.s, v: target.v },
++  })),
++};
++
++function makeResult(overrides: Partial<GameSubmitResponse> = {}): GameSubmitResponse {
++  return {
++    mode: "daily",
++    totalScore: EXPECTED_TOTAL,
++    rounds: FIXED_TARGETS.map((target, index) => ({
++      roundNumber: index + 1,
++      target: { h: target.h, s: target.s, v: target.v },
++      guess: FIXED_GUESSES[index] ?? SLIDER_DEFAULTS,
++      score: EXPECTED_ROUND_SCORES[index] ?? 0,
++      diff: { h: 5.6, s: 3.5, v: 3.5 },
++    })),
++    totalGamesPlayed: 4,
++    pb: { scope: "daily", previous: null, current: EXPECTED_TOTAL, updated: true, beatExisting: false },
++    streak: { current: 3, longest: 7 },
++    achievements: [],
++    room: null,
++    ...overrides,
++  };
++}
++
++function starting(): GameMachineState {
++  return gameMachineReducer(initialGameMachineState, { type: "START" });
++}
++
++function revealing(): GameMachineState {
++  return gameMachineReducer(starting(), { type: "GAME_STARTED", game: GAME });
++}
++
++function submitting(): GameMachineState {
++  let state = gameMachineReducer(revealing(), { type: "REVEAL_ENDED" });
++
++  for (let round = 0; round < ROUNDS_PER_GAME; round += 1) {
++    state = gameMachineReducer(state, { type: "SUBMIT_GUESS" });
++    if (round < ROUNDS_PER_GAME - 1) {
++      state = gameMachineReducer(state, { type: "REVEAL_ENDED" });
++    }
++  }
++
++  return state;
++}
++
++function renderView(state: GameMachineState): string {
++  return renderToStaticMarkup(
++    <DailyGameView
++      state={state}
++      start={() => undefined}
++      setGuess={() => undefined}
++      submitGuess={() => undefined}
++      retry={() => undefined}
++      playAgain={() => undefined}
++    />,
++  );
++}
++
++function resultState(result: GameSubmitResponse): GameMachineState {
++  return gameMachineReducer(submitting(), { type: "SUBMIT_SUCCEEDED", result });
++}
++
++describe("DailyGameView", () => {
++  it("shows Daily copy on the intro screen", () => {
++    const html = renderView(initialGameMachineState);
++
++    expect(html).toContain("Daily");
++    expect(html).toContain("Same palette for everyone");
++    expect(html).toContain("Play Daily");
++    expect(html).not.toContain("Play Global");
++  });
++
++  it("unmounts the target swatch when the reveal ends", () => {
++    const reveal = revealing();
++    const revealHtml = renderView(reveal);
++
++    expect(revealHtml).toContain('data-testid="target-swatch"');
++    expect(revealHtml).toContain('role="progressbar"');
++    expect(revealHtml).toContain("Daily");
++
++    const guessHtml = renderView(gameMachineReducer(reveal, { type: "REVEAL_ENDED" }));
++
++    expect(guessHtml).not.toContain('data-testid="target-swatch"');
++    expect(guessHtml).toContain('data-testid="guess-preview"');
++    expect(guessHtml).toContain("Submit guess");
++  });
++
++  it("renders the Daily result with daily PB copy, streak and the Daily board link", () => {
++    const html = renderView(resultState(makeResult()));
++
++    expect(html).toContain("Daily logged.");
++    expect(html).toContain("First Daily benchmark");
++    expect(html).not.toContain("First Global benchmark");
++    expect(html).toContain('data-testid="daily-streak"');
++    expect(html).toContain("current");
++    expect(html).toContain("longest");
++    expect(html).toContain('href="/leaderboard/daily"');
++    expect(html).toContain("Daily board");
++    expect(html).toContain("25.3");
++    expect(html).toContain('data-testid="round-split-swatch-3"');
++  });
++
++  it("celebrates a streak only at a 3/7/30 milestone on the first run of the day", () => {
++    const milestone = renderView(resultState(makeResult({ streak: { current: 3, longest: 3 } })));
++    expect(milestone).toContain("3-day streak!");
++
++    const midStreak = renderView(resultState(makeResult({ streak: { current: 4, longest: 4 } })));
++    expect(midStreak).not.toContain("-day streak!");
++    expect(midStreak).toContain('data-testid="daily-streak"');
++
++    const repeatPlay = renderView(
++      resultState(
++        makeResult({
++          streak: { current: 7, longest: 7 },
++          pb: { scope: "daily", previous: 20, current: 20, updated: false, beatExisting: false },
++        }),
++      ),
++    );
++    expect(repeatPlay).not.toContain("-day streak!");
++  });
++
++  it("uses the new-daily-best copy when a Daily best is beaten", () => {
++    const html = renderView(
++      resultState(
++        makeResult({
++          pb: { scope: "daily", previous: 20, current: EXPECTED_TOTAL, updated: true, beatExisting: true },
++        }),
++      ),
++    );
++
++    expect(html).toContain("New daily best!");
++    expect(html).not.toContain("New personal best!");
++  });
++});
+-- 
+2.43.0
+
