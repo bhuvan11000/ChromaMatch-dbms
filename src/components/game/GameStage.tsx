@@ -14,6 +14,8 @@ export interface GameStageCountdown {
   totalMs: number;
   /** Defaults to "Reveal window"; use "Guess window" for timed rooms. */
   label?: string;
+  /** Short line under the label, e.g. "Lock it in." for the guess window. */
+  hint?: string;
 }
 
 export interface GameStageProps {
@@ -90,6 +92,7 @@ export function GameStage({
           remainingMs={countdown.remainingMs}
           totalMs={countdown.totalMs}
           label={countdown.label}
+          hint={countdown.hint}
         />
       ) : null}
 

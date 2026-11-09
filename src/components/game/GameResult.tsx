@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   Button,
@@ -132,6 +132,15 @@ export interface GameResultProps {
   result: GameSubmitResponse;
   onPlayAgain: () => void;
   className?: string;
+  /**
+   * Overrides the heading copy. Used by room results; Global and Daily derive
+   * theirs from `result.mode`.
+   */
+  header?: { kicker: string; title: string };
+  /** Extra panel between the notices and the rounds (e.g. room summary). */
+  summary?: ReactNode;
+  /** Replaces the default Play again / leaderboard buttons. */
+  actions?: ReactNode;
 }
 
 /**
@@ -140,7 +149,14 @@ export interface GameResultProps {
  * Scores, differences and totals are rendered exactly as the server returned
  * them; this component never imports the scoring domain module.
  */
-export function GameResult({ result, onPlayAgain, className }: GameResultProps) {
+export function GameResult({
+  result,
+  onPlayAgain,
+  className,
+  header,
+  summary,
+  actions,
+}: GameResultProps) {
   const isDaily = result.mode === "daily";
   const pb = result.pb;
   const isFirstPb = pb !== null && pb.previous === null;
@@ -197,13 +213,14 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="min-w-0">
             <p className="font-mono text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
-              {isDaily ? "Daily · Shared palette complete" : "Global · Flash complete"}
+              {header?.kicker ??
+                (isDaily ? "Daily · Shared palette complete" : "Global · Flash complete")}
             </p>
             <h2
               id="game-result-heading"
               className="mt-2 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
             >
-              {isDaily ? "Daily logged." : "Palette logged."}
+              {header?.title ?? (isDaily ? "Daily logged." : "Palette logged.")}
             </h2>
           </div>
 
@@ -257,6 +274,8 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
         </div>
       ) : null}
 
+      {summary}
+
       {streak && streakMilestone ? (
         <Celebration
           kind="streak"
@@ -301,6 +320,11 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
                     Round {round.roundNumber}
                   </h3>
                   <p className="text-[11px] text-muted-foreground">Target vs your mix</p>
+                  {round.timedOut ? (
+                    <span className="mt-1 inline-flex rounded-full border border-warning/40 bg-warning-soft px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.14em] text-warning uppercase">
+                      Timed out
+                    </span>
+                  ) : null}
                 </div>
               </div>
               <p className="font-display text-2xl font-bold tracking-tight text-foreground tabular-nums">
@@ -349,35 +373,37 @@ export function GameResult({ result, onPlayAgain, className }: GameResultProps) 
         </Card>
       ) : null}
 
-      <div className="grid gap-2 sm:grid-cols-3">
-        <Button size="lg" onClick={onPlayAgain}>
-          <PlayIcon />
-          Play again
-        </Button>
-        {isDaily ? (
-          <>
-            <a href="/leaderboard/daily" className={EMPHASIZED_LINK_CLASSES}>
-              <TrophyIcon />
-              Daily board
-            </a>
-            <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
-              <TrophyIcon />
-              Global board
-            </a>
-          </>
-        ) : (
-          <>
-            <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
-              <TrophyIcon />
-              Global board
-            </a>
-            <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
-              <TrophyIcon />
-              Daily board
-            </a>
-          </>
-        )}
-      </div>
+      {actions ?? (
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Button size="lg" onClick={onPlayAgain}>
+            <PlayIcon />
+            Play again
+          </Button>
+          {isDaily ? (
+            <>
+              <a href="/leaderboard/daily" className={EMPHASIZED_LINK_CLASSES}>
+                <TrophyIcon />
+                Daily board
+              </a>
+              <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
+                <TrophyIcon />
+                Global board
+              </a>
+            </>
+          ) : (
+            <>
+              <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
+                <TrophyIcon />
+                Global board
+              </a>
+              <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
+                <TrophyIcon />
+                Daily board
+              </a>
+            </>
+          )}
+        </div>
+      )}
     </section>
   );
 }

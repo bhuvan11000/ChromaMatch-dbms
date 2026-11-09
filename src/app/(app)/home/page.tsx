@@ -50,6 +50,7 @@ const MODES: ModeCard[] = [
     kind: "room",
     name: "Custom Room",
     description: "A private code and bragging rights.",
+    href: "/rooms",
   },
   {
     kind: "boards",

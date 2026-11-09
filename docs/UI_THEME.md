@@ -106,6 +106,13 @@ they must not recreate their own stage background.
 | `GameView` | `components/game/GameView.tsx` | Shared presentational phase shell for Global, Daily and Room; mode copy table only. |
 | `DailyGameView` | `components/game/DailyGameView.tsx` | Daily wrapper over `GameView`. |
 | `DailyCard` | `components/home/DailyCard.tsx` | Live Home card: today's best, streak and reset countdown. |
+| `RoomPanel` | `components/rooms/RoomPanel.tsx` | Status-driven lobby/in-progress/finished/cancelled panel; Start is creator-only. |
+| `RoomCreateForm` | `components/rooms/RoomCreateForm.tsx` | Size, timer and attempts controls with shared Zod validation. |
+| `JoinForm` | `components/rooms/JoinForm.tsx` | Join-by-code form; trims and upper-cases. |
+| `LobbyMemberList` | `components/rooms/LobbyMemberList.tsx` | Lobby members with Host/You text tags. |
+| `RoomScoreboard` | `components/rooms/RoomScoreboard.tsx` | Ranked room standings; unranked players last. |
+| `RoomSettingsSummary` | `components/rooms/RoomSettingsSummary.tsx` | Text summary of size, timer and attempts. |
+| `RoomResult` | `components/rooms/RoomResult.tsx` | Room attempt result; reuses `GameResult` with room actions. |
 | `LeaderboardTable` | `components/leaderboard/LeaderboardTable.tsx` | Rank/player/score/date table; highlights the viewer row with a visible “You” label. |
 | `RankBadge` | `components/leaderboard/RankBadge.tsx` | Rank pill; top three add a medal cue, never colour alone. |
 | `YourRankCard` | `components/leaderboard/YourRankCard.tsx` | Compact viewer rank/score card, rendered only when `me` exists. |

@@ -12,6 +12,7 @@ import {
   HsvSliders,
   RoundProgress,
 } from "@/components/game";
+import { JoinForm, RoomCreateForm, RoomPanel, RoomResult } from "@/components/rooms";
 import {
   Button,
   Card,
@@ -31,6 +32,7 @@ import {
 import { initialGameMachineState } from "@/hooks/useGameMachine";
 import type { Hsv } from "@/lib/domain/hsv";
 import type { GameSubmitResponse } from "@/lib/schemas/game";
+import type { RoomState } from "@/lib/schemas/rooms";
 
 const NOOP = () => undefined;
 
@@ -63,6 +65,86 @@ const DAILY_RESULT: GameSubmitResponse = {
     { id: 1, name: "First Daily Game", description: "Complete your first Daily game." },
   ],
   room: null,
+};
+
+const ROOM_MEMBERS: RoomState["members"] = [
+  {
+    userId: 1,
+    username: "alice",
+    isCreator: true,
+    status: "active",
+    attemptsUsed: 0,
+    bestScore: null,
+    joinedAt: "2026-10-29T12:00:00.000Z",
+  },
+  {
+    userId: 2,
+    username: "bob",
+    isCreator: false,
+    status: "active",
+    attemptsUsed: 1,
+    bestScore: 24.5,
+    joinedAt: "2026-10-29T12:01:00.000Z",
+  },
+];
+
+const ROOM_STANDINGS: NonNullable<RoomState["standings"]> = [
+  { rank: 1, userId: 2, username: "bob", bestScore: 24.5 },
+  { rank: null, userId: 1, username: "alice", bestScore: null },
+];
+
+const ROOM_LOBBY: RoomState = {
+  code: "ABCD2345",
+  status: "lobby",
+  roomSize: 4,
+  timerSeconds: 10,
+  attemptsLimit: 3,
+  creatorId: 1,
+  createdAt: "2026-10-29T12:00:00.000Z",
+  startedAt: null,
+  endedAt: null,
+  me: {
+    userId: 1,
+    isCreator: true,
+    status: "active",
+    attemptsUsed: 0,
+    attemptsRemaining: 3,
+    bestScore: null,
+  },
+  members: ROOM_MEMBERS,
+  standings: ROOM_STANDINGS,
+};
+
+const ROOM_IN_PROGRESS: RoomState = {
+  ...ROOM_LOBBY,
+  status: "in_progress",
+  startedAt: "2026-10-29T12:05:00.000Z",
+  me: { ...ROOM_LOBBY.me, attemptsUsed: 1, attemptsRemaining: 2, bestScore: 20 },
+};
+
+const ROOM_RESULT: GameSubmitResponse = {
+  mode: "room",
+  totalScore: 25.3,
+  rounds: DAILY_TARGETS.map((target, index) => ({
+    roundNumber: index + 1,
+    target,
+    guess: { h: target.h + 5, s: target.s - 2, v: target.v - 2 },
+    score: [9.7, 9.9, 5.7][index] ?? 0,
+    diff: { h: 5.6, s: 3.5, v: 3.5 },
+    timedOut: index === 1,
+  })),
+  totalGamesPlayed: null,
+  pb: null,
+  streak: null,
+  achievements: [],
+  room: {
+    attemptNumber: 2,
+    bestScore: 27.5,
+    isNewBest: true,
+    attemptsRemaining: 1,
+    memberStatus: "active",
+    roomStatus: "in_progress",
+  },
 };
 
 const SURFACE_TOKENS = [
@@ -556,6 +638,48 @@ export function StyleguideShowcase() {
               playAgain={NOOP}
             />
             <GameResult result={DAILY_RESULT} onPlayAgain={NOOP} />
+          </div>
+        </Section>
+
+        <Section
+          id="rooms"
+          eyebrow="Rooms"
+          title="Lobby, play and result"
+          description="Private code, shared palette, independent attempts. The stage and result well are the same components as Global and Daily."
+        >
+          <div className="space-y-6">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <RoomPanel
+                state={ROOM_LOBBY}
+                onStart={NOOP}
+                onLeave={NOOP}
+                onPlay={NOOP}
+                onCopyLink={NOOP}
+                copied={false}
+              />
+              <RoomPanel
+                state={ROOM_IN_PROGRESS}
+                onStart={NOOP}
+                onLeave={NOOP}
+                onPlay={NOOP}
+                onCopyLink={NOOP}
+                copied={false}
+              />
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card className="p-5">
+                <RoomCreateForm onSubmit={NOOP} />
+              </Card>
+              <Card className="p-5">
+                <JoinForm onSubmit={NOOP} />
+              </Card>
+            </div>
+            <RoomResult
+              result={ROOM_RESULT}
+              roomCode="ABCD2345"
+              onNextAttempt={NOOP}
+              onBackToRoom={NOOP}
+            />
           </div>
         </Section>
 

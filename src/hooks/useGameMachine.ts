@@ -37,6 +37,8 @@ export interface GameMachineState {
   currentGuess: Hsv;
   timedOut: boolean[];
   revealRemainingMs: number;
+  /** Timed rooms only: time left to guess in the current round (ms). */
+  guessRemainingMs: number;
   result: GameSubmitResponse | null;
   error: GameMachineError | null;
   startNonce: number;
@@ -49,6 +51,7 @@ export type GameMachineEvent =
   | { type: "START_FAILED"; code: ErrorCode; message: string }
   | { type: "REVEAL_TICK"; remainingMs: number }
   | { type: "REVEAL_ENDED" }
+  | { type: "GUESS_TICK"; remainingMs: number }
   | { type: "SET_GUESS"; guess: Hsv }
   | { type: "SUBMIT_GUESS"; timedOut?: boolean }
   | { type: "SUBMIT_SUCCEEDED"; result: GameSubmitResponse }
@@ -72,6 +75,7 @@ export const initialGameMachineState: GameMachineState = {
   currentGuess: defaultGuess(),
   timedOut: defaultTimedOut(),
   revealRemainingMs: 0,
+  guessRemainingMs: 0,
   result: null,
   error: null,
   startNonce: 0,
@@ -153,7 +157,18 @@ export function gameMachineReducer(
         phase: "ROUND_GUESS",
         currentGuess: defaultGuess(),
         revealRemainingMs: 0,
+        // The guess window (timed rooms) starts now, not at the reveal.
+        guessRemainingMs: (state.game?.timerSeconds ?? 0) * 1000,
       };
+    }
+
+    case "GUESS_TICK": {
+      if (state.phase !== "ROUND_GUESS") return state;
+
+      const total = (state.game?.timerSeconds ?? 0) * 1000;
+      const remaining = Math.max(0, Math.min(total, event.remainingMs));
+
+      return { ...state, guessRemainingMs: remaining };
     }
 
     case "SET_GUESS": {
@@ -180,6 +195,7 @@ export function gameMachineReducer(
           timedOut,
           currentGuess: defaultGuess(),
           revealRemainingMs: state.game?.revealMs ?? REVEAL_MS,
+          guessRemainingMs: 0,
         };
       }
 
@@ -189,6 +205,7 @@ export function gameMachineReducer(
         guesses,
         timedOut,
         revealRemainingMs: 0,
+        guessRemainingMs: 0,
         submitNonce: state.submitNonce + 1,
       };
     }
@@ -263,19 +280,56 @@ function toMachineError(error: unknown): { code: ErrorCode; message: string } {
 export interface GameMachineOptions {
   /** Defaults to "global" so existing callers keep their behaviour. */
   mode?: GameMode;
+  /** Required when `mode` is "room". */
+  roomCode?: string;
 }
 
 /** Body for `POST /api/games/start`. Pure so it can be unit-tested. */
 export function buildStartBody(options: GameMachineOptions = {}): GameStartRequest {
-  return { mode: options.mode ?? "global" };
+  const mode = options.mode ?? "global";
+
+  return mode === "room" && options.roomCode !== undefined
+    ? { mode, roomCode: options.roomCode }
+    : { mode };
+}
+
+export interface GuessCountdown {
+  remainingMs: number;
+  totalMs: number;
+  label: string;
+}
+
+/**
+ * The guess-window countdown for the current state, or null when the game has
+ * no per-round timer (Global, Daily and untimed rooms) or is not guessing.
+ */
+export function getGuessCountdown(state: GameMachineState): GuessCountdown | null {
+  const timerSeconds = state.game?.timerSeconds ?? null;
+
+  if (state.phase !== "ROUND_GUESS" || timerSeconds === null) return null;
+
+  return {
+    remainingMs: state.guessRemainingMs,
+    totalMs: timerSeconds * 1000,
+    label: "Guess window",
+  };
 }
 
 /**
  * Body for `POST /api/games/submit`: the signed token and the guesses only.
- * Targets and scores are never sent; Global/Daily never send `timedOut`.
+ * Targets and scores are never sent. `timedOut` is passed only for room games;
+ * Global and Daily omit it.
  */
-export function buildSubmitBody(gameToken: string, guesses: readonly Hsv[]): GameSubmitRequest {
-  return { gameToken, guesses: [...guesses] };
+export function buildSubmitBody(
+  gameToken: string,
+  guesses: readonly Hsv[],
+  timedOut?: readonly boolean[],
+): GameSubmitRequest {
+  return {
+    gameToken,
+    guesses: [...guesses],
+    ...(timedOut !== undefined ? { timedOut: [...timedOut] } : {}),
+  };
 }
 
 export interface UseGameMachineResult {
@@ -298,6 +352,7 @@ export interface UseGameMachineResult {
  */
 export function useGameMachine(options: GameMachineOptions = {}): UseGameMachineResult {
   const mode = options.mode ?? "global";
+  const roomCode = options.roomCode;
   const [state, dispatch] = useReducer(gameMachineReducer, initialGameMachineState);
 
   const startRequestRef = useRef<string | null>(null);
@@ -317,7 +372,7 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
     startRequestRef.current = requestKey;
 
     apiClient
-      .post<GameStartResponse>("/games/start", buildStartBody({ mode }), {
+      .post<GameStartResponse>("/games/start", buildStartBody({ mode, roomCode }), {
         schema: gameStartResponseSchema,
       })
       .then((game) => dispatch({ type: "GAME_STARTED", game }))
@@ -325,7 +380,7 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
         const mapped = toMachineError(error);
         dispatch({ type: "START_FAILED", code: mapped.code, message: mapped.message });
       });
-  }, [state.phase, state.startNonce, mode]);
+  }, [state.phase, state.startNonce, mode, roomCode]);
 
   useEffect(() => {
     if (state.phase !== "SUBMITTING" || !state.game || state.guesses.length !== ROUNDS_PER_GAME) {
@@ -339,7 +394,11 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
     apiClient
       .post<GameSubmitResponse>(
         "/games/submit",
-        buildSubmitBody(state.game.gameToken, state.guesses),
+        buildSubmitBody(
+          state.game.gameToken,
+          state.guesses,
+          mode === "room" ? state.timedOut : undefined,
+        ),
         { schema: gameSubmitResponseSchema },
       )
       .then((result) => dispatch({ type: "SUBMIT_SUCCEEDED", result }))
@@ -347,7 +406,7 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
         const mapped = toMachineError(error);
         dispatch({ type: "SUBMIT_FAILED", code: mapped.code, message: mapped.message });
       });
-  }, [state.phase, state.game, state.guesses, state.submitNonce]);
+  }, [state.phase, state.game, state.guesses, state.timedOut, state.submitNonce, mode]);
 
   useEffect(() => {
     if (state.phase !== "ROUND_REVEAL" || !state.game) return;
@@ -372,6 +431,37 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
 
     return () => cancelAnimationFrame(frame);
   }, [state.phase, state.roundIndex, state.game]);
+
+  const timerSeconds = state.game?.timerSeconds ?? null;
+
+  useEffect(() => {
+    // Timed rooms only: the guess window starts when the round enters
+    // ROUND_GUESS (not at the reveal) and resets every round.
+    if (state.phase !== "ROUND_GUESS" || timerSeconds === null) return;
+
+    const totalMs = timerSeconds * 1000;
+    const startedAt = performance.now();
+    let frame = 0;
+
+    const tick = () => {
+      const remainingMs = Math.max(0, totalMs - (performance.now() - startedAt));
+
+      if (remainingMs <= 0) {
+        // Auto-submit the current slider values once. The reducer's phase
+        // guard turns any duplicate into a no-op; there is no second path.
+        dispatch({ type: "GUESS_TICK", remainingMs: 0 });
+        dispatch({ type: "SUBMIT_GUESS", timedOut: true });
+        return;
+      }
+
+      dispatch({ type: "GUESS_TICK", remainingMs });
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(frame);
+  }, [state.phase, state.roundIndex, timerSeconds]);
 
   const inProgress = state.game !== null && state.phase !== "RESULT";
 

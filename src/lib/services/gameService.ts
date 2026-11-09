@@ -1,6 +1,7 @@
 import { REVEAL_MS, ROUNDS_PER_GAME } from "@/lib/config/constants";
 import { buildHistoryDocument, insertGame, type HistoryDocument } from "@/lib/db/mongo/historyRepo";
-import { submitGameResult } from "@/lib/db/pg/functions";
+import { submitGameResult, submitRoomAttempt } from "@/lib/db/pg/functions";
+import { findRoomByCode, findRoomMember, listRoomColors } from "@/lib/db/pg/queries/rooms";
 import { generateRandomColors } from "@/lib/domain/colors";
 import { isValidHsv, normalizeHsv, type Hsv } from "@/lib/domain/hsv";
 import { scoreGame, type GameResult } from "@/lib/domain/scoring";
@@ -23,11 +24,14 @@ import {
 
 import { getOrCreateToday } from "./dailyChallengeService";
 
+// Room reads use the data-access readers directly: gameService must not import
+// roomService (same layer; avoids a cycle).
+
 /**
  * Game use-cases — Architecture §5.7.3 and §5.12.1.
  *
- * Global and Daily are implemented. Room is still an explicit branch so a
- * later step can add it without changing the submit pipeline.
+ * Global, Daily and Room share one start/submit pipeline; each mode only
+ * differs in where its targets come from and which SQL function records it.
  */
 
 interface StartContext {
@@ -36,12 +40,8 @@ interface StartContext {
   timerSeconds: 5 | 10 | 15 | null;
   challengeDate: string | null;
   roomCode: string | null;
-  /** Extra signed claims for the token (Daily `cid`/`cdate`). */
-  tokenContext: { cid?: number; cdate?: string };
-}
-
-function notImplemented(mode: GameMode): never {
-  throw new AppError("INTERNAL_ERROR", `NOT_IMPLEMENTED: ${mode} mode is not available yet.`);
+  /** Extra signed claims for the token (Daily `cid`/`cdate`, Room `rid`/`tmr`). */
+  tokenContext: { cid?: number; cdate?: string; rid?: number; tmr?: number | null };
 }
 
 function startGlobal(): StartContext {
@@ -86,14 +86,73 @@ async function startDaily(now: Date): Promise<StartContext> {
   };
 }
 
-async function startContextForMode(input: GameStartRequest, now: Date): Promise<StartContext> {
+/** Room codes are matched exactly by SQL; normalize like roomService does (U-016). */
+function normalizeRoomCode(code: string | undefined): string {
+  return (code ?? "").trim().toUpperCase();
+}
+
+/**
+ * Room: checks run in a fixed order so a non-member always gets 403 before any
+ * status information is revealed. Attempts are consumed at submit, not here.
+ */
+async function startRoomGame(
+  userId: number,
+  roomCodeInput: string | undefined,
+): Promise<StartContext> {
+  const code = normalizeRoomCode(roomCodeInput);
+
+  const room = await findRoomByCode(code);
+  if (!room) {
+    throw new AppError("ROOM_NOT_FOUND");
+  }
+
+  const member = await findRoomMember(room.roomId, userId);
+  if (!member) {
+    throw new AppError("NOT_ROOM_MEMBER");
+  }
+
+  if (room.status !== "in_progress") {
+    throw new AppError("ROOM_NOT_IN_PROGRESS");
+  }
+  if (member.status !== "active") {
+    throw new AppError("MEMBER_NOT_ACTIVE");
+  }
+  if (member.attemptsUsed >= room.attemptsLimit) {
+    throw new AppError("ATTEMPTS_EXHAUSTED");
+  }
+
+  const colors = await listRoomColors(room.roomId);
+  const order = randomPermutation(ROUNDS_PER_GAME);
+
+  const rounds = order.map((originalIndex): GameTokenRound => {
+    const color = colors[originalIndex];
+    if (!color) {
+      throw new AppError("INTERNAL_ERROR", "Could not order the room colors.");
+    }
+    return { h: color.h, s: color.s, v: color.v, n: (originalIndex + 1) as 1 | 2 | 3 };
+  });
+
+  return {
+    rounds: [rounds[0], rounds[1], rounds[2]],
+    timerSeconds: room.timerSeconds,
+    challengeDate: null,
+    roomCode: code,
+    tokenContext: { rid: room.roomId, tmr: room.timerSeconds },
+  };
+}
+
+async function startContextForMode(
+  userId: number,
+  input: GameStartRequest,
+  now: Date,
+): Promise<StartContext> {
   switch (input.mode) {
     case "global":
       return startGlobal();
     case "daily":
       return startDaily(now);
     case "room":
-      return notImplemented(input.mode);
+      return startRoomGame(userId, input.roomCode);
   }
 }
 
@@ -112,8 +171,12 @@ function normalizeGuesses(guesses: readonly Hsv[]): [Hsv, Hsv, Hsv] {
   return [normalized[0], normalized[1], normalized[2]];
 }
 
+/**
+ * `timedOut` is only meaningful for timed rooms (§5.7.3): for every other
+ * token it must be absent or all `false`.
+ */
 function normalizeTimedOut(
-  mode: GameMode,
+  claims: GameTokenClaims,
   timedOut: readonly boolean[] | undefined,
 ): boolean[] | undefined {
   if (timedOut === undefined) {
@@ -127,7 +190,9 @@ function normalizeTimedOut(
     );
   }
 
-  if (mode !== "room" && timedOut.some(Boolean)) {
+  const timedRoom = claims.mode === "room" && claims.tmr !== null && claims.tmr !== undefined;
+
+  if (!timedRoom && timedOut.some(Boolean)) {
     throw new AppError("VALIDATION_ERROR", "timedOut is only allowed for timed room games.");
   }
 
@@ -212,13 +277,95 @@ function buildSubmitResponse(
   };
 }
 
+function buildRoomResponse(
+  claims: GameTokenClaims,
+  guesses: readonly [Hsv, Hsv, Hsv],
+  game: GameResult,
+  sqlResult: Awaited<ReturnType<typeof submitRoomAttempt>>,
+  timedOut: readonly boolean[],
+): GameSubmitResponse {
+  const rounds = claims.rounds.map((target, index) => ({
+    roundNumber: index + 1,
+    target: { h: target.h, s: target.s, v: target.v },
+    guess: { ...guesses[index] },
+    score: game.rounds[index].score,
+    diff: { ...game.rounds[index].diff },
+    // Room rounds always report `timedOut` (false when the client sent none).
+    timedOut: timedOut[index] ?? false,
+  }));
+
+  return {
+    mode: "room",
+    totalScore: sqlResult.total_score,
+    rounds: [rounds[0], rounds[1], rounds[2]],
+    totalGamesPlayed: null,
+    pb: null,
+    streak: null,
+    achievements: [],
+    room: {
+      attemptNumber: sqlResult.attempt_number,
+      bestScore: sqlResult.best_score,
+      isNewBest: sqlResult.is_new_best,
+      attemptsRemaining: sqlResult.attempts_remaining,
+      memberStatus: sqlResult.member_status,
+      roomStatus: sqlResult.room_status,
+    },
+  };
+}
+
+/**
+ * Room attempt: exactly one `submit_room_attempt` call (which consumes the
+ * attempt and may finish the room). Users, PBs, streaks and achievements are
+ * never touched. Mongo uses the service's `now` because the SQL function has no
+ * `played_at` parameter (it stamps `best_achieved_at` with the DB clock).
+ */
+async function submitRoomGame(
+  userId: number,
+  claims: GameTokenClaims,
+  guesses: [Hsv, Hsv, Hsv],
+  game: GameResult,
+  timedOut: boolean[] | undefined,
+  now: Date,
+): Promise<GameSubmitResponse> {
+  if (claims.rid === undefined) {
+    throw new AppError("TOKEN_INVALID", "Room tokens require a room id.");
+  }
+
+  const sqlResult = await submitRoomAttempt({
+    userId,
+    roomId: claims.rid,
+    roundScores: [game.rounds[0].score, game.rounds[1].score, game.rounds[2].score],
+  });
+
+  const roomTimedOut = timedOut ?? Array.from({ length: ROUNDS_PER_GAME }, () => false);
+
+  const historyDocument = buildHistoryDocument({
+    token: claims,
+    userId,
+    guesses,
+    roundResults: game.rounds,
+    total: game.total,
+    playedAt: now,
+    roomAttemptNumber: sqlResult.attempt_number,
+    timedOut: roomTimedOut,
+  });
+
+  await insertHistoryBestEffort(historyDocument, {
+    userId,
+    mode: claims.mode,
+    jti: claims.jti,
+  });
+
+  return buildRoomResponse(claims, guesses, game, sqlResult, roomTimedOut);
+}
+
 /** Starts a game and returns the display targets plus a signed game token. */
 export async function startGame(
   userId: number,
   input: GameStartRequest,
   now: Date,
 ): Promise<GameStartResponse> {
-  const context = await startContextForMode(input, now);
+  const context = await startContextForMode(userId, input, now);
   const signed = await signGameToken(
     {
       userId,
@@ -255,13 +402,13 @@ export async function submitGame(
 ): Promise<GameSubmitResponse> {
   const claims = await verifyGameToken(input.gameToken, { userId, now });
 
-  if (claims.mode === "room") {
-    notImplemented(claims.mode);
-  }
-
   const guesses = normalizeGuesses(input.guesses);
-  const timedOut = normalizeTimedOut(claims.mode, input.timedOut);
+  const timedOut = normalizeTimedOut(claims, input.timedOut);
   const game = scoreGame(claims.rounds, guesses);
+
+  if (claims.mode === "room") {
+    return submitRoomGame(userId, claims, guesses, game, timedOut, now);
+  }
 
   // Daily tokens always carry `cid` (verifyGameToken enforces it); the id comes
   // only from the signed token, never from the request body.
