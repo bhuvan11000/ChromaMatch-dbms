@@ -1,5 +1,6 @@
 import { Int32, Long, ObjectId, type WithId } from "mongodb";
 
+import { HISTORY_MAX_LIMIT } from "@/lib/config/constants";
 import { AppError } from "@/lib/errors";
 
 import { getGameHistoryCollection } from "./client";
@@ -111,8 +112,6 @@ export interface BuildHistoryInput {
   roomAttemptNumber?: number;
   timedOut?: readonly boolean[];
 }
-
-const HISTORY_MAX_LIMIT = 100;
 
 function invalid(message: string): AppError {
   return new AppError("VALIDATION_ERROR", message);

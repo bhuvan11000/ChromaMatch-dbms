@@ -12,6 +12,14 @@ import {
   HsvSliders,
   RoundProgress,
 } from "@/components/game";
+import {
+  AccuracyChart,
+  AchievementGrid,
+  HistoryList,
+  HueRegionChart,
+  StatsCards,
+  TrendChart,
+} from "@/components/profile";
 import { JoinForm, RoomCreateForm, RoomPanel, RoomResult } from "@/components/rooms";
 import {
   Button,
@@ -33,6 +41,14 @@ import { initialGameMachineState } from "@/hooks/useGameMachine";
 import type { Hsv } from "@/lib/domain/hsv";
 import type { GameSubmitResponse } from "@/lib/schemas/game";
 import type { RoomState } from "@/lib/schemas/rooms";
+import type {
+  AchievementItemResponse,
+  HistoryItemResponse,
+  MyStatsResponse,
+  StatsChannelAccuracy,
+  StatsHueRegion,
+  StatsTrendPoint,
+} from "@/lib/schemas/stats";
 
 const NOOP = () => undefined;
 
@@ -146,6 +162,98 @@ const ROOM_RESULT: GameSubmitResponse = {
     roomStatus: "in_progress",
   },
 };
+
+const PROFILE_STATS: MyStatsResponse = {
+  global: { bestScore: 24.6, achievedAt: "2026-10-17T14:32:08.000Z" },
+  totalGamesPlayed: 41,
+  daily: {
+    currentStreak: 3,
+    longestStreak: 7,
+    lastPlayedDate: "2026-10-20",
+    todayBest: 25.3,
+  },
+  achievementsEarned: 1,
+  historyAvailable: true,
+  history: null,
+};
+
+const PROFILE_ACHIEVEMENTS: AchievementItemResponse[] = [
+  {
+    id: 1,
+    name: "First Global Game",
+    description: "Complete your first Global game.",
+    criteriaDescription: "Complete your first Global game.",
+    earned: true,
+    earnedAt: "2026-10-17T14:32:08.000Z",
+  },
+  {
+    id: 2,
+    name: "Centurion",
+    description: "Complete 100 games.",
+    criteriaDescription: "Complete 100 games.",
+    earned: false,
+    earnedAt: null,
+  },
+];
+
+const PROFILE_HISTORY: HistoryItemResponse[] = [
+  {
+    id: "profile-global",
+    mode: "global",
+    playedAt: "2026-10-21T09:15:00.000Z",
+    totalScore: 24.6,
+    rounds: DAILY_TARGETS.map((target, index) => ({
+      roundNumber: index + 1,
+      target,
+      guess: { h: target.h + 5, s: target.s - 2, v: target.v - 2 },
+      score: [9.7, 9.9, 5.7][index] ?? 0,
+    })),
+  },
+  {
+    id: "profile-room",
+    mode: "room",
+    playedAt: "2026-10-20T18:00:00.000Z",
+    totalScore: 22.1,
+    roomId: 7,
+    attemptNumber: 2,
+    rounds: DAILY_TARGETS.map((target, index) => ({
+      roundNumber: index + 1,
+      colorNumber: index + 1,
+      target,
+      guess: { h: target.h + 8, s: target.s - 4, v: target.v - 4 },
+      score: [8.1, 7.9, 6.1][index] ?? 0,
+      timedOut: index === 1,
+    })),
+  },
+];
+
+const PROFILE_TREND: StatsTrendPoint[] = [
+  { bucketStart: "2026-10-17", games: 2, avgScore: 18.4 },
+  { bucketStart: "2026-10-18", games: 1, avgScore: 21.2 },
+  { bucketStart: "2026-10-19", games: 3, avgScore: 19.7 },
+  { bucketStart: "2026-10-20", games: 2, avgScore: 23.1 },
+  { bucketStart: "2026-10-21", games: 1, avgScore: 24.6 },
+];
+
+const PROFILE_ACCURACY: StatsChannelAccuracy = {
+  rounds: 123,
+  avgAbsDiff: { h: 9.4, s: 7.2, v: 6.8 },
+};
+
+const PROFILE_HUE_REGIONS: StatsHueRegion[] = [
+  { from: 0, to: 30, rounds: 11, avgScore: 7.3 },
+  { from: 30, to: 60, rounds: 8, avgScore: 8.1 },
+  { from: 60, to: 90, rounds: 6, avgScore: 7.9 },
+  { from: 90, to: 120, rounds: 9, avgScore: 8.4 },
+  { from: 120, to: 150, rounds: 4, avgScore: 6.8 },
+  { from: 150, to: 180, rounds: 5, avgScore: 7.1 },
+  { from: 180, to: 210, rounds: 7, avgScore: 7.7 },
+  { from: 210, to: 240, rounds: 10, avgScore: 8.6 },
+  { from: 240, to: 270, rounds: 5, avgScore: 7.4 },
+  { from: 270, to: 300, rounds: 6, avgScore: 7.8 },
+  { from: 300, to: 330, rounds: 8, avgScore: 8.2 },
+  { from: 330, to: 360, rounds: 7, avgScore: 8.9 },
+];
 
 const SURFACE_TOKENS = [
   { name: "Background", token: "--background" },
@@ -680,6 +788,35 @@ export function StyleguideShowcase() {
               onNextAttempt={NOOP}
               onBackToRoom={NOOP}
             />
+          </div>
+        </Section>
+
+        <Section
+          id="profile"
+          eyebrow="Profile"
+          title="Stats, badges and the logbook"
+          description="Counters keep working while history charts degrade; earned and locked badges always carry text."
+        >
+          <div className="space-y-5">
+            <StatsCards stats={PROFILE_STATS} />
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <Card className="min-w-0 p-4">
+                <h3 className="text-sm font-bold tracking-tight">Score trend</h3>
+                <TrendChart points={PROFILE_TREND} />
+              </Card>
+              <Card className="min-w-0 p-4">
+                <h3 className="text-sm font-bold tracking-tight">Channel accuracy</h3>
+                <AccuracyChart accuracy={PROFILE_ACCURACY} />
+              </Card>
+              <Card className="min-w-0 p-4 lg:col-span-2">
+                <h3 className="text-sm font-bold tracking-tight">Hue regions</h3>
+                <HueRegionChart regions={PROFILE_HUE_REGIONS} />
+              </Card>
+            </div>
+
+            <AchievementGrid achievements={PROFILE_ACHIEVEMENTS} />
+            <HistoryList items={PROFILE_HISTORY} />
           </div>
         </Section>
 

@@ -1,4 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+
+import { AppError } from "@/lib/errors";
 
 import { getDb } from "../client";
 import { mapPgError } from "../errors";
@@ -140,4 +142,69 @@ export async function findById(userId: number): Promise<PublicUserRecord | null>
   } catch (error) {
     throw mapPgError(error);
   }
+}
+
+export interface UserStatsRecord {
+  globalBestScore: number | null;
+  globalBestAchievedAt: Date | null;
+  totalGamesPlayed: number;
+  currentDailyStreak: number;
+  longestDailyStreak: number;
+  /** `YYYY-MM-DD` or null if the user never played a Daily. */
+  lastDailyPlayedDate: string | null;
+}
+
+/** Reads the counters shown on the profile; the same values the game functions maintain. */
+export async function findUserStats(userId: number): Promise<UserStatsRecord> {
+  let row:
+    | {
+        global_best_score: string | number | null;
+        global_best_achieved_at: Date | string | null;
+        total_games_played: string | number;
+        current_daily_streak: string | number;
+        longest_daily_streak: string | number;
+        last_daily_played_date: string | null;
+      }
+    | undefined;
+
+  try {
+    const rows = await getDb().execute<{
+      global_best_score: string | number | null;
+      global_best_achieved_at: Date | string | null;
+      total_games_played: string | number;
+      current_daily_streak: string | number;
+      longest_daily_streak: string | number;
+      last_daily_played_date: string | null;
+    }>(sql`
+      select "global_best_score",
+             "global_best_achieved_at",
+             "total_games_played",
+             "current_daily_streak",
+             "longest_daily_streak",
+             "last_daily_played_date"::text as "last_daily_played_date"
+      from "users"
+      where "user_id" = ${userId}::bigint
+    `);
+    row = rows[0];
+  } catch (error) {
+    throw mapPgError(error);
+  }
+
+  if (!row) {
+    throw new AppError("USER_NOT_FOUND");
+  }
+
+  return {
+    globalBestScore: row.global_best_score === null ? null : Number(row.global_best_score),
+    globalBestAchievedAt:
+      row.global_best_achieved_at === null
+        ? null
+        : row.global_best_achieved_at instanceof Date
+          ? row.global_best_achieved_at
+          : new Date(row.global_best_achieved_at),
+    totalGamesPlayed: Number(row.total_games_played),
+    currentDailyStreak: Number(row.current_daily_streak),
+    longestDailyStreak: Number(row.longest_daily_streak),
+    lastDailyPlayedDate: row.last_daily_played_date,
+  };
 }

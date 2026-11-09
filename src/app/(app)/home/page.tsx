@@ -19,7 +19,6 @@ import {
 } from "@/components/ui";
 import { useSession } from "@/hooks/useSession";
 import { ApiError, apiClient } from "@/lib/api-client";
-import { cn } from "@/lib/cn";
 
 interface ModeLink {
   label: string;
@@ -65,6 +64,7 @@ const MODES: ModeCard[] = [
     kind: "profile",
     name: "Profile",
     description: "Your colours, streaks and badges.",
+    href: "/profile",
   },
 ];
 
@@ -74,38 +74,6 @@ const AVATAR_TONES = [
   "bg-accent-violet/15 text-accent-violet",
   "bg-success/15 text-success",
 ] as const;
-
-function SoonLock({ className }: { className?: string }) {
-  return (
-    <span
-      title="Coming soon"
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted px-2 py-1 font-mono text-[9px] font-bold tracking-[0.14em] text-muted-foreground uppercase",
-        className,
-      )}
-    >
-      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3.5">
-        <rect
-          x="4.8"
-          y="8.6"
-          width="10.4"
-          height="6.8"
-          rx="2"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M7.3 8.6V6.7a2.7 2.7 0 0 1 5.4 0v1.9"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <circle cx="10" cy="12" r="1" fill="currentColor" />
-      </svg>
-      Soon
-    </span>
-  );
-}
 
 export default function HomePage() {
   const router = useRouter();
@@ -255,17 +223,39 @@ export default function HomePage() {
             mode.kind === "daily" ? (
               <DailyCard key={mode.name} />
             ) : mode.kind === "profile" ? (
-              <Card
+              <Link
                 key={mode.name}
-                className="flex min-w-0 items-center gap-4 p-5 sm:col-span-2 lg:col-span-2"
+                href={mode.href ?? "/profile"}
+                className="group block min-w-0 rounded-[1.25rem] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none sm:col-span-2 lg:col-span-2"
               >
-                <ModeGlyph kind={mode.kind} />
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-lg font-bold tracking-tight">{mode.name}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
-                </div>
-                <SoonLock />
-              </Card>
+                <Card
+                  interactive
+                  elevated
+                  className="relative flex min-w-0 items-center gap-4 overflow-hidden p-5 pt-6 ring-1 ring-success/30"
+                >
+                  <div
+                    aria-hidden="true"
+                    className="cm-spectrum-bar absolute inset-x-0 top-0 h-1"
+                  />
+                  <ModeGlyph kind={mode.kind} />
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg font-bold tracking-tight">{mode.name}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-1.5 font-mono text-[10px] font-bold tracking-[0.16em] text-foreground uppercase">
+                    Open
+                    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-3.5">
+                      <path
+                        d="M4.5 10h10M10.5 6 14.5 10l-4 4"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </Card>
+              </Link>
             ) : mode.hrefs ? (
               <Card key={mode.name} className="flex min-w-0 flex-col p-5">
                 <div className="flex items-start justify-between gap-2">
@@ -336,16 +326,7 @@ export default function HomePage() {
                   </span>
                 </Card>
               </Link>
-            ) : (
-              <Card key={mode.name} className="flex min-w-0 flex-col p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <ModeGlyph kind={mode.kind} />
-                  <SoonLock />
-                </div>
-                <h2 className="mt-4 text-lg font-bold tracking-tight">{mode.name}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{mode.description}</p>
-              </Card>
-            ),
+            ) : null,
           )}
         </div>
       </section>

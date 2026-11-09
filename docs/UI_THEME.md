@@ -113,6 +113,13 @@ they must not recreate their own stage background.
 | `RoomScoreboard` | `components/rooms/RoomScoreboard.tsx` | Ranked room standings; unranked players last. |
 | `RoomSettingsSummary` | `components/rooms/RoomSettingsSummary.tsx` | Text summary of size, timer and attempts. |
 | `RoomResult` | `components/rooms/RoomResult.tsx` | Room attempt result; reuses `GameResult` with room actions. |
+| `StatsCards` | `components/profile/StatsCards.tsx` | Four profile counters: Global PB, games, Daily streak, today's Daily best. |
+| `AchievementGrid` | `components/profile/AchievementGrid.tsx` | Earned/locked badge tiles; icon, label and criteria text always visible. |
+| `TrendChart` | `components/profile/TrendChart.tsx` | Recharts 30-day daily score trend, y-axis 0–30. |
+| `AccuracyChart` | `components/profile/AccuracyChart.tsx` | Recharts H/S/V closeness bars with average-miss readouts. |
+| `HueRegionChart` | `components/profile/HueRegionChart.tsx` | Recharts average round score per hue bin. |
+| `HistoryList` | `components/profile/HistoryList.tsx` | Newest-first history; expandable rounds; room attempts labelled and visually set apart. |
+| `ProfileView` | `components/profile/ProfileView.tsx` | Signed-in profile screen with independent stats, insight, badge and history states. |
 | `LeaderboardTable` | `components/leaderboard/LeaderboardTable.tsx` | Rank/player/score/date table; highlights the viewer row with a visible “You” label. |
 | `RankBadge` | `components/leaderboard/RankBadge.tsx` | Rank pill; top three add a medal cue, never colour alone. |
 | `YourRankCard` | `components/leaderboard/YourRankCard.tsx` | Compact viewer rank/score card, rendered only when `me` exists. |

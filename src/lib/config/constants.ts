@@ -77,6 +77,14 @@ export const SESSION_TTL_SECONDS = 604800 as const;
 export const LEADERBOARD_DEFAULT_LIMIT = 50 as const;
 export const LEADERBOARD_MAX_LIMIT = 100 as const;
 
+/**
+ * Default and maximum page sizes for cursor-paginated game history.
+ * Architecture §5.10.2 defines `limit` + `cursor` but no values; 20/100 is the
+ * service-level default recorded in UNCERTAINTIES.md (U-002).
+ */
+export const HISTORY_DEFAULT_LIMIT = 20 as const;
+export const HISTORY_MAX_LIMIT = 100 as const;
+
 /** Polling intervals for room views (ms). */
 export const LOBBY_POLL_MS = 2000 as const;
 export const ROOM_POLL_MS = 3000 as const;
