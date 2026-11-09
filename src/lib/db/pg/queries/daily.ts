@@ -54,9 +54,7 @@ export async function findChallengeByDate(date: string): Promise<DailyChallengeR
     `);
 
     const row = rows[0];
-    return row
-      ? { challengeId: Number(row.daily_challenge_id), date: row.challenge_date }
-      : null;
+    return row ? { challengeId: Number(row.daily_challenge_id), date: row.challenge_date } : null;
   } catch (error) {
     throw mapPgError(error);
   }
@@ -87,13 +85,11 @@ export async function listChallengeColors(
     throw new AppError("INTERNAL_ERROR", "A daily challenge must have exactly 3 colors.");
   }
 
-  const colors = rows.map(
-    (row): DailyChallengeColor => ({
-      h: Number(row.hue),
-      s: Number(row.saturation),
-      v: Number(row.value),
-    }),
-  );
+  const colors = rows.map((row): DailyChallengeColor => ({
+    h: Number(row.hue),
+    s: Number(row.saturation),
+    v: Number(row.value),
+  }));
 
   return [colors[0], colors[1], colors[2]];
 }

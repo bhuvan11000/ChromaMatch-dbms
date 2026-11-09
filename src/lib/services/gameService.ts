@@ -95,7 +95,10 @@ function normalizeRoomCode(code: string | undefined): string {
  * Room: checks run in a fixed order so a non-member always gets 403 before any
  * status information is revealed. Attempts are consumed at submit, not here.
  */
-async function startRoomGame(userId: number, roomCodeInput: string | undefined): Promise<StartContext> {
+async function startRoomGame(
+  userId: number,
+  roomCodeInput: string | undefined,
+): Promise<StartContext> {
   const code = normalizeRoomCode(roomCodeInput);
 
   const room = await findRoomByCode(code);

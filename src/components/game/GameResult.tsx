@@ -193,7 +193,6 @@ export function GameResult({
     isFirstPb &&
     (STREAK_MILESTONES as readonly number[]).includes(streak.current);
 
-
   for (const achievement of result.achievements) {
     notices.push({
       kind: "achievement",
@@ -287,7 +286,10 @@ export function GameResult({
       ) : null}
 
       {streak ? (
-        <Card data-testid="daily-streak" className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4 sm:p-5">
+        <Card
+          data-testid="daily-streak"
+          className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4 sm:p-5"
+        >
           <h3 className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
             Daily streak
           </h3>

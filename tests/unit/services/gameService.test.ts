@@ -457,7 +457,13 @@ describe("submitGame (Daily)", () => {
     mocks.submitGameResult.mockResolvedValue(
       dailySqlResult({
         total_score: 30,
-        pb: { scope: "daily", previous: EXPECTED_TOTAL, current: 30, updated: true, beat_existing: true },
+        pb: {
+          scope: "daily",
+          previous: EXPECTED_TOTAL,
+          current: 30,
+          updated: true,
+          beat_existing: true,
+        },
       }),
     );
     const { token } = await mintGameToken({ mode: "daily" });

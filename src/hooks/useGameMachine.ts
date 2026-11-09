@@ -372,11 +372,9 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
     startRequestRef.current = requestKey;
 
     apiClient
-      .post<GameStartResponse>(
-        "/games/start",
-        buildStartBody({ mode, roomCode }),
-        { schema: gameStartResponseSchema },
-      )
+      .post<GameStartResponse>("/games/start", buildStartBody({ mode, roomCode }), {
+        schema: gameStartResponseSchema,
+      })
       .then((game) => dispatch({ type: "GAME_STARTED", game }))
       .catch((error: unknown) => {
         const mapped = toMachineError(error);

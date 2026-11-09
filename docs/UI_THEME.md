@@ -102,7 +102,10 @@ they must not recreate their own stage background.
 | `RoundProgress` | `components/game/RoundProgress.tsx` | Three-pill round tracker; check icon and text carry completion. |
 | `ChannelDiffBars` | `components/game/ChannelDiffBars.tsx` | Result delta rows for H/S/V, each with a labelled value and bar. |
 | `GameResult` | `components/game/GameResult.tsx` | Result-screen score header, split target/guess wells, deltas, notices. |
-| `GlobalGameView` | `components/game/GlobalGameView.tsx` | Presentational phase shell for the Global mode; the pattern future modes reuse. |
+| `GlobalGameView` | `components/game/GlobalGameView.tsx` | Presentational phase shell for the Global mode; thin wrapper over `GameView`. |
+| `GameView` | `components/game/GameView.tsx` | Shared presentational phase shell for Global, Daily and Room; mode copy table only. |
+| `DailyGameView` | `components/game/DailyGameView.tsx` | Daily wrapper over `GameView`. |
+| `DailyCard` | `components/home/DailyCard.tsx` | Live Home card: today's best, streak and reset countdown. |
 | `LeaderboardTable` | `components/leaderboard/LeaderboardTable.tsx` | Rank/player/score/date table; highlights the viewer row with a visible “You” label. |
 | `RankBadge` | `components/leaderboard/RankBadge.tsx` | Rank pill; top three add a medal cue, never colour alone. |
 | `YourRankCard` | `components/leaderboard/YourRankCard.tsx` | Compact viewer rank/score card, rendered only when `me` exists. |

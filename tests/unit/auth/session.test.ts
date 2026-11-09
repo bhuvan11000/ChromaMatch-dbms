@@ -1,6 +1,6 @@
 import { SignJWT, decodeJwt } from "jose";
 import { NextResponse } from "next/server";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { SESSION_TTL_SECONDS } from "@/lib/config/constants";
 import {
@@ -23,6 +23,10 @@ afterAll(() => {
   resetAuthEnv();
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 function requestWithCookie(value: string): Request {
   return new Request("http://localhost:3000/api/me", {
     headers: { cookie: value },
@@ -31,6 +35,8 @@ function requestWithCookie(value: string): Request {
 
 describe("session signing and verification", () => {
   it("signs an HS256 JWT with the session claims and TTL", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-29T12:00:00.000Z"));
     const token = await signSession(
       { userId: 42, role: "player" },
       new Date("2026-10-29T12:00:00.000Z"),

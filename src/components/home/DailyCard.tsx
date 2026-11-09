@@ -52,9 +52,7 @@ export function DailyCard() {
         </div>
 
         <h2 className="mt-4 text-lg font-bold tracking-tight">Daily</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Same palette for everyone, every day.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">Same palette for everyone, every day.</p>
 
         {query.isError ? (
           <p className="mt-3 text-xs text-muted-foreground">

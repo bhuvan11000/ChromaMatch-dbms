@@ -34,7 +34,9 @@ describe("clock offset correction", () => {
   });
 
   it("never returns a negative remaining time and tolerates bad input", () => {
-    expect(remainingUntilMs("2026-10-30T00:00:00.000Z", Date.parse("2026-10-31T00:00:00Z"), 0)).toBe(0);
+    expect(
+      remainingUntilMs("2026-10-30T00:00:00.000Z", Date.parse("2026-10-31T00:00:00Z"), 0),
+    ).toBe(0);
     expect(remainingUntilMs("not-a-date", 0, 0)).toBe(0);
     expect(clockOffsetMs("not-a-date", 123)).toBe(0);
   });
