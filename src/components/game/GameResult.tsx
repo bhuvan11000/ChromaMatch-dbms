@@ -320,6 +320,11 @@ export function GameResult({
                     Round {round.roundNumber}
                   </h3>
                   <p className="text-[11px] text-muted-foreground">Target vs your mix</p>
+                  {round.timedOut ? (
+                    <span className="mt-1 inline-flex rounded-full border border-warning/40 bg-warning-soft px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.14em] text-warning uppercase">
+                      Timed out
+                    </span>
+                  ) : null}
                 </div>
               </div>
               <p className="font-display text-2xl font-bold tracking-tight text-foreground tabular-nums">
@@ -369,35 +374,35 @@ export function GameResult({
       ) : null}
 
       {actions ?? (
-      <div className="grid gap-2 sm:grid-cols-3">
-        <Button size="lg" onClick={onPlayAgain}>
-          <PlayIcon />
-          Play again
-        </Button>
-        {isDaily ? (
-          <>
-            <a href="/leaderboard/daily" className={EMPHASIZED_LINK_CLASSES}>
-              <TrophyIcon />
-              Daily board
-            </a>
-            <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
-              <TrophyIcon />
-              Global board
-            </a>
-          </>
-        ) : (
-          <>
-            <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
-              <TrophyIcon />
-              Global board
-            </a>
-            <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
-              <TrophyIcon />
-              Daily board
-            </a>
-          </>
-        )}
-      </div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Button size="lg" onClick={onPlayAgain}>
+            <PlayIcon />
+            Play again
+          </Button>
+          {isDaily ? (
+            <>
+              <a href="/leaderboard/daily" className={EMPHASIZED_LINK_CLASSES}>
+                <TrophyIcon />
+                Daily board
+              </a>
+              <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
+                <TrophyIcon />
+                Global board
+              </a>
+            </>
+          ) : (
+            <>
+              <a href="/leaderboard/global" className={OUTLINE_LINK_CLASSES}>
+                <TrophyIcon />
+                Global board
+              </a>
+              <a href="/leaderboard/daily" className={OUTLINE_LINK_CLASSES}>
+                <TrophyIcon />
+                Daily board
+              </a>
+            </>
+          )}
+        </div>
       )}
     </section>
   );

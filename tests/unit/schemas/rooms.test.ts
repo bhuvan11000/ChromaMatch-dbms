@@ -75,7 +75,9 @@ describe("createRoomRequestSchema", () => {
   });
 
   it("rejects unknown keys", () => {
-    expect(createRoomRequestSchema.safeParse({ ...VALID_CREATE, creatorId: 1 }).success).toBe(false);
+    expect(createRoomRequestSchema.safeParse({ ...VALID_CREATE, creatorId: 1 }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -86,7 +88,15 @@ describe("room codes", () => {
   });
 
   it("rejects wrong length and characters outside the alphabet", () => {
-    for (const code of ["", "ABCD234", "ABCD23456", "ABCD234O", "ABCD2341", "ABCD 234", "ABCD-234"]) {
+    for (const code of [
+      "",
+      "ABCD234",
+      "ABCD23456",
+      "ABCD234O",
+      "ABCD2341",
+      "ABCD 234",
+      "ABCD-234",
+    ]) {
       expect(roomCodeSchema.safeParse(code).success).toBe(false);
     }
     expect(ROOM_CODE_ALPHABET).not.toContain("O");
@@ -106,9 +116,9 @@ describe("roomStateResponseSchema", () => {
   it("rejects unknown keys and invalid statuses", () => {
     expect(roomStateResponseSchema.safeParse({ ...STATE, extra: 1 }).success).toBe(false);
     expect(roomStateResponseSchema.safeParse({ ...STATE, status: "open" }).success).toBe(false);
-    expect(
-      roomStateResponseSchema.safeParse({ ...STATE, createdAt: "yesterday" }).success,
-    ).toBe(false);
+    expect(roomStateResponseSchema.safeParse({ ...STATE, createdAt: "yesterday" }).success).toBe(
+      false,
+    );
     expect(
       roomStateResponseSchema.safeParse({ ...STATE, me: { ...STATE.me, extra: true } }).success,
     ).toBe(false);
@@ -132,6 +142,8 @@ describe("leaveRoomResponseSchema", () => {
   });
 
   it("rejects unknown outcomes", () => {
-    expect(leaveRoomResponseSchema.safeParse({ outcome: "kicked", room: null }).success).toBe(false);
+    expect(leaveRoomResponseSchema.safeParse({ outcome: "kicked", room: null }).success).toBe(
+      false,
+    );
   });
 });

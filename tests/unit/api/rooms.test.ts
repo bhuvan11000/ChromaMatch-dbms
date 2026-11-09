@@ -194,7 +194,10 @@ describe("GET /api/rooms/[code]", () => {
     expect(await errorCode(forbidden)).toBe("NOT_ROOM_MEMBER");
 
     mocks.getRoomState.mockRejectedValueOnce(new AppError("ROOM_NOT_FOUND"));
-    const missing = await stateRoute(makeGetRequest("/api/rooms/ZZZZ", await cookie()), ctx("ZZZZ"));
+    const missing = await stateRoute(
+      makeGetRequest("/api/rooms/ZZZZ", await cookie()),
+      ctx("ZZZZ"),
+    );
     expect(missing.status).toBe(404);
   });
 });

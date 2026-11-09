@@ -141,16 +141,26 @@ function PlayArrowIcon() {
   );
 }
 
-function GameFallback({ message, retry }: { message: string; retry: () => void }) {
+function GameFallback({
+  message,
+  retry,
+  backHref,
+  backLabel,
+}: {
+  message: string;
+  retry: () => void;
+  backHref: string;
+  backLabel: string;
+}) {
   return (
     <div className="mx-auto max-w-xl">
       <ErrorMessage title="Game unavailable" message={message} onRetry={retry} />
       <p className="mt-4 text-center text-sm text-muted-foreground">
         <a
-          href="/home"
+          href={backHref}
           className="rounded-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
         >
-          Back to home
+          {backLabel}
         </a>
       </p>
     </div>
@@ -196,6 +206,10 @@ export function GameView({
   const copy = MODE_COPY[mode];
   const stageLabel = mode === "room" && roomCode ? `Room ${roomCode}` : copy.name;
   const guessCountdown = getGuessCountdown(state);
+  const errorBackLabel = backHref === "/home" ? "Back to home" : "Back to room";
+  const fallback = (message: string) => (
+    <GameFallback message={message} retry={retry} backHref={backHref} backLabel={errorBackLabel} />
+  );
 
   function renderPhase() {
     switch (state.phase) {
@@ -268,7 +282,7 @@ export function GameView({
         const target = state.game?.rounds[state.roundIndex]?.target;
 
         if (!state.game || !target) {
-          return <GameFallback message="The round could not be loaded." retry={retry} />;
+          return fallback("The round could not be loaded.");
         }
 
         return (
@@ -313,7 +327,7 @@ export function GameView({
 
       case "ROUND_GUESS": {
         if (!state.game) {
-          return <GameFallback message="The round could not be loaded." retry={retry} />;
+          return fallback("The round could not be loaded.");
         }
 
         return (
@@ -327,9 +341,7 @@ export function GameView({
               roundNumber={state.roundIndex + 1}
               modeLabel={stageLabel}
               phaseLabel="Recreate from memory"
-              countdown={
-                guessCountdown ? { ...guessCountdown, hint: "Lock it in." } : null
-              }
+              countdown={guessCountdown ? { ...guessCountdown, hint: "Lock it in." } : null}
               footer={
                 <div className="flex justify-end">
                   <StageSubmitButton onClick={submitGuess} />
@@ -369,7 +381,12 @@ export function GameView({
             <GameResult result={state.result} onPlayAgain={playAgain} />
           )
         ) : (
-          <GameFallback message="The result could not be loaded." retry={retry} />
+          <GameFallback
+            message="The result could not be loaded."
+            retry={retry}
+            backHref={backHref}
+            backLabel={errorBackLabel}
+          />
         );
 
       case "ERROR":
@@ -400,11 +417,11 @@ export function GameView({
             </p>
           </div>
         ) : (
-          <GameFallback message="The game could not be recovered." retry={retry} />
+          fallback("The game could not be recovered.")
         );
 
       default:
-        return <GameFallback message="The game state is unavailable." retry={retry} />;
+        return fallback("The game state is unavailable.");
     }
   }
 

@@ -59,9 +59,7 @@ describe("createRoom wrapper", () => {
   });
 
   it("does not treat other unique violations as a room-code conflict", async () => {
-    mocks.execute.mockRejectedValue(
-      pgError({ code: "23505", constraint_name: "users_email_key" }),
-    );
+    mocks.execute.mockRejectedValue(pgError({ code: "23505", constraint_name: "users_email_key" }));
 
     const error = await createRoom(INPUT).catch((caught: unknown) => caught);
 

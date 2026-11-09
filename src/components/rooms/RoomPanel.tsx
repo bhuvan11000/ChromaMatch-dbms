@@ -46,7 +46,8 @@ export function RoomPanel({
 }: RoomPanelProps) {
   const { me } = state;
   const canStart = state.members.length >= ROOM_MIN_SIZE;
-  const canPlay = state.status === "in_progress" && me.status === "active" && me.attemptsRemaining > 0;
+  const canPlay =
+    state.status === "in_progress" && me.status === "active" && me.attemptsRemaining > 0;
   const canLeave =
     (state.status === "lobby" && me.status === "active") ||
     (state.status === "in_progress" && me.status === "active");

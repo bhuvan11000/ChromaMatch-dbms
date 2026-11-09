@@ -14,7 +14,12 @@ import { SLIDER_DEFAULTS } from "@/lib/config/constants";
 import type { GameSubmitResponse } from "@/lib/schemas/game";
 import type { RoomState } from "@/lib/schemas/rooms";
 
-import { EXPECTED_ROUND_SCORES, EXPECTED_TOTAL, FIXED_GUESSES, FIXED_TARGETS } from "../support/game";
+import {
+  EXPECTED_ROUND_SCORES,
+  EXPECTED_TOTAL,
+  FIXED_GUESSES,
+  FIXED_TARGETS,
+} from "../support/game";
 
 const NOOP = () => undefined;
 
@@ -120,7 +125,9 @@ describe("lobby pieces", () => {
     expect(html).toContain("3 each");
 
     expect(
-      renderToStaticMarkup(<RoomSettingsSummary roomSize={2} timerSeconds={null} attemptsLimit={5} />),
+      renderToStaticMarkup(
+        <RoomSettingsSummary roomSize={2} timerSeconds={null} attemptsLimit={5} />,
+      ),
     ).toContain("Off");
   });
 });
@@ -263,7 +270,7 @@ describe("forms", () => {
 });
 
 describe("RoomResult", () => {
-  function result(room: GameSubmitResponse["room"]): GameSubmitResponse {
+  function result(room: GameSubmitResponse["room"], timedOut = false): GameSubmitResponse {
     return {
       mode: "room",
       totalScore: EXPECTED_TOTAL,
@@ -273,7 +280,7 @@ describe("RoomResult", () => {
         guess: FIXED_GUESSES[index] ?? SLIDER_DEFAULTS,
         score: EXPECTED_ROUND_SCORES[index] ?? 0,
         diff: { h: 5.6, s: 3.5, v: 3.5 },
-        timedOut: false,
+        timedOut: timedOut && index === 1,
       })),
       totalGamesPlayed: null,
       pb: null,
@@ -292,9 +299,14 @@ describe("RoomResult", () => {
     roomStatus: "in_progress" as const,
   };
 
-  function render(room: GameSubmitResponse["room"]) {
+  function render(room: GameSubmitResponse["room"], timedOut = false) {
     return renderToStaticMarkup(
-      <RoomResult result={result(room)} roomCode="ABCD2345" onNextAttempt={NOOP} onBackToRoom={NOOP} />,
+      <RoomResult
+        result={result(room, timedOut)}
+        roomCode="ABCD2345"
+        onNextAttempt={NOOP}
+        onBackToRoom={NOOP}
+      />,
     );
   }
 
@@ -326,5 +338,11 @@ describe("RoomResult", () => {
     expect(html).not.toContain("personal best");
     expect(html).not.toContain("Achievement");
     expect(html).not.toContain("/leaderboard/");
+  });
+
+  it("labels timed-out rounds", () => {
+    const html = render(ROOM_SUMMARY, true);
+
+    expect(html).toContain("Timed out");
   });
 });

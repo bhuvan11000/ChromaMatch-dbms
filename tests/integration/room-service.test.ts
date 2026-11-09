@@ -47,7 +47,11 @@ async function newUser(): Promise<number> {
 
 async function newRoom(
   creator: number,
-  options: Partial<{ roomSize: number; timerSeconds: 5 | 10 | 15 | null; attemptsLimit: 3 | 5 }> = {},
+  options: Partial<{
+    roomSize: number;
+    timerSeconds: 5 | 10 | 15 | null;
+    attemptsLimit: 3 | 5;
+  }> = {},
 ): Promise<RoomState> {
   const state = await createRoom(creator, {
     roomSize: options.roomSize ?? 3,
@@ -205,11 +209,16 @@ describe("leaving", () => {
     const created = await newRoom(alice, { roomSize: 3 });
     await joinRoom(bob, created.code);
 
-    await expect(leaveRoom(bob, created.code)).resolves.toEqual({ outcome: "left_lobby", room: null });
+    await expect(leaveRoom(bob, created.code)).resolves.toEqual({
+      outcome: "left_lobby",
+      room: null,
+    });
 
     const state = await getRoomState(alice, created.code);
     expect(state.members.map((member) => member.userId)).toEqual([alice]);
-    await expect(getRoomState(bob, created.code)).rejects.toMatchObject({ code: "NOT_ROOM_MEMBER" });
+    await expect(getRoomState(bob, created.code)).rejects.toMatchObject({
+      code: "NOT_ROOM_MEMBER",
+    });
   });
 
   it("creator leaving the lobby cancels the room for everyone", async () => {
@@ -269,7 +278,9 @@ describe("attempt submission side effects", () => {
     // is reported before ATTEMPTS_EXHAUSTED can be (both are 409).
     await expect(
       startGame(alice, { mode: "room", roomCode: code }, tick().startedAt),
-    ).rejects.toMatchObject({ code: expect.stringMatching(/MEMBER_NOT_ACTIVE|ATTEMPTS_EXHAUSTED/) });
+    ).rejects.toMatchObject({
+      code: expect.stringMatching(/MEMBER_NOT_ACTIVE|ATTEMPTS_EXHAUSTED/),
+    });
   });
 
   it("writes Postgres + a Mongo room document and leaves user stats untouched", async () => {

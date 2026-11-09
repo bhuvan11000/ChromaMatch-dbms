@@ -3,7 +3,12 @@
 import { useId, useState, type FormEvent } from "react";
 
 import { Button, ErrorMessage } from "@/components/ui";
-import { ROOM_ATTEMPT_OPTIONS, ROOM_MAX_SIZE, ROOM_MIN_SIZE, ROOM_TIMER_OPTIONS } from "@/lib/config/constants";
+import {
+  ROOM_ATTEMPT_OPTIONS,
+  ROOM_MAX_SIZE,
+  ROOM_MIN_SIZE,
+  ROOM_TIMER_OPTIONS,
+} from "@/lib/config/constants";
 import { createRoomRequestSchema, type CreateRoomRequest } from "@/lib/schemas/rooms";
 
 export interface RoomCreateFormProps {
@@ -89,7 +94,10 @@ export function RoomCreateForm({ onSubmit, pending = false, error = null }: Room
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-label="Create a room">
       <div>
-        <label htmlFor={sizeId} className="mb-1.5 block font-display text-sm font-semibold tracking-tight">
+        <label
+          htmlFor={sizeId}
+          className="mb-1.5 block font-display text-sm font-semibold tracking-tight"
+        >
           Players ({ROOM_MIN_SIZE}–{ROOM_MAX_SIZE})
         </label>
         <select

@@ -330,9 +330,15 @@ describe("timed room guess window", () => {
   it("ticks, clamps and ignores ticks outside ROUND_GUESS", () => {
     const guessing = timedGuessing();
 
-    expect(gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: 1234 }).guessRemainingMs).toBe(1234);
-    expect(gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: -50 }).guessRemainingMs).toBe(0);
-    expect(gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: 99_999 }).guessRemainingMs).toBe(5000);
+    expect(
+      gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: 1234 }).guessRemainingMs,
+    ).toBe(1234);
+    expect(
+      gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: -50 }).guessRemainingMs,
+    ).toBe(0);
+    expect(
+      gameMachineReducer(guessing, { type: "GUESS_TICK", remainingMs: 99_999 }).guessRemainingMs,
+    ).toBe(5000);
 
     const reveal = gameMachineReducer(starting(), { type: "GAME_STARTED", game: TIMED });
     expect(gameMachineReducer(reveal, { type: "GUESS_TICK", remainingMs: 10 })).toBe(reveal);

@@ -24,7 +24,9 @@ function messageOf(error: unknown): string | null {
 
 export default function RoomPage() {
   const params = useParams<{ code: string }>();
-  const code = String(params.code ?? "").trim().toUpperCase();
+  const code = String(params.code ?? "")
+    .trim()
+    .toUpperCase();
   const router = useRouter();
   const queryClient = useQueryClient();
   const queryKey = ["room", code] as const;
@@ -163,7 +165,10 @@ export default function RoomPage() {
 
       <Modal
         open={confirmLeave}
-        onClose={() => setConfirmLeave(false)}
+        onClose={() => {
+          setConfirmLeave(false);
+          leave.reset();
+        }}
         title="Leave this room?"
         footer={
           <>
@@ -177,6 +182,11 @@ export default function RoomPage() {
         }
       >
         <p className="text-sm text-muted-foreground">{leaveWarning}</p>
+        {leave.error ? (
+          <p role="alert" className="mt-3 text-sm font-medium text-danger">
+            {messageOf(leave.error)}
+          </p>
+        ) : null}
       </Modal>
     </main>
   );

@@ -54,7 +54,9 @@ export function RoomResult({ result, roomCode, onNextAttempt, onBackToRoom }: Ro
               <p className="text-sm font-semibold">New best score in this room.</p>
             ) : null}
             {room.roomStatus === "finished" ? (
-              <p className="text-sm text-muted-foreground">The room is over. Check the final standings.</p>
+              <p className="text-sm text-muted-foreground">
+                The room is over. Check the final standings.
+              </p>
             ) : room.memberStatus === "finished" ? (
               <p className="text-sm text-muted-foreground">
                 You used every attempt. Waiting for the others.

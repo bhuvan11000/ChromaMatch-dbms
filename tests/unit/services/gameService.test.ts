@@ -575,11 +575,7 @@ describe("startGame (Room)", () => {
   });
 
   it("signs a token with rid, tmr and a colour-number permutation", async () => {
-    const result = await startGame(
-      7,
-      { mode: "room", roomCode: " abcd2345 " },
-      GAME_TEST_NOW,
-    );
+    const result = await startGame(7, { mode: "room", roomCode: " abcd2345 " }, GAME_TEST_NOW);
 
     expect(mocks.findRoomByCode).toHaveBeenCalledWith("ABCD2345");
     expect(result).toMatchObject({
@@ -780,7 +776,11 @@ describe("submitGame (Room)", () => {
     await expect(
       submitGame(
         7,
-        { gameToken: token, guesses: FIXED_GUESSES, timedOut: [true] } as unknown as GameSubmitRequest,
+        {
+          gameToken: token,
+          guesses: FIXED_GUESSES,
+          timedOut: [true],
+        } as unknown as GameSubmitRequest,
         GAME_TEST_NOW,
       ),
     ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });

@@ -25,7 +25,10 @@ export const roomCodeSchema = z
   .pipe(
     z
       .string()
-      .regex(ROOM_CODE_PATTERN, `Room codes are ${ROOM_CODE_LENGTH} characters from the room alphabet.`),
+      .regex(
+        ROOM_CODE_PATTERN,
+        `Room codes are ${ROOM_CODE_LENGTH} characters from the room alphabet.`,
+      ),
   );
 
 export const roomTimerSchema = z.union([z.literal(5), z.literal(10), z.literal(15)]).nullable();
