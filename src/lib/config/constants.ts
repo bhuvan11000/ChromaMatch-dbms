@@ -73,9 +73,19 @@ export const GAME_MIN_ELAPSED_SECONDS = 13 as const;
 /** Session lifetime: 7 days. */
 export const SESSION_TTL_SECONDS = 604800 as const;
 
-/** Default and maximum page sizes for leaderboards and admin lists. */
+/** Default and maximum page sizes for leaderboards. */
 export const LEADERBOARD_DEFAULT_LIMIT = 50 as const;
 export const LEADERBOARD_MAX_LIMIT = 100 as const;
+
+/**
+ * Default and maximum page sizes for the admin player list.
+ * The docs do not specify these; 50/100 mirrors the leaderboard limits.
+ */
+export const ADMIN_USERS_DEFAULT_LIMIT = 50 as const;
+export const ADMIN_USERS_MAX_LIMIT = 100 as const;
+
+/** Number of recent Daily bests shown on the admin user detail (§5.7.7). */
+export const ADMIN_DAILY_BESTS_LIMIT = 30 as const;
 
 /**
  * Default and maximum page sizes for cursor-paginated game history.

@@ -124,6 +124,13 @@ they must not recreate their own stage background.
 | `RankBadge` | `components/leaderboard/RankBadge.tsx` | Rank pill; top three add a medal cue, never colour alone. |
 | `YourRankCard` | `components/leaderboard/YourRankCard.tsx` | Compact viewer rank/score card, rendered only when `me` exists. |
 | `LeaderboardView` | `components/leaderboard/LeaderboardView.tsx` | Shared public Global/Daily screen: tabs, date picker, pagination and states. |
+| `AdminNavLink` | `components/admin/AdminNavLink.tsx` | Admin-only header link; renders nothing for players. |
+| `AdminUserTable` | `components/admin/AdminUserTable.tsx` | Player roster with status, stats, detail links and protected admin rows. |
+| `AdminStatsEditor` | `components/admin/AdminStatsEditor.tsx` | §5.7.7 stats allow-list form with shared Zod validation. |
+| `DailyBestsTable` | `components/admin/DailyBestsTable.tsx` | Recent Daily bests on the admin player record. |
+| `AdminGuard` | `components/admin/AdminGuard.tsx` | `/api/me` role check and redirect for non-admin pages. |
+| `AdminUsersView` | `components/admin/AdminUsersView.tsx` | `/admin`: search, status filter, pagination and ban/unban confirmation. |
+| `AdminUserView` | `components/admin/AdminUserView.tsx` | `/admin/users/[id]`: stats, Daily bests, earned achievements and history. |
 | `Celebration` | `components/ui/Celebration.tsx` | Result-screen stamp: tag + shape + icon + text. |
 | `ScoreCountUp` | `components/ui/Celebration.tsx` | Integer-tenths count-up; instant final value under reduced motion / SSR. |
 

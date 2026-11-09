@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ADMIN_DAILY_BESTS_LIMIT,
+  ADMIN_USERS_DEFAULT_LIMIT,
+  ADMIN_USERS_MAX_LIMIT,
   BANNED_CAN_PLAY,
   GAME_MIN_ELAPSED_SECONDS,
   GAME_TOKEN_TTL_SECONDS,
@@ -65,6 +68,9 @@ describe("Architecture §5.3.1 constants", () => {
     expect(SESSION_TTL_SECONDS).toBe(604800);
     expect(LEADERBOARD_DEFAULT_LIMIT).toBe(50);
     expect(LEADERBOARD_MAX_LIMIT).toBe(100);
+    expect(ADMIN_USERS_DEFAULT_LIMIT).toBe(50);
+    expect(ADMIN_USERS_MAX_LIMIT).toBe(100);
+    expect(ADMIN_DAILY_BESTS_LIMIT).toBe(30);
     expect(LOBBY_POLL_MS).toBe(2000);
     expect(ROOM_POLL_MS).toBe(3000);
     expect(SHOW_LIVE_STANDINGS).toBe(true);

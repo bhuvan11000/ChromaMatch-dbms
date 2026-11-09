@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { AdminNavLink } from "@/components/admin/AdminNavLink";
 import { DailyCard } from "@/components/home/DailyCard";
 import {
   Button,
@@ -156,6 +157,8 @@ export default function HomePage() {
         <Wordmark size="md" />
 
         <div className="flex items-center gap-2">
+          <AdminNavLink role={user.role} />
+
           <span className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-card py-1 pr-3 pl-1">
             <span
               aria-hidden="true"

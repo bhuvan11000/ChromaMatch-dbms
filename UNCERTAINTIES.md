@@ -6,7 +6,7 @@
 > docs, assumptions made while implementing, and follow-ups that need a human
 > decision. Design-level open items still live in `docs/ChromaMatch_Database_Design.md` §11.
 
-Last updated: 2026-11-08
+Last updated: 2026-11-09
 
 ## How to use
 
@@ -72,6 +72,13 @@ Last updated: 2026-11-08
 | U-049 | Room route context type | The brief suggests `RouteContext<'/api/rooms/[code]'>`; that global type only exists after `next typegen`/`next build`, so `tsc --noEmit` on a clean checkout would fail. | Routes use the structurally identical `{ params: Promise<{ code: string }> }` (async params, never synchronous). | Switch to `RouteContext` if `typegen` becomes part of `typecheck`. |
 | U-050 | Mongo room `played_at` | `submit_room_attempt` has no `played_at` parameter and stamps `best_achieved_at` with the DB clock. | Mongo `played_at` is the service's `now` (same `now` passed to the SQL layer's caller); the two can differ by milliseconds. No parameter/migration added. | None. |
 | U-051 | Stats trend window and accuracy display | §5.7.6 says `userTrend(last 30 days)` without defining alignment; the channel chart label is not specified. | The trend is the last 30 UTC days inclusive (`today − 29` at 00:00 UTC → `now`, daily buckets). The profile accuracy bars show derived closeness (`100 − normalized average miss`) with raw average misses printed below; the API still exposes `avgAbsDiff`. | Confirm the window alignment and whether the chart should show raw miss instead of derived closeness. |
+| U-052 | Admin list pagination | §5.10.7 defines `limit`/`offset` for `GET /api/admin/users` but gives no default or maximum. | **Step 19:** default `ADMIN_USERS_DEFAULT_LIMIT = 50`, maximum `ADMIN_USERS_MAX_LIMIT = 100`; the service clamps. | Confirm the admin page size. |
+| U-053 | Admin list ordering | The docs do not specify list order. | `listAdminUsers` sorts by `user_id ASC` for stable pagination. | Confirm newest-first or alphabetical if desired. |
+| U-054 | Admin detail achievements | §5.7.7 says “earned achievements”, while the profile endpoint returns every definition with earned flags. | `adminService.getUser` filters `listAchievementsForUser` to `earned === true`; the admin UI shows earned badges only. | Confirm admins should not see locked achievements. |
+| U-055 | Admin PB patch pairing | §5.10.7 says “set both PB fields together”; SQL’s null-together CHECK accepts a partial patch when the other column already has a compatible value (U-021). | `adminStatsPatchSchema` requires both keys whenever either is present and requires their nullness to agree. `adminService` repeats the allow-list check for direct callers. | Confirm the stricter API contract. |
+| U-056 | Empty admin stats patch | U-022 noted the procedure accepts `{}` as a no-op; the docs do not define the API behaviour. | The API accepts `{}` and returns the unchanged user; the admin form always sends all six keys. | Confirm no-op vs `INVALID_PATCH`. |
+| U-057 | Admin list search semantics | §5.7.7 says “username/email substring” without defining wildcard or case behaviour. | The reader uses parameterized, case-insensitive literal `strpos(lower(column), lower(query))`; `%` and `_` are ordinary characters. | Confirm wildcard search is not required. |
+| U-058 | Admin history target check | §5.10.7 says the admin history route matches `/api/me/history`, but does not say how to handle a deleted/missing target. | `adminService.getUserHistory` reads the target first and returns `USER_NOT_FOUND` (404); otherwise it delegates to `statsService.getHistory`. | Confirm 404 vs an empty page. |
 
 ## Resolved during implementation
 
