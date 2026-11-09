@@ -60,7 +60,8 @@ export function useResetCountdown(
   }, []);
 
   const offset = data ? clockOffsetMs(data.serverTime, receivedAtMs) : 0;
-  const remainingMs = data && nowMs !== null ? remainingUntilMs(data.resetsAt, nowMs, offset) : null;
+  const remainingMs =
+    data && nowMs !== null ? remainingUntilMs(data.resetsAt, nowMs, offset) : null;
 
   const resetsAt = data?.resetsAt ?? null;
   useEffect(() => {

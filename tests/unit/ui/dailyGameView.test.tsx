@@ -43,7 +43,13 @@ function makeResult(overrides: Partial<GameSubmitResponse> = {}): GameSubmitResp
       diff: { h: 5.6, s: 3.5, v: 3.5 },
     })),
     totalGamesPlayed: 4,
-    pb: { scope: "daily", previous: null, current: EXPECTED_TOTAL, updated: true, beatExisting: false },
+    pb: {
+      scope: "daily",
+      previous: null,
+      current: EXPECTED_TOTAL,
+      updated: true,
+      beatExisting: false,
+    },
     streak: { current: 3, longest: 7 },
     achievements: [],
     room: null,
@@ -152,7 +158,13 @@ describe("DailyGameView", () => {
     const html = renderView(
       resultState(
         makeResult({
-          pb: { scope: "daily", previous: 20, current: EXPECTED_TOTAL, updated: true, beatExisting: true },
+          pb: {
+            scope: "daily",
+            previous: 20,
+            current: EXPECTED_TOTAL,
+            updated: true,
+            beatExisting: true,
+          },
         }),
       ),
     );

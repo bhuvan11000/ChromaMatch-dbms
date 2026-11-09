@@ -6,7 +6,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   ChannelDiffBars,
   ColorSwatch,
+  GameResult,
   GameStage,
+  GameView,
   HsvSliders,
   RoundProgress,
 } from "@/components/game";
@@ -26,7 +28,42 @@ import {
   useToast,
   type CelebrationKind,
 } from "@/components/ui";
+import { initialGameMachineState } from "@/hooks/useGameMachine";
 import type { Hsv } from "@/lib/domain/hsv";
+import type { GameSubmitResponse } from "@/lib/schemas/game";
+
+const NOOP = () => undefined;
+
+const DAILY_TARGETS: Hsv[] = [
+  { h: 214.6, s: 62, v: 80.5 },
+  { h: 12, s: 90, v: 70 },
+  { h: 301.3, s: 45.5, v: 33 },
+];
+
+const DAILY_RESULT: GameSubmitResponse = {
+  mode: "daily",
+  totalScore: 25.3,
+  rounds: DAILY_TARGETS.map((target, index) => ({
+    roundNumber: index + 1,
+    target,
+    guess: { h: target.h + 5, s: target.s - 2, v: target.v - 2 },
+    score: [9.7, 9.9, 5.7][index] ?? 0,
+    diff: { h: 5.6, s: 3.5, v: 3.5 },
+  })),
+  totalGamesPlayed: 12,
+  pb: {
+    scope: "daily",
+    previous: 22,
+    current: 25.3,
+    updated: true,
+    beatExisting: true,
+  },
+  streak: { current: 3, longest: 7 },
+  achievements: [
+    { id: 1, name: "First Daily Game", description: "Complete your first Daily game." },
+  ],
+  room: null,
+};
 
 const SURFACE_TOKENS = [
   { name: "Background", token: "--background" },
@@ -499,6 +536,26 @@ export function StyleguideShowcase() {
             <Button variant="outline" size="sm" onClick={runCountdown} disabled={countdownRunning}>
               {countdownRunning ? "Counting…" : "Run countdown"}
             </Button>
+          </div>
+        </Section>
+
+        <Section
+          id="daily"
+          eyebrow="Daily"
+          title="Shared palette"
+          description="Everyone gets the same three colours; the daily best and streak are the only differences."
+        >
+          <div className="space-y-4">
+            <GameView
+              mode="daily"
+              state={initialGameMachineState}
+              start={NOOP}
+              setGuess={NOOP}
+              submitGuess={NOOP}
+              retry={NOOP}
+              playAgain={NOOP}
+            />
+            <GameResult result={DAILY_RESULT} onPlayAgain={NOOP} />
           </div>
         </Section>
 

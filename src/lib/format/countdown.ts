@@ -13,7 +13,11 @@ export function clockOffsetMs(serverTimeIso: string, clientReceivedAtMs: number)
 }
 
 /** Milliseconds until `resetsAt`, never negative, using the corrected clock. */
-export function remainingUntilMs(resetsAtIso: string, clientNowMs: number, offsetMs: number): number {
+export function remainingUntilMs(
+  resetsAtIso: string,
+  clientNowMs: number,
+  offsetMs: number,
+): number {
   const resetsAt = Date.parse(resetsAtIso);
   if (!Number.isFinite(resetsAt)) return 0;
   return Math.max(0, resetsAt - (clientNowMs + offsetMs));

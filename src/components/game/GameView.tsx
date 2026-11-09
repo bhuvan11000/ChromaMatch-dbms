@@ -202,9 +202,7 @@ export function GameView({
                     <h2 className="mt-1 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
                       {copy.title}
                     </h2>
-                    <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                      {copy.blurb}
-                    </p>
+                    <p className="mt-2 max-w-md text-sm text-muted-foreground">{copy.blurb}</p>
                   </div>
                 </div>
 

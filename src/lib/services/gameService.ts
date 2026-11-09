@@ -86,10 +86,7 @@ async function startDaily(now: Date): Promise<StartContext> {
   };
 }
 
-async function startContextForMode(
-  input: GameStartRequest,
-  now: Date,
-): Promise<StartContext> {
+async function startContextForMode(input: GameStartRequest, now: Date): Promise<StartContext> {
   switch (input.mode) {
     case "global":
       return startGlobal();

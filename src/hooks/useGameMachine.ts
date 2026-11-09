@@ -274,10 +274,7 @@ export function buildStartBody(options: GameMachineOptions = {}): GameStartReque
  * Body for `POST /api/games/submit`: the signed token and the guesses only.
  * Targets and scores are never sent; Global/Daily never send `timedOut`.
  */
-export function buildSubmitBody(
-  gameToken: string,
-  guesses: readonly Hsv[],
-): GameSubmitRequest {
+export function buildSubmitBody(gameToken: string, guesses: readonly Hsv[]): GameSubmitRequest {
   return { gameToken, guesses: [...guesses] };
 }
 
@@ -320,11 +317,9 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
     startRequestRef.current = requestKey;
 
     apiClient
-      .post<GameStartResponse>(
-        "/games/start",
-        buildStartBody({ mode }),
-        { schema: gameStartResponseSchema },
-      )
+      .post<GameStartResponse>("/games/start", buildStartBody({ mode }), {
+        schema: gameStartResponseSchema,
+      })
       .then((game) => dispatch({ type: "GAME_STARTED", game }))
       .catch((error: unknown) => {
         const mapped = toMachineError(error);

@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto";
+
 import { Long } from "mongodb";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -56,7 +58,7 @@ function addDays(date: string, days: number): string {
 
 /** A random far-past base date so repeated runs do not collide. */
 function randomPastBase(): string {
-  const offset = Math.floor(Math.random() * 20_000);
+  const offset = randomInt(0, 20_000);
   return addDays("1900-01-01", offset);
 }
 
@@ -174,7 +176,10 @@ describe("dailyChallengeService against real databases", () => {
     const bobGame = await startGame(bob, { mode: "daily" }, now);
 
     const verifyAt = new Date(now.getTime() + 20_000);
-    const aliceClaims = await verifyGameToken(aliceGame.gameToken, { userId: alice, now: verifyAt });
+    const aliceClaims = await verifyGameToken(aliceGame.gameToken, {
+      userId: alice,
+      now: verifyAt,
+    });
     const bobClaims = await verifyGameToken(bobGame.gameToken, { userId: bob, now: verifyAt });
 
     expect(aliceClaims.cid).toBe(bobClaims.cid);
@@ -184,9 +189,7 @@ describe("dailyChallengeService against real databases", () => {
     expect(aliceGame.roomCode).toBeNull();
 
     const byNumber = (rounds: typeof aliceClaims.rounds) =>
-      [...rounds]
-        .sort((x, y) => (x.n ?? 0) - (y.n ?? 0))
-        .map(({ h, s, v, n }) => ({ h, s, v, n }));
+      [...rounds].sort((x, y) => (x.n ?? 0) - (y.n ?? 0)).map(({ h, s, v, n }) => ({ h, s, v, n }));
 
     expect(byNumber(aliceClaims.rounds)).toEqual(byNumber(bobClaims.rounds));
 

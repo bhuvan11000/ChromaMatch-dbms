@@ -94,10 +94,7 @@ export async function getTodaySummary(userId: number, now: Date): Promise<DailyT
  * Architecture §5.7.2 lists `getChallengeByDate(date)`; `now` is added so the
  * future-date check is testable without an implicit `Date.now()` (§5.4.5).
  */
-export async function getChallengeByDate(
-  date: string,
-  now: Date,
-): Promise<DailyChallenge | null> {
+export async function getChallengeByDate(date: string, now: Date): Promise<DailyChallenge | null> {
   if (!isValidUtcDateString(date) || date > utcDateString(now)) {
     throw new AppError("INVALID_DATE");
   }
