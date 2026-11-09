@@ -1,6 +1,6 @@
 import { SignJWT, decodeJwt } from "jose";
 import { NextResponse } from "next/server";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { SESSION_TTL_SECONDS } from "@/lib/config/constants";
 import {
@@ -31,6 +31,8 @@ function requestWithCookie(value: string): Request {
 
 describe("session signing and verification", () => {
   it("signs an HS256 JWT with the session claims and TTL", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-29T12:00:00.000Z"));
     const token = await signSession(
       { userId: 42, role: "player" },
       new Date("2026-10-29T12:00:00.000Z"),
@@ -42,10 +44,14 @@ describe("session signing and verification", () => {
     expect(payload.iat).toBe(Math.floor(Date.parse("2026-10-29T12:00:00.000Z") / 1000));
     expect(payload.exp).toBe((payload.iat as number) + SESSION_TTL_SECONDS);
 
-    await expect(verifySessionToken(token)).resolves.toEqual({
-      userId: 42,
-      roleHint: "player",
-    });
+    try {
+      await expect(verifySessionToken(token)).resolves.toEqual({
+        userId: 42,
+        roleHint: "player",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("rejects a tampered token", async () => {
