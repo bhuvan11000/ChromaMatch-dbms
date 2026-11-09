@@ -4,6 +4,7 @@ import { submitGameResult } from "@/lib/db/pg/functions";
 import { generateRandomColors } from "@/lib/domain/colors";
 import { isValidHsv, normalizeHsv, type Hsv } from "@/lib/domain/hsv";
 import { scoreGame, type GameResult } from "@/lib/domain/scoring";
+import { randomPermutation } from "@/lib/domain/shuffle";
 import { AppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import type {
@@ -13,20 +14,30 @@ import type {
   GameSubmitRequest,
   GameSubmitResponse,
 } from "@/lib/schemas/game";
-import { signGameToken, verifyGameToken, type GameTokenClaims } from "@/lib/tokens/gameToken";
+import {
+  signGameToken,
+  verifyGameToken,
+  type GameTokenClaims,
+  type GameTokenRound,
+} from "@/lib/tokens/gameToken";
+
+import { getOrCreateToday } from "./dailyChallengeService";
 
 /**
  * Game use-cases — Architecture §5.7.3 and §5.12.1.
  *
- * Only Global is implemented in this step. Daily and Room are explicit
- * branches so later steps can add them without changing the submit pipeline.
+ * Global and Daily are implemented. Room is still an explicit branch so a
+ * later step can add it without changing the submit pipeline.
  */
 
 interface StartContext {
-  rounds: [Hsv, Hsv, Hsv];
+  /** Targets in play order; Daily/Room rounds carry their 1-based colour number. */
+  rounds: [GameTokenRound, GameTokenRound, GameTokenRound];
   timerSeconds: 5 | 10 | 15 | null;
   challengeDate: string | null;
   roomCode: string | null;
+  /** Extra signed claims for the token (Daily `cid`/`cdate`). */
+  tokenContext: { cid?: number; cdate?: string };
 }
 
 function notImplemented(mode: GameMode): never {
@@ -45,16 +56,44 @@ function startGlobal(): StartContext {
     timerSeconds: null,
     challengeDate: null,
     roomCode: null,
+    tokenContext: {},
   };
 }
 
-function startContextForMode(mode: GameMode): StartContext {
-  switch (mode) {
+/**
+ * Daily: the stored challenge row is the source of truth. The play order is a
+ * fresh crypto shuffle per game; `n` is the 1-based colour number of the
+ * stored colour (the shuffle helper returns 0-based indices — U-027).
+ */
+async function startDaily(now: Date): Promise<StartContext> {
+  const challenge = await getOrCreateToday(now);
+  const order = randomPermutation(ROUNDS_PER_GAME);
+
+  const rounds = order.map((originalIndex): GameTokenRound => {
+    const color = challenge.colors[originalIndex];
+    if (!color) {
+      throw new AppError("INTERNAL_ERROR", "Could not order the Daily colors.");
+    }
+    return { h: color.h, s: color.s, v: color.v, n: (originalIndex + 1) as 1 | 2 | 3 };
+  });
+
+  return {
+    rounds: [rounds[0], rounds[1], rounds[2]],
+    timerSeconds: null,
+    challengeDate: challenge.date,
+    roomCode: null,
+    tokenContext: { cid: challenge.challengeId, cdate: challenge.date },
+  };
+}
+
+async function startContextForMode(input: GameStartRequest, now: Date): Promise<StartContext> {
+  switch (input.mode) {
     case "global":
       return startGlobal();
     case "daily":
+      return startDaily(now);
     case "room":
-      return notImplemented(mode);
+      return notImplemented(input.mode);
   }
 }
 
@@ -179,12 +218,13 @@ export async function startGame(
   input: GameStartRequest,
   now: Date,
 ): Promise<GameStartResponse> {
-  const context = startContextForMode(input.mode);
+  const context = await startContextForMode(input, now);
   const signed = await signGameToken(
     {
       userId,
       mode: input.mode,
       rounds: context.rounds,
+      ...context.tokenContext,
     },
     now,
   );
@@ -215,7 +255,7 @@ export async function submitGame(
 ): Promise<GameSubmitResponse> {
   const claims = await verifyGameToken(input.gameToken, { userId, now });
 
-  if (claims.mode !== "global") {
+  if (claims.mode === "room") {
     notImplemented(claims.mode);
   }
 
@@ -223,10 +263,16 @@ export async function submitGame(
   const timedOut = normalizeTimedOut(claims.mode, input.timedOut);
   const game = scoreGame(claims.rounds, guesses);
 
+  // Daily tokens always carry `cid` (verifyGameToken enforces it); the id comes
+  // only from the signed token, never from the request body.
+  if (claims.mode === "daily" && claims.cid === undefined) {
+    throw new AppError("TOKEN_INVALID", "Daily tokens require a challenge id.");
+  }
+
   const sqlResult = await submitGameResult({
     userId,
-    mode: "global",
-    challengeId: null,
+    mode: claims.mode,
+    challengeId: claims.mode === "daily" ? (claims.cid ?? null) : null,
     roundScores: [game.rounds[0].score, game.rounds[1].score, game.rounds[2].score],
     playedAt: now,
   });

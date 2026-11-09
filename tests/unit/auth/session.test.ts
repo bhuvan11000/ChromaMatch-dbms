@@ -1,6 +1,6 @@
 import { SignJWT, decodeJwt } from "jose";
 import { NextResponse } from "next/server";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { SESSION_TTL_SECONDS } from "@/lib/config/constants";
 import {
@@ -21,6 +21,10 @@ beforeAll(() => {
 
 afterAll(() => {
   resetAuthEnv();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 function requestWithCookie(value: string): Request {
@@ -44,14 +48,10 @@ describe("session signing and verification", () => {
     expect(payload.iat).toBe(Math.floor(Date.parse("2026-10-29T12:00:00.000Z") / 1000));
     expect(payload.exp).toBe((payload.iat as number) + SESSION_TTL_SECONDS);
 
-    try {
-      await expect(verifySessionToken(token)).resolves.toEqual({
-        userId: 42,
-        roleHint: "player",
-      });
-    } finally {
-      vi.useRealTimers();
-    }
+    await expect(verifySessionToken(token)).resolves.toEqual({
+      userId: 42,
+      roleHint: "player",
+    });
   });
 
   it("rejects a tampered token", async () => {

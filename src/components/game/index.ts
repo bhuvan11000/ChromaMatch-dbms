@@ -4,11 +4,17 @@ export type { ChannelDiff, ChannelDiffBarsProps } from "./ChannelDiffBars";
 export { ColorSwatch } from "./ColorSwatch";
 export type { ColorSwatchProps, ColorSwatchSize, ColorSwatchTone } from "./ColorSwatch";
 
+export { DailyGameView } from "./DailyGameView";
+export type { DailyGameViewProps } from "./DailyGameView";
+
 export { GameResult } from "./GameResult";
 export type { GameResultProps } from "./GameResult";
 
 export { GameStage, GAME_STAGE_HEX, GAME_STAGE_NEUTRAL_TOKEN } from "./GameStage";
 export type { GameStageCountdown, GameStageProps } from "./GameStage";
+
+export { GameView } from "./GameView";
+export type { GameViewProps } from "./GameView";
 
 export { GlobalGameView } from "./GlobalGameView";
 export type { GlobalGameViewProps } from "./GlobalGameView";

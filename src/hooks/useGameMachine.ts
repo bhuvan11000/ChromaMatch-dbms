@@ -9,7 +9,10 @@ import type { ErrorCode } from "@/lib/errors";
 import {
   gameStartResponseSchema,
   gameSubmitResponseSchema,
+  type GameMode,
+  type GameStartRequest,
   type GameStartResponse,
+  type GameSubmitRequest,
   type GameSubmitResponse,
 } from "@/lib/schemas/game";
 
@@ -257,6 +260,24 @@ function toMachineError(error: unknown): { code: ErrorCode; message: string } {
   };
 }
 
+export interface GameMachineOptions {
+  /** Defaults to "global" so existing callers keep their behaviour. */
+  mode?: GameMode;
+}
+
+/** Body for `POST /api/games/start`. Pure so it can be unit-tested. */
+export function buildStartBody(options: GameMachineOptions = {}): GameStartRequest {
+  return { mode: options.mode ?? "global" };
+}
+
+/**
+ * Body for `POST /api/games/submit`: the signed token and the guesses only.
+ * Targets and scores are never sent; Global/Daily never send `timedOut`.
+ */
+export function buildSubmitBody(gameToken: string, guesses: readonly Hsv[]): GameSubmitRequest {
+  return { gameToken, guesses: [...guesses] };
+}
+
 export interface UseGameMachineResult {
   state: GameMachineState;
   start: () => void;
@@ -275,7 +296,8 @@ export interface UseGameMachineResult {
  * Guesses, token and result all live in React state only. Nothing is written
  * to localStorage, sessionStorage or cookies.
  */
-export function useGameMachine(): UseGameMachineResult {
+export function useGameMachine(options: GameMachineOptions = {}): UseGameMachineResult {
+  const mode = options.mode ?? "global";
   const [state, dispatch] = useReducer(gameMachineReducer, initialGameMachineState);
 
   const startRequestRef = useRef<string | null>(null);
@@ -295,17 +317,15 @@ export function useGameMachine(): UseGameMachineResult {
     startRequestRef.current = requestKey;
 
     apiClient
-      .post<GameStartResponse>(
-        "/games/start",
-        { mode: "global" },
-        { schema: gameStartResponseSchema },
-      )
+      .post<GameStartResponse>("/games/start", buildStartBody({ mode }), {
+        schema: gameStartResponseSchema,
+      })
       .then((game) => dispatch({ type: "GAME_STARTED", game }))
       .catch((error: unknown) => {
         const mapped = toMachineError(error);
         dispatch({ type: "START_FAILED", code: mapped.code, message: mapped.message });
       });
-  }, [state.phase, state.startNonce]);
+  }, [state.phase, state.startNonce, mode]);
 
   useEffect(() => {
     if (state.phase !== "SUBMITTING" || !state.game || state.guesses.length !== ROUNDS_PER_GAME) {
@@ -319,7 +339,7 @@ export function useGameMachine(): UseGameMachineResult {
     apiClient
       .post<GameSubmitResponse>(
         "/games/submit",
-        { gameToken: state.game.gameToken, guesses: state.guesses },
+        buildSubmitBody(state.game.gameToken, state.guesses),
         { schema: gameSubmitResponseSchema },
       )
       .then((result) => dispatch({ type: "SUBMIT_SUCCEEDED", result }))

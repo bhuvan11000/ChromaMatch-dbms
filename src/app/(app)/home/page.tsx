@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { DailyCard } from "@/components/home/DailyCard";
 import {
   Button,
   Card,
@@ -250,7 +251,9 @@ export default function HomePage() {
 
         <div className="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {MODES.map((mode) =>
-            mode.kind === "profile" ? (
+            mode.kind === "daily" ? (
+              <DailyCard key={mode.name} />
+            ) : mode.kind === "profile" ? (
               <Card
                 key={mode.name}
                 className="flex min-w-0 items-center gap-4 p-5 sm:col-span-2 lg:col-span-2"
