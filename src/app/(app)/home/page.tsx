@@ -90,6 +90,9 @@ export default function HomePage() {
               What are we{" "}
               <span className="cm-shine-text relative inline-block whitespace-nowrap">
                 mixing
+                <span aria-hidden="true" className="cm-shine-layer">
+                  mixing
+                </span>
                 <span
                   aria-hidden="true"
                   className="cm-spectrum-bar absolute -bottom-1 left-0 h-2 w-full rounded-full"

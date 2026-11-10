@@ -820,13 +820,30 @@
     animation: cm-blink 1.15s steps(1, end) infinite;
   }
 
-  /* ReactBits-style shine sweep: base colour stays readable; a light band passes. */
+  /*
+   * ReactBits-style shine sweep. The real word stays solid; a duplicate layer
+   * paints the moving highlight. If background-clip is unavailable, the layer
+   * is hidden and the base word remains readable.
+   */
   .cm-shine-text {
+    position: relative;
     color: var(--primary-ink);
   }
 
+  .cm-shine-layer {
+    display: none;
+    position: absolute;
+    inset: 0;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+
   @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-    .cm-shine-text {
+    .cm-shine-layer {
+      display: block;
       background-image: linear-gradient(
         110deg,
         var(--primary-ink) 0%,
@@ -840,8 +857,6 @@
       background-size: 240% 100%;
       -webkit-background-clip: text;
       background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
       animation: cm-shine-sweep 5.5s ease-in-out infinite;
     }
   }
@@ -1059,9 +1074,8 @@
     animation: none;
   }
 
-  .cm-shine-text {
-    animation: none;
-    background-position: 0 0;
+  .cm-shine-layer {
+    display: none;
   }
 
   .cm-star-frame::before {
