@@ -6,7 +6,7 @@
 > docs, assumptions made while implementing, and follow-ups that need a human
 > decision. Design-level open items still live in `docs/ChromaMatch_Database_Design.md` §11.
 
-Last updated: 2026-11-09
+Last updated: 2026-11-10
 
 ## How to use
 
@@ -31,7 +31,7 @@ Last updated: 2026-11-09
 | U-008 | Hue 360 in region buckets | HSV allows hue `360`, which is equivalent to `0`. The hue-region aggregation does not specify how to bucket it. | `userHueRegionAccuracy` normalizes `360` to `0` before `$bucket`, so it lands in the `0–30` bin. `scoreRound` also applies the circular `360 ≡ 0` rule, but the display/bucket choice is unchanged. | Confirm this is the desired display behavior. |
 | U-009 | History cursor compatibility | The cursor is opaque but not versioned. | Cursor payload is base64url JSON `{ p: playedAt ISO, i: ObjectId hex }`. Changing the shape later will invalidate outstanding cursors. | Add a version field if cursor stability across deployments matters. |
 | U-010 | History read shape | The API contract uses ISO-8601 strings, but the data layer returns `Date` values. | **Resolved (step 18):** `statsService.getHistory` serializes `playedAt` to ISO-8601; achievements likewise serialize `earnedAt`. | None. |
-| U-011 | CI coverage | The current GitHub Actions workflow runs lint → typecheck → unit → build, not integration tests. | Mongo/Postgres integration tests are run locally with Docker. A Mongo regression will not fail CI yet. | Add Mongo/Postgres service containers and `test:int` to CI. |
+| U-011 | CI coverage | The current GitHub Actions workflow runs lint → typecheck → unit → build, not integration tests. | **Resolved (step 20):** `.github/workflows/ci.yml` starts Postgres 16 + Mongo 7 service containers, applies migrations/`mongo:init`/seeds, and runs `npm run test:int` before the build; the manual E2E workflow covers Playwright. | None. |
 | U-012 | Test isolation | Integration tests use random numeric user ids and delete by `user_id` after each file. | Cleanup is scoped to generated ids, but tests share the configured `MONGODB_DB_NAME` and could theoretically collide with local data. | Consider a dedicated test database name or a reserved id range. |
 | U-013 | Index changes over time | `initMongo` calls `createIndex` with stable names. | Re-running is idempotent for identical specs. If an index's keys/options change, MongoDB may raise an index-options conflict instead of replacing it. | Add explicit drop/recreate migration logic if index definitions evolve. |
 | U-014 | Aggregation rounding | §5.9.5 says results are rounded to one decimal in the service layer, not in MongoDB. | **Resolved (step 18):** `statsService` rounds mode averages, channel misses, trend averages and hue-region averages to one decimal; aggregations remain raw. | None. |
@@ -79,6 +79,7 @@ Last updated: 2026-11-09
 | U-056 | Empty admin stats patch | U-022 noted the procedure accepts `{}` as a no-op; the docs do not define the API behaviour. | The API accepts `{}` and returns the unchanged user; the admin form always sends all six keys. | Confirm no-op vs `INVALID_PATCH`. |
 | U-057 | Admin list search semantics | §5.7.7 says “username/email substring” without defining wildcard or case behaviour. | The reader uses parameterized, case-insensitive literal `strpos(lower(column), lower(query))`; `%` and `_` are ordinary characters. | Confirm wildcard search is not required. |
 | U-058 | Admin history target check | §5.10.7 says the admin history route matches `/api/me/history`, but does not say how to handle a deleted/missing target. | `adminService.getUserHistory` reads the target first and returns `USER_NOT_FOUND` (404); otherwise it delegates to `statsService.getHistory`. | Confirm 404 vs an empty page. |
+| U-059 | E2E data cleanup | §5.14 requires two happy-path Playwright tests but does not define test-data isolation or cleanup. | Tests register unique users (`crypto.randomUUID`) and leave their users, games, rooms and history rows behind. CI service containers are ephemeral; repeated local runs accumulate rows but never collide. | Add a dedicated e2e cleanup script/database if local accumulation becomes noisy. |
 
 ## Resolved during implementation
 

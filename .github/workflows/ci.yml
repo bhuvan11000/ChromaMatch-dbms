@@ -13,6 +13,38 @@ env:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: chromamatch
+          POSTGRES_PASSWORD: chromamatch
+          POSTGRES_DB: chromamatch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U chromamatch -d chromamatch"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://chromamatch:chromamatch@localhost:5432/chromamatch
+      DATABASE_URL_DIRECT: postgresql://chromamatch:chromamatch@localhost:5432/chromamatch
+      MONGODB_URI: mongodb://localhost:27017
+      MONGODB_DB_NAME: chromamatch
+      SESSION_JWT_SECRET: ci-session-secret-not-for-production-0001
+      GAME_TOKEN_SECRET: ci-game-token-secret-not-for-production-0002
+      DAILY_SEED_SECRET: ci-daily-seed-not-for-production-0003
+      APP_ORIGIN: http://localhost:3000
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,14 +58,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Dependency audit (informational)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Apply database migrations
+        run: npm run db:migrate
+
+      - name: Initialize MongoDB
+        run: npm run mongo:init
+
+      - name: Seed achievements
+        run: npm run db:seed
+
       - name: Lint
         run: npm run lint
 
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
+      - name: Unit tests
         run: npm test
+
+      - name: Integration tests
+        run: npm run test:int
 
       - name: Build
         run: npm run build
