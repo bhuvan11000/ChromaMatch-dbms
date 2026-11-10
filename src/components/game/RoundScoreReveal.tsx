@@ -190,40 +190,42 @@ export function RoundScoreReveal({
               </div>
             </div>
 
-            <div className="cm-led-well relative flex flex-col justify-between overflow-hidden rounded-[0.85rem] px-4 py-4 text-right">
-              {score.score >= 9 ? <ScoreBurst /> : null}
-              <div className="relative z-10">
-                <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-[var(--screen-muted)] uppercase">
-                  Round score
-                </p>
-                <p className="cm-led-gold mt-1 font-display text-6xl leading-none font-extrabold tracking-tight">
-                  <ScoreCountUp value={score.score} max={10} />
-                </p>
-                <p className="mt-1 font-mono text-[9px] tracking-[0.12em] text-[var(--screen-muted)] uppercase">
-                  out of 10
-                </p>
-              </div>
-
-              <div className="relative z-10 mt-5">
-                <div className="flex gap-1" aria-hidden="true">
-                  {Array.from({ length: 10 }, (_, index) => (
-                    <span
-                      key={index}
-                      className={cn(
-                        "cm-score-cell h-5 flex-1 rounded-[0.12rem] border",
-                        index < cells
-                          ? "border-[var(--screen-gold)]/60 bg-[var(--screen-gold)]"
-                          : "border-[var(--screen-line)] bg-white/5",
-                      )}
-                      style={{ animationDelay: `${index * 40}ms` } as CSSProperties}
-                    />
-                  ))}
-                </div>
-                {timedOut ? (
-                  <p className="mt-2 rounded-[0.25rem] border border-warning/50 bg-warning/10 px-2 py-1 font-mono text-[8px] font-bold tracking-[0.14em] text-warning uppercase">
-                    Timed out
+            <div className={cn("h-full", score.score >= 9.5 && "cm-star-frame rounded-[0.9rem]")}>
+              <div className="cm-led-well relative flex h-full flex-col justify-between overflow-hidden rounded-[0.85rem] px-4 py-4 text-right">
+                {score.score >= 9 ? <ScoreBurst /> : null}
+                <div className="relative z-10">
+                  <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-[var(--screen-muted)] uppercase">
+                    Round score
                   </p>
-                ) : null}
+                  <p className="cm-led-gold mt-1 font-display text-6xl leading-none font-extrabold tracking-tight">
+                    <ScoreCountUp value={score.score} max={10} />
+                  </p>
+                  <p className="mt-1 font-mono text-[9px] tracking-[0.12em] text-[var(--screen-muted)] uppercase">
+                    out of 10
+                  </p>
+                </div>
+
+                <div className="relative z-10 mt-5">
+                  <div className="flex gap-1" aria-hidden="true">
+                    {Array.from({ length: 10 }, (_, index) => (
+                      <span
+                        key={index}
+                        className={cn(
+                          "cm-score-cell h-5 flex-1 rounded-[0.12rem] border",
+                          index < cells
+                            ? "border-[var(--screen-gold)]/60 bg-[var(--screen-gold)]"
+                            : "border-[var(--screen-line)] bg-white/5",
+                        )}
+                        style={{ animationDelay: `${index * 40}ms` } as CSSProperties}
+                      />
+                    ))}
+                  </div>
+                  {timedOut ? (
+                    <p className="mt-2 rounded-[0.25rem] border border-warning/50 bg-warning/10 px-2 py-1 font-mono text-[8px] font-bold tracking-[0.14em] text-warning uppercase">
+                      Timed out
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>

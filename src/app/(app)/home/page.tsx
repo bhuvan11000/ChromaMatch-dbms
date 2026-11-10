@@ -88,7 +88,7 @@ export default function HomePage() {
               className="mt-4 max-w-xl font-display text-5xl leading-[0.92] font-extrabold tracking-[-0.045em] text-balance sm:text-6xl lg:text-[4.8rem]"
             >
               What are we{" "}
-              <span className="relative inline-block whitespace-nowrap text-primary-ink">
+              <span className="cm-shine-text relative inline-block whitespace-nowrap">
                 mixing
                 <span
                   aria-hidden="true"

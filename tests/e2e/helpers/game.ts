@@ -112,7 +112,8 @@ async function setSliderValue(page: Page, name: string, value: number): Promise<
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }, formatted);
 
-  await expect(slider).toHaveValue(formatted);
+  // Native range inputs normalize "77.0" to "77"; compare numerically formatted.
+  await expect(slider).toHaveValue(String(Number(formatted)));
 }
 
 /** Sets all three sliders and verifies that React accepted the whole mix. */

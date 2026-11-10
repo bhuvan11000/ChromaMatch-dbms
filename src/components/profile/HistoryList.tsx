@@ -83,11 +83,16 @@ export interface HistoryListProps {
 export function HistoryList({ items }: HistoryListProps) {
   return (
     <ol className="space-y-2.5">
-      {items.map((item) => {
+      {items.map((item, index) => {
         const isRoom = item.mode === "room";
 
         return (
-          <li key={item.id} data-mode={item.mode}>
+          <li
+            key={item.id}
+            data-mode={item.mode}
+            className="cm-list-row"
+            style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+          >
             <details
               className={cn(
                 "group overflow-hidden rounded-[0.8rem] border-2 border-border bg-card",

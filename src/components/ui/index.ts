@@ -28,13 +28,12 @@ export type { ModalProps, ModalSize } from "./Modal";
 export { ModeGlyph } from "./ModeGlyph";
 export type { ModeGlyphKind, ModeGlyphProps } from "./ModeGlyph";
 
-export { Spotlight } from "./Spotlight";
-export type { SpotlightProps } from "./Spotlight";
-
 export { Spinner } from "./Spinner";
 export type { SpinnerProps, SpinnerSize } from "./Spinner";
 
 export { TestStrip, TEST_STRIP_COLORS } from "./TestStrip";
+
+export { ThemeToggle } from "./ThemeToggle";
 export type { TestStripProps, TestStripSize } from "./TestStrip";
 
 export { ToastProvider, useToast } from "./Toast";

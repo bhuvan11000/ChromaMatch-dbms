@@ -115,8 +115,7 @@ function PageHeader({
         href={backHref}
         className="inline-flex min-h-9 items-center gap-1.5 rounded-[0.5rem] border-2 border-border bg-card px-3 py-1.5 font-mono text-[9px] font-bold tracking-[0.14em] text-muted-foreground uppercase shadow-[0_2px_0_var(--border-lip)] transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
       >
-        <span aria-hidden="true">←</span>
-        {backLabel.replace("← ", "")}
+        {backLabel}
       </a>
     </header>
   );

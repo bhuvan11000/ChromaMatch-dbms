@@ -54,12 +54,14 @@ export function LeaderboardTable({ entries, me, mode, className }: LeaderboardTa
           </tr>
         </thead>
         <tbody>
-          {entries.map((entry) => {
+          {entries.map((entry, index) => {
             const isViewer = me !== null && entry.rank === me.rank;
 
             return (
               <tr
                 key={entry.userId}
+                className="cm-list-row"
+                style={{ animationDelay: `${index * 45}ms` }}
                 data-viewer={isViewer ? "true" : undefined}
                 aria-current={isViewer ? "true" : undefined}
               >

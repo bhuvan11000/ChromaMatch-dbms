@@ -126,6 +126,10 @@ export function ClickSpark({ children }: { children: ReactNode }) {
 
     function handlePointerDown(event: PointerEvent) {
       if (event.button !== 0 || !event.isPrimary) return;
+      // Keep the calibrated game surface free of decorative colour/motion.
+      if (event.target instanceof Element && event.target.closest('[data-testid="game-stage"]')) {
+        return;
+      }
       spawn(event.clientX, event.clientY);
     }
 

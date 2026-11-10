@@ -61,7 +61,7 @@ export function RevealCountdown({
         className="cm-countdown-track mt-2.5 h-3.5 w-full overflow-hidden rounded-[0.25rem] border border-stage-border bg-stage-surface"
       >
         <div
-          className="h-full rounded-[0.15rem] bg-stage-fg transition-[width] duration-100 ease-linear motion-reduce:transition-none"
+          className="h-full rounded-[0.15rem] bg-stage-fg will-change-[width]"
           style={{ width: `${progress}%` }}
         />
       </div>

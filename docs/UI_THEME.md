@@ -33,6 +33,10 @@ Components use token-backed Tailwind utilities or the `cm-*` component classes;
 only illustrations (the prism mark, mode pins, high-score medal tones) may use
 fixed colours.
 
+Theme tokens use `light-dark()` and a `data-theme` override on `<html>`; the
+system preference is the default. The stage, marquee and high-score surfaces are
+fixed or near-fixed across both schemes.
+
 | Group | Tokens |
 |---|---|
 | Canvas | `--background`, `--foreground` |
@@ -92,6 +96,9 @@ must not recreate their own stage background.
   wordmark + player chip + a fixed four-item bottom dock.
 - The header is sticky, two-pixel ink, with a spectrum hairline at the top. The
   bottom dock sits above the safe area and the app shell reserves bottom space.
+- `ThemeToggle` switches the light/dark override and stores it as `cm_theme`.
+  The system preference is the default; the pre-paint script in the root layout
+  applies the stored value before hydration, so there is no flash.
 - Page-level headers are small mode plates (glyph, `Mode`, title, back action).
   Do not repeat the wordmark inside a page header; the shell owns it.
 - Shell widths: app `max-w-7xl`; home/profile/boards `max-w-5xl`–`max-w-6xl`;
@@ -119,7 +126,7 @@ must not recreate their own stage background.
 | `ScoreCountUp` | `components/ui/Celebration.tsx` | Integer-tenths count-up; instant final value under reduced motion / SSR. |
 | `AuthCabinet` | `components/auth/AuthCabinet.tsx` | Shared access-terminal shell for login/register. |
 | `ClickSpark` | `components/ui/ClickSpark.tsx` | ReactBits-adapted canvas click burst; decorative, reduced-motion-safe. |
-| `Spotlight` | `components/ui/Spotlight.tsx` | ReactBits-adapted pointer colour spill for Home cards; focus also lights it. |
+| `ThemeToggle` | `components/ui/ThemeToggle.tsx` | Persisted light/dark override; system is the default. |
 | `GameStage` | `components/game/GameStage.tsx` | Fixed neutral stage; HUD, countdown, content, optional footer. |
 | `ColorSwatch` | `components/game/ColorSwatch.tsx` | Display-only HSV swatch; sizes `sm/md/lg/reveal/canvas/fill`. |
 | `RevealCountdown` | `components/game/RevealCountdown.tsx` | Achromatic timer + segmented bar used by `GameStage`. |
@@ -236,18 +243,20 @@ Target is always the upper half and the player's mix the lower half, separated
 by a hard seam. Each half carries a visible label and HSV mono badge. Do not
 swap the order between modes.
 
-## 8.4 Motion & effects
+### 8.4 Motion & effects
 
 - Chrome may move; the stage may not. Entrance rises, card lifts, the live-dot
-  pulse, `ClickSpark`, `Spotlight` and marquee details are all outside the stage.
+  pulse, `ClickSpark` and marquee details are all outside the stage.
 - `ClickSpark` is adapted from ReactBits. It draws a short canvas burst on
   primary press and is not installed at all under reduced motion.
-- `Spotlight` is adapted from ReactBits. It sets two CSS variables on pointer
-  move; the glow is a single `::before` layer, so the card keeps its ink border
-  and hard print shadow.
 - Round-score feedback adds: a count-up, a sequential 10-cell fill, a grade
-  sticker and an optional colour burst for 9.0+. All are skipped or static under
-  reduced motion.
+  sticker and an optional colour burst for 9.0+. A near-perfect round (9.5+)
+  also gets the slow ReactBits-style star border around the LED score well.
+- The Home hero word uses a ReactBits-style shiny-text sweep; it keeps the
+  base orange readable and only animates the highlight band.
+- Leaderboard, room-scoreboard and history rows use a short staggered entrance
+  (`cm-list-row`); this is a list reveal, never a looping effect.
+- All of these are skipped or static under reduced motion.
 - Do not add ambient motion to the stage, a target swatch or the guess canvas.
 
 ## 9. Celebrations
@@ -279,8 +288,9 @@ surfaces, mode pins, the stage and result states.
 
 ## 11. Deliberate choices
 
-- **No theme toggle.** The cabinet follows the OS colour scheme. Both schemes
-  are first-class; the marquee, stage and high-score screens are dark in both.
+- **System theme by default, explicit override when asked.** Both schemes are
+  first-class; the marquee, stage and high-score screens are dark in both.
+  `ThemeToggle` persists only the display preference (`cm_theme`).
 - **Dark screens as a material.** Leaderboards and room standings use the dark
   high-score material in both themes; that contrast is the arcade screen.
 - **The stage is the one fixed surface.** The surrounding cabinet can be loud,

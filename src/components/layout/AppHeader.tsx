@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { AdminNavLink } from "@/components/admin/AdminNavLink";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { useSession } from "@/hooks/useSession";
 import { apiClient } from "@/lib/api-client";
@@ -254,6 +255,8 @@ export function AppHeader() {
                 Sign in
               </Link>
             )}
+
+            <ThemeToggle />
 
             {user ? (
               <button

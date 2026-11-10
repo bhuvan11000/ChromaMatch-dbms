@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ModeGlyph, TestStrip, Wordmark } from "@/components/ui";
+import { ModeGlyph, TestStrip, ThemeToggle, Wordmark } from "@/components/ui";
 
 const POSTER_MODES = [
   { kind: "global", label: "Global", detail: "Random palette" },
@@ -90,6 +90,9 @@ export default function AuthLayout({ children }: Readonly<{ children: ReactNode 
             aria-hidden="true"
             className="cm-darkroom-grid pointer-events-none absolute inset-0 opacity-60"
           />
+          <div className="absolute top-4 right-4 z-10 sm:top-6 sm:right-6">
+            <ThemeToggle />
+          </div>
           <div
             aria-hidden="true"
             className="pointer-events-none absolute top-0 right-0 h-1.5 w-full bg-[var(--spectrum-gradient)] lg:hidden"

@@ -16,7 +16,12 @@
  */
 
 :root {
-  color-scheme: light;
+  /*
+   * System preference is the default. A stored `data-theme` on <html>
+   * overrides it for the session and across reloads (see ThemeToggle).
+   * `light-dark()` keeps both palettes in one token table.
+   */
+  color-scheme: light dark;
 
   /* Typeface stacks are real CSS variables so custom component classes and
    * Tailwind's generated font utilities read the same source. */
@@ -24,44 +29,45 @@
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
 
-  /* Paper and ink */
-  --background: #f1ead9;
-  --foreground: #17141f;
-  --card: #fffaf0;
-  --card-elevated: #fffdf7;
-  --card-foreground: #17141f;
-  --muted: #e5dcc7;
-  --muted-strong: #d8cdb4;
-  --muted-foreground: #57505e;
-  --border: #1c1826;
-  --border-lip: #0a0810;
-  --input: #fffdf7;
-  --input-border: #393243;
-  --input-border-strong: #17141f;
+  /* Paper and ink — daylight flyer / midnight cathode */
+  --background: light-dark(#f1ead9, #0a0a10);
+  --foreground: light-dark(#17141f, #f5efdf);
+  --card: light-dark(#fffaf0, #14141f);
+  --card-elevated: light-dark(#fffdf7, #1b1a28);
+  --card-foreground: light-dark(#17141f, #f5efdf);
+  --muted: light-dark(#e5dcc7, #232232);
+  --muted-strong: light-dark(#d8cdb4, #2d2b3e);
+  --muted-foreground: light-dark(#57505e, #aaa4b5);
+  --border: light-dark(#1c1826, #403c55);
+  --border-lip: light-dark(#0a0810, #000000);
+  --input: light-dark(#fffdf7, #101019);
+  --input-border: light-dark(#393243, #514c69);
+  --input-border-strong: light-dark(#17141f, #817b9d);
 
   /* Signal orange: the one loud action colour. Ink text keeps it legible. */
-  --primary: #ff5a1f;
-  --primary-hover: #ef4a10;
-  --primary-lip: #8b2405;
-  --primary-foreground: #1c0a02;
+  --primary: light-dark(#ff5a1f, #ff6b2c);
+  --primary-hover: light-dark(#ef4a10, #ff8250);
+  --primary-lip: light-dark(#8b2405, #8b2a06);
+  --primary-foreground: light-dark(#1c0a02, #1d0a02);
   /* Text-safe signal orange (4.8:1 on paper). */
-  --primary-ink: #b83a0c;
+  --primary-ink: light-dark(#b83a0c, #ff8a5c);
 
-  --accent-cyan: #06758a;
-  --accent-violet: #6d28d9;
-  --accent-gold: #a16207;
+  --accent-cyan: light-dark(#06758a, #4be0e8);
+  --accent-violet: light-dark(#6d28d9, #b98bff);
+  --accent-gold: light-dark(#a16207, #ffd166);
 
-  --success: #087a4b;
-  --success-soft: #dff6e8;
-  --warning: #9a5200;
-  --warning-soft: #fdefcf;
-  --danger: #c81e3c;
-  --danger-lip: #6d0a1d;
-  --danger-foreground: #fff7f8;
-  --danger-soft: #ffe5ea;
+  --success: light-dark(#087a4b, #3ee09a);
+  --success-soft: light-dark(#dff6e8, #062b1d);
+  --warning: light-dark(#9a5200, #ffbd4a);
+  --warning-soft: light-dark(#fdefcf, #2a1d05);
+  --danger: light-dark(#c81e3c, #ff5c77);
+  --danger-lip: light-dark(#6d0a1d, #6d0a1d);
+  --danger-foreground: light-dark(#fff7f8, #1c0208);
+  --danger-soft: light-dark(#ffe5ea, #2c0d16);
 
-  --ring: #06758a;
-  --overlay: rgb(12 9 18 / 0.74);
+  --ring: light-dark(#06758a, #4be0e8);
+  --overlay: light-dark(rgb(12 9 18 / 0.74), rgb(2 2 6 / 0.84));
+  --page-sheen: light-dark(rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.04));
 
   /* Fixed game stage — identical in every theme and for every player. */
   --stage-bg: #1e1e1e;
@@ -71,9 +77,9 @@
   --stage-muted: #a3a3a3;
 
   /* Cabinet marquee (dark in both themes) */
-  --marquee-bg: #17131f;
+  --marquee-bg: light-dark(#17131f, #08080d);
   --marquee-fg: #fff6e6;
-  --marquee-muted: #b9b0c4;
+  --marquee-muted: light-dark(#b9b0c4, #9c93aa);
 
   /* High-score / LED screens (dark in both themes) */
   --screen-bg: #11101a;
@@ -103,51 +109,12 @@
   --cm-radius-xl: 1.75rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+:root[data-theme="light"] {
+  color-scheme: light;
+}
 
-    /* Midnight cathode cabinet */
-    --background: #0a0a10;
-    --foreground: #f5efdf;
-    --card: #14141f;
-    --card-elevated: #1b1a28;
-    --card-foreground: #f5efdf;
-    --muted: #232232;
-    --muted-strong: #2d2b3e;
-    --muted-foreground: #aaa4b5;
-    --border: #403c55;
-    --border-lip: #000000;
-    --input: #101019;
-    --input-border: #514c69;
-    --input-border-strong: #817b9d;
-
-    --primary: #ff6b2c;
-    --primary-hover: #ff8250;
-    --primary-lip: #8b2a06;
-    --primary-foreground: #1d0a02;
-    --primary-ink: #ff8a5c;
-
-    --accent-cyan: #4be0e8;
-    --accent-violet: #b98bff;
-    --accent-gold: #ffd166;
-
-    --success: #3ee09a;
-    --success-soft: #062b1d;
-    --warning: #ffbd4a;
-    --warning-soft: #2a1d05;
-    --danger: #ff5c77;
-    --danger-lip: #6d0a1d;
-    --danger-foreground: #1c0208;
-    --danger-soft: #2c0d16;
-
-    --ring: #4be0e8;
-    --overlay: rgb(2 2 6 / 0.84);
-
-    --marquee-bg: #08080d;
-    --marquee-fg: #fff6e6;
-    --marquee-muted: #9c93aa;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -192,8 +159,7 @@
   --color-screen: var(--screen-bg);
   --color-screen-foreground: var(--screen-fg);
 
-  --font-display:
-    var(--font-bricolage), var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
 }
@@ -565,40 +531,6 @@
     box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.35);
   }
 
-  /*
-   * ReactBits-style spotlight: one colour spill that follows the pointer.
-   * The card's ink border and hard shadow are untouched.
-   */
-  .cm-spotlight {
-    position: relative;
-  }
-
-  .cm-spotlight::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    border-radius: inherit;
-    background: radial-gradient(
-      240px circle at var(--spot-x, 50%) var(--spot-y, 50%),
-      color-mix(in srgb, var(--spot-color, var(--primary)) 26%, transparent),
-      transparent 70%
-    );
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 180ms ease;
-  }
-
-  @media (hover: hover) {
-    .cm-spotlight:hover::before {
-      opacity: 1;
-    }
-  }
-
-  .cm-spotlight:focus-within::before {
-    opacity: 0.7;
-  }
-
   /* Speaker grille dots, used as a quiet cabinet detail. */
   .cm-speaker {
     background-image: radial-gradient(circle, currentColor 1px, transparent 1.2px);
@@ -888,6 +820,67 @@
     animation: cm-blink 1.15s steps(1, end) infinite;
   }
 
+  /* ReactBits-style shine sweep: base colour stays readable; a light band passes. */
+  .cm-shine-text {
+    color: var(--primary-ink);
+  }
+
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .cm-shine-text {
+      background-image: linear-gradient(
+        110deg,
+        var(--primary-ink) 0%,
+        var(--primary-ink) 38%,
+        #ffd166 49%,
+        #fff3dc 52%,
+        #ffd166 55%,
+        var(--primary-ink) 66%,
+        var(--primary-ink) 100%
+      );
+      background-size: 240% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: cm-shine-sweep 5.5s ease-in-out infinite;
+    }
+  }
+
+  /* ReactBits-style star border: a slow light mote around a high score. */
+  .cm-star-frame {
+    position: relative;
+    overflow: hidden;
+    padding: 3px;
+    background: var(--screen-line);
+    box-shadow: 0 0 20px rgb(255 209 102 / 0.14);
+  }
+
+  .cm-star-frame::before {
+    content: "";
+    position: absolute;
+    inset: -65%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0 62%,
+      rgb(255 209 102 / 0.22) 70%,
+      #ffd166 80%,
+      #fff3dc 83%,
+      #ffd166 86%,
+      rgb(255 209 102 / 0.22) 94%,
+      transparent 100%
+    );
+    animation: cm-star-spin 4.5s linear infinite;
+  }
+
+  .cm-star-frame > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cm-list-row {
+    animation: cm-list-row-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
   .cm-score-cell {
     transform-origin: bottom;
     animation: cm-score-cell-in 320ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
@@ -975,6 +968,33 @@
   }
 }
 
+@keyframes cm-shine-sweep {
+  0%,
+  35% {
+    background-position: 130% 0;
+  }
+  100% {
+    background-position: -30% 0;
+  }
+}
+
+@keyframes cm-star-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes cm-list-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes cm-score-cell-in {
   from {
     opacity: 0.2;
@@ -1034,8 +1054,21 @@
   .cm-rise,
   .cm-pop,
   .cm-score-cell,
-  .cm-grade {
+  .cm-grade,
+  .cm-list-row {
     animation: none;
+  }
+
+  .cm-shine-text {
+    animation: none;
+    background-position: 0 0;
+  }
+
+  .cm-star-frame::before {
+    animation: none;
+    inset: 0;
+    background: var(--screen-gold);
+    opacity: 0.35;
   }
 
   .cm-live-dot::after {

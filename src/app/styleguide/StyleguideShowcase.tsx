@@ -11,6 +11,7 @@ import {
   GameView,
   HsvSliders,
   RoundProgress,
+  RoundScoreReveal,
 } from "@/components/game";
 import {
   AccuracyChart,
@@ -33,13 +34,14 @@ import {
   ScoreCountUp,
   Spinner,
   TestStrip,
+  ThemeToggle,
   Wordmark,
   useToast,
   type CelebrationKind,
 } from "@/components/ui";
 import { initialGameMachineState } from "@/hooks/useGameMachine";
 import type { Hsv } from "@/lib/domain/hsv";
-import type { GameSubmitResponse } from "@/lib/schemas/game";
+import type { GameRoundScoreResponse, GameSubmitResponse } from "@/lib/schemas/game";
 import type { RoomState } from "@/lib/schemas/rooms";
 import type {
   AchievementItemResponse,
@@ -81,6 +83,14 @@ const DAILY_RESULT: GameSubmitResponse = {
     { id: 1, name: "First Daily Game", description: "Complete your first Daily game." },
   ],
   room: null,
+};
+
+const ROUND_SCORE_DEMO: GameRoundScoreResponse = {
+  roundNumber: 1,
+  target: DAILY_TARGETS[0],
+  guess: { h: DAILY_TARGETS[0].h + 2.4, s: DAILY_TARGETS[0].s - 1.8, v: DAILY_TARGETS[0].v + 1.2 },
+  score: 9.7,
+  diff: { h: 2.4, s: 1.8, v: 1.2 },
 };
 
 const ROOM_MEMBERS: RoomState["members"] = [
@@ -388,7 +398,8 @@ export function StyleguideShowcase() {
             Dev-only reference. Tokens, states, the stage and celebrations.
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 items-center gap-2">
+          <ThemeToggle />
           <Link
             href="/home"
             className="inline-flex min-h-11 items-center rounded-[0.875rem] border-2 border-border px-4 font-display text-sm font-semibold hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
@@ -698,6 +709,15 @@ export function StyleguideShowcase() {
               </p>
               <ChannelDiffBars diff={{ h: 5.6, s: 3.5, v: 3.5 }} className="mt-3" />
             </Card>
+            <RoundScoreReveal
+              roundNumber={1}
+              totalRounds={3}
+              modeLabel="Global"
+              score={ROUND_SCORE_DEMO}
+              error={null}
+              isLastRound={false}
+              onNext={NOOP}
+            />
             <Card className="p-5">
               <p className="font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
                 Result split well
