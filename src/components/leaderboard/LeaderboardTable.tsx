@@ -33,34 +33,22 @@ export function LeaderboardTable({ entries, me, mode, className }: LeaderboardTa
 
   return (
     <div className={cn("overflow-x-auto", className)}>
-      <table className="w-full min-w-[32rem] border-collapse text-left">
+      <table className="cm-score-table min-w-[32rem] text-left">
         <caption className="sr-only">
           {mode === "daily" ? "Daily leaderboard" : "Global leaderboard"}
         </caption>
         <thead>
-          <tr className="border-b border-border">
-            <th
-              scope="col"
-              className="px-3 py-2.5 font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase"
-            >
+          <tr>
+            <th scope="col" className="px-3 py-3 text-left">
               Rank
             </th>
-            <th
-              scope="col"
-              className="px-3 py-2.5 font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase"
-            >
+            <th scope="col" className="px-3 py-3 text-left">
               Player
             </th>
-            <th
-              scope="col"
-              className="px-3 py-2.5 text-right font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase"
-            >
+            <th scope="col" className="px-3 py-3 text-right">
               Score
             </th>
-            <th
-              scope="col"
-              className="px-3 py-2.5 text-right font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase"
-            >
+            <th scope="col" className="px-3 py-3 text-right">
               {dateLabel}
             </th>
           </tr>
@@ -74,28 +62,24 @@ export function LeaderboardTable({ entries, me, mode, className }: LeaderboardTa
                 key={entry.userId}
                 data-viewer={isViewer ? "true" : undefined}
                 aria-current={isViewer ? "true" : undefined}
-                className={cn(
-                  "border-b border-border/70 last:border-b-0",
-                  isViewer ? "bg-primary/10" : "hover:bg-muted/40",
-                )}
               >
                 <td className="px-3 py-3">
-                  <RankBadge rank={entry.rank} />
+                  <RankBadge rank={entry.rank} tone="screen" />
                 </td>
                 <td className="px-3 py-3">
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="truncate font-semibold text-foreground">{entry.username}</span>
+                    <span className="cm-score-name truncate">{entry.username}</span>
                     {isViewer ? (
-                      <span className="shrink-0 rounded-full border border-primary/35 bg-primary/10 px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.12em] text-primary uppercase">
+                      <span className="shrink-0 rounded-[0.25rem] border border-[var(--screen-gold)]/50 bg-[var(--screen-gold)]/10 px-1.5 py-0.5 font-mono text-[8px] font-bold tracking-[0.12em] text-[var(--screen-gold)] uppercase">
                         You
                       </span>
                     ) : null}
                   </span>
                 </td>
-                <td className="px-3 py-3 text-right font-mono text-sm font-bold text-foreground tabular-nums">
+                <td className="cm-score-value px-3 py-3 text-right text-base">
                   {formatScore(entry.score)}
                 </td>
-                <td className="px-3 py-3 text-right font-mono text-xs text-muted-foreground tabular-nums">
+                <td className="cm-score-muted px-3 py-3 text-right font-mono text-[11px]">
                   {formatDate(entry.achievedAt)}
                 </td>
               </tr>

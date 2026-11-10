@@ -7,9 +7,12 @@ import { REVEAL_MS, ROUNDS_PER_GAME, SLIDER_DEFAULTS } from "@/lib/config/consta
 import type { Hsv } from "@/lib/domain/hsv";
 import type { ErrorCode } from "@/lib/errors";
 import {
+  gameRoundScoreResponseSchema,
   gameStartResponseSchema,
   gameSubmitResponseSchema,
   type GameMode,
+  type GameRoundScoreRequest,
+  type GameRoundScoreResponse,
   type GameStartRequest,
   type GameStartResponse,
   type GameSubmitRequest,
@@ -17,7 +20,15 @@ import {
 } from "@/lib/schemas/game";
 
 export type GameMachinePhase =
-  "IDLE" | "STARTING" | "ROUND_REVEAL" | "ROUND_GUESS" | "SUBMITTING" | "RESULT" | "ERROR";
+  | "IDLE"
+  | "STARTING"
+  | "ROUND_REVEAL"
+  | "ROUND_GUESS"
+  | "ROUND_SCORING"
+  | "ROUND_SCORE"
+  | "SUBMITTING"
+  | "RESULT"
+  | "ERROR";
 
 export type GameRetryTarget = "start" | "submit";
 
@@ -39,10 +50,15 @@ export interface GameMachineState {
   revealRemainingMs: number;
   /** Timed rooms only: time left to guess in the current round (ms). */
   guessRemainingMs: number;
+  /** Server-scored preview for the round that was just submitted. */
+  roundScore: GameRoundScoreResponse | null;
+  /** Non-fatal preview failure; the player can still advance. */
+  roundScoreError: { code: ErrorCode; message: string } | null;
   result: GameSubmitResponse | null;
   error: GameMachineError | null;
   startNonce: number;
   submitNonce: number;
+  roundScoreNonce: number;
 }
 
 export type GameMachineEvent =
@@ -54,6 +70,9 @@ export type GameMachineEvent =
   | { type: "GUESS_TICK"; remainingMs: number }
   | { type: "SET_GUESS"; guess: Hsv }
   | { type: "SUBMIT_GUESS"; timedOut?: boolean }
+  | { type: "ROUND_SCORED"; score: GameRoundScoreResponse }
+  | { type: "ROUND_SCORE_FAILED"; code: ErrorCode; message: string }
+  | { type: "NEXT_ROUND" }
   | { type: "SUBMIT_SUCCEEDED"; result: GameSubmitResponse }
   | { type: "SUBMIT_FAILED"; code: ErrorCode; message: string }
   | { type: "RETRY" }
@@ -76,10 +95,13 @@ export const initialGameMachineState: GameMachineState = {
   timedOut: defaultTimedOut(),
   revealRemainingMs: 0,
   guessRemainingMs: 0,
+  roundScore: null,
+  roundScoreError: null,
   result: null,
   error: null,
   startNonce: 0,
   submitNonce: 0,
+  roundScoreNonce: 0,
 };
 
 /**
@@ -98,6 +120,8 @@ export function gameMachineReducer(
         state.phase === "STARTING" ||
         state.phase === "ROUND_REVEAL" ||
         state.phase === "ROUND_GUESS" ||
+        state.phase === "ROUND_SCORING" ||
+        state.phase === "ROUND_SCORE" ||
         state.phase === "SUBMITTING"
       ) {
         return state;
@@ -125,6 +149,8 @@ export function gameMachineReducer(
         currentGuess: defaultGuess(),
         timedOut: defaultTimedOut(),
         revealRemainingMs: event.game.revealMs,
+        roundScore: null,
+        roundScoreError: null,
         result: null,
         error: null,
       };
@@ -186,26 +212,65 @@ export function gameMachineReducer(
       const timedOut = [...state.timedOut];
       timedOut[state.roundIndex] = event.timedOut ?? false;
 
+      return {
+        ...state,
+        phase: "ROUND_SCORING",
+        guesses,
+        timedOut,
+        revealRemainingMs: 0,
+        guessRemainingMs: 0,
+        roundScore: null,
+        roundScoreError: null,
+        roundScoreNonce: state.roundScoreNonce + 1,
+      };
+    }
+
+    case "ROUND_SCORED": {
+      if (state.phase !== "ROUND_SCORING") return state;
+
+      return {
+        ...state,
+        phase: "ROUND_SCORE",
+        roundScore: event.score,
+        roundScoreError: null,
+      };
+    }
+
+    case "ROUND_SCORE_FAILED": {
+      if (state.phase !== "ROUND_SCORING") return state;
+
+      return {
+        ...state,
+        phase: "ROUND_SCORE",
+        roundScore: null,
+        roundScoreError: { code: event.code, message: event.message },
+      };
+    }
+
+    case "NEXT_ROUND": {
+      if (state.phase !== "ROUND_SCORE") return state;
+
       if (state.roundIndex + 1 < ROUNDS_PER_GAME) {
         return {
           ...state,
           phase: "ROUND_REVEAL",
           roundIndex: state.roundIndex + 1,
-          guesses,
-          timedOut,
           currentGuess: defaultGuess(),
           revealRemainingMs: state.game?.revealMs ?? REVEAL_MS,
           guessRemainingMs: 0,
+          roundScore: null,
+          roundScoreError: null,
         };
       }
 
       return {
         ...state,
         phase: "SUBMITTING",
-        guesses,
-        timedOut,
+        currentGuess: defaultGuess(),
         revealRemainingMs: 0,
         guessRemainingMs: 0,
+        roundScore: null,
+        roundScoreError: null,
         submitNonce: state.submitNonce + 1,
       };
     }
@@ -254,6 +319,8 @@ export function gameMachineReducer(
         ...state,
         phase: "SUBMITTING",
         error: null,
+        roundScore: null,
+        roundScoreError: null,
         submitNonce: state.submitNonce + 1,
       };
     }
@@ -332,11 +399,28 @@ export function buildSubmitBody(
   };
 }
 
+/**
+ * Body for `POST /api/games/round-score`: the signed token, the 1-based round
+ * number and the guess. The target never leaves the server in this request.
+ */
+export function buildRoundScoreBody(
+  gameToken: string,
+  roundNumber: number,
+  guess: Hsv,
+): GameRoundScoreRequest {
+  return {
+    gameToken,
+    roundNumber,
+    guess: { ...guess },
+  };
+}
+
 export interface UseGameMachineResult {
   state: GameMachineState;
   start: () => void;
   setGuess: (guess: Hsv) => void;
   submitGuess: () => void;
+  nextRound: () => void;
   retry: () => void;
   playAgain: () => void;
 }
@@ -357,10 +441,12 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
 
   const startRequestRef = useRef<string | null>(null);
   const submitRequestRef = useRef<string | null>(null);
+  const roundScoreRequestRef = useRef<string | null>(null);
 
   const start = useCallback(() => dispatch({ type: "START" }), []);
   const setGuess = useCallback((guess: Hsv) => dispatch({ type: "SET_GUESS", guess }), []);
   const submitGuess = useCallback(() => dispatch({ type: "SUBMIT_GUESS" }), []);
+  const nextRound = useCallback(() => dispatch({ type: "NEXT_ROUND" }), []);
   const retry = useCallback(() => dispatch({ type: "RETRY" }), []);
   const playAgain = start;
 
@@ -381,6 +467,29 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
         dispatch({ type: "START_FAILED", code: mapped.code, message: mapped.message });
       });
   }, [state.phase, state.startNonce, mode, roomCode]);
+
+  useEffect(() => {
+    if (state.phase !== "ROUND_SCORING" || !state.game) return;
+
+    const guess = state.guesses[state.roundIndex];
+    if (!guess) return;
+
+    const requestKey = `score:${state.game.gameToken}:${state.roundIndex}:${state.roundScoreNonce}`;
+    if (roundScoreRequestRef.current === requestKey) return;
+    roundScoreRequestRef.current = requestKey;
+
+    apiClient
+      .post<GameRoundScoreResponse>(
+        "/games/round-score",
+        buildRoundScoreBody(state.game.gameToken, state.roundIndex + 1, guess),
+        { schema: gameRoundScoreResponseSchema },
+      )
+      .then((score) => dispatch({ type: "ROUND_SCORED", score }))
+      .catch((error: unknown) => {
+        const mapped = toMachineError(error);
+        dispatch({ type: "ROUND_SCORE_FAILED", code: mapped.code, message: mapped.message });
+      });
+  }, [state.phase, state.game, state.guesses, state.roundIndex, state.roundScoreNonce]);
 
   useEffect(() => {
     if (state.phase !== "SUBMITTING" || !state.game || state.guesses.length !== ROUNDS_PER_GAME) {
@@ -477,5 +586,5 @@ export function useGameMachine(options: GameMachineOptions = {}): UseGameMachine
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [inProgress]);
 
-  return { state, start, setGuess, submitGuess, retry, playAgain };
+  return { state, start, setGuess, submitGuess, nextRound, retry, playAgain };
 }

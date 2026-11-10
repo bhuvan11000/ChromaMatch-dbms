@@ -36,14 +36,14 @@ export function EmptyState({ title, description, icon, action, className }: Empt
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-[1.25rem] border border-dashed border-border bg-card/60 px-6 py-10 text-center",
+        "flex flex-col items-center justify-center rounded-[1.1rem] border-2 border-dashed border-border bg-card/60 px-6 py-10 text-center",
         className,
       )}
     >
-      <span className="flex size-11 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground">
+      <span className="grid size-12 place-items-center rounded-full border-2 border-border bg-muted text-muted-foreground shadow-[0_3px_0_var(--border-lip)]">
         {icon ?? <EmptyAperture />}
       </span>
-      <p className="mt-4 font-display text-base font-bold tracking-tight text-foreground">
+      <p className="mt-4 font-display text-base font-extrabold tracking-tight text-foreground">
         {title}
       </p>
       {description ? (

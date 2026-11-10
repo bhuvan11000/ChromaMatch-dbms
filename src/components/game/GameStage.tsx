@@ -60,19 +60,19 @@ export function GameStage({
       data-stage-calibration={GAME_STAGE_NEUTRAL_TOKEN}
       aria-label="Game stage"
       className={cn(
-        "cm-game-stage w-full rounded-[1.25rem] border border-stage-border p-4 text-stage-fg sm:p-6",
+        "cm-game-stage w-full overflow-hidden rounded-[1.05rem] border-2 border-stage-border text-stage-fg",
         className,
       )}
     >
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-stage-border pb-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] font-medium tracking-[0.16em] text-stage-muted uppercase">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-stage-border bg-stage-surface/45 px-4 py-2.5 sm:px-5">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[10px] font-bold tracking-[0.18em] text-stage-muted uppercase">
           {modeLabel ? (
             <>
-              <span data-testid="game-stage-mode" className="truncate">
+              <span data-testid="game-stage-mode" className="truncate text-stage-fg">
                 {modeLabel}
               </span>
               <span aria-hidden="true" className="text-stage-border">
-                /
+                {"//"}
               </span>
             </>
           ) : null}
@@ -81,26 +81,27 @@ export function GameStage({
           </span>
         </div>
         {phaseLabel ? (
-          <span className="font-mono text-[11px] tracking-[0.16em] text-stage-muted uppercase">
+          <span className="inline-flex items-center gap-2 rounded-[0.35rem] border border-stage-border bg-stage-bg px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.18em] text-stage-fg uppercase">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-stage-fg" />
             {phaseLabel}
           </span>
         ) : null}
       </header>
 
-      {countdown ? (
-        <RevealCountdown
-          remainingMs={countdown.remainingMs}
-          totalMs={countdown.totalMs}
-          label={countdown.label}
-          hint={countdown.hint}
-        />
-      ) : null}
+      <div className="p-4 sm:p-5">
+        {countdown ? (
+          <RevealCountdown
+            remainingMs={countdown.remainingMs}
+            totalMs={countdown.totalMs}
+            label={countdown.label}
+            hint={countdown.hint}
+          />
+        ) : null}
 
-      <div className="mt-4 sm:mt-5">{children}</div>
+        <div className={countdown ? "mt-4 sm:mt-5" : undefined}>{children}</div>
 
-      {footer ? (
-        <div className="mt-4 border-t border-stage-border pt-3 sm:mt-5">{footer}</div>
-      ) : null}
+        {footer ? <div className="mt-4 border-t border-stage-border pt-4">{footer}</div> : null}
+      </div>
     </section>
   );
 }

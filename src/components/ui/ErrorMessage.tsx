@@ -38,7 +38,7 @@ export function ErrorMessage({
     <div
       role="alert"
       className={cn(
-        "flex items-start gap-3 rounded-[0.875rem] border-2 border-danger/45 bg-danger-soft p-3.5 text-foreground",
+        "flex items-start gap-3 rounded-[0.9rem] border-2 border-danger/55 bg-danger-soft p-3.5 text-foreground shadow-[0_4px_0_var(--danger-lip)]",
         className,
       )}
     >

@@ -28,12 +28,14 @@ export function RoomSettingsSummary({
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-[0.875rem] border border-border bg-muted/60 px-3 py-2.5"
+          className="rounded-[0.55rem] border-2 border-border bg-muted/45 px-3 py-2"
         >
-          <dt className="font-mono text-[9px] font-bold tracking-[0.14em] text-muted-foreground uppercase">
+          <dt className="font-mono text-[8px] font-bold tracking-[0.14em] text-muted-foreground uppercase">
             {item.label}
           </dt>
-          <dd className="mt-0.5 font-display text-base font-bold tracking-tight">{item.value}</dd>
+          <dd className="mt-0.5 font-display text-sm font-extrabold tracking-tight">
+            {item.value}
+          </dd>
         </div>
       ))}
     </dl>

@@ -111,15 +111,15 @@ export default function RoomPage() {
 
   if (room.isPending) {
     return (
-      <main className="mx-auto grid min-h-[50dvh] w-full max-w-3xl place-items-center px-4">
+      <div className="mx-auto grid min-h-[50dvh] w-full max-w-3xl place-items-center">
         <Spinner label="Loading room" />
-      </main>
+      </div>
     );
   }
 
   if (room.isError || !room.data) {
     return (
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl">
         <ErrorMessage
           title="Could not load this room"
           message={messageOf(room.error) ?? "Something went wrong."}
@@ -127,11 +127,11 @@ export default function RoomPage() {
         />
         <Link
           href="/rooms"
-          className="mt-4 inline-block font-semibold text-primary underline-offset-4 hover:underline"
+          className="mt-4 inline-block font-semibold text-primary-ink underline-offset-4 hover:underline"
         >
           Back to rooms
         </Link>
-      </main>
+      </div>
     );
   }
 
@@ -144,10 +144,10 @@ export default function RoomPage() {
     : "You forfeit remaining attempts, keep your best score, and cannot rejoin.";
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-3xl">
       <Link
         href="/rooms"
-        className="mb-4 inline-flex min-h-9 items-center font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="mb-4 inline-flex min-h-9 items-center rounded-[0.5rem] border-2 border-border bg-card px-3 py-1.5 font-mono text-[9px] font-bold tracking-[0.14em] text-muted-foreground uppercase shadow-[0_2px_0_var(--border-lip)] transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
       >
         ← Rooms
       </Link>
@@ -188,6 +188,6 @@ export default function RoomPage() {
           </p>
         ) : null}
       </Modal>
-    </main>
+    </div>
   );
 }

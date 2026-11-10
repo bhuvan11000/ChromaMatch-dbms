@@ -3,16 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import {
-  Button,
-  Card,
-  EmptyState,
-  ErrorMessage,
-  Input,
-  ModeGlyph,
-  Spinner,
-  Wordmark,
-} from "@/components/ui";
+import { Button, EmptyState, ErrorMessage, Input, ModeGlyph, Spinner } from "@/components/ui";
 import { LEADERBOARD_DEFAULT_LIMIT } from "@/lib/config/constants";
 import { ApiError } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
@@ -28,11 +19,7 @@ export interface LeaderboardViewProps {
 }
 
 const TAB_CLASSES =
-  "inline-flex min-h-9 items-center justify-center rounded-[0.625rem] border px-3 py-2 font-display text-xs font-semibold tracking-tight transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
-
-function boardLabel(mode: LeaderboardMode): string {
-  return mode === "global" ? "Global board" : "Daily board";
-}
+  "inline-flex min-h-10 items-center justify-center rounded-[0.6rem] border-2 px-4 py-2 font-display text-xs font-extrabold tracking-[0.05em] uppercase transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
 
 /**
  * Shared public leaderboard screen — Architecture §5.11.1, §5.11.5.
@@ -67,82 +54,55 @@ export function LeaderboardView({ mode, todayUtc = "" }: LeaderboardViewProps) {
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <ModeGlyph kind="boards" size="md" />
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-              Boards
-            </p>
-            <h1 className="truncate text-xl font-bold tracking-tight">Leaderboards</h1>
-          </div>
+      <section className="cm-cabinet cm-rise overflow-hidden p-0">
+        <div className="cm-marquee flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2.5 sm:px-7">
+          <p className="font-mono text-[9px] font-bold tracking-[0.2em] text-white/60 uppercase">
+            High scores // {mode}
+          </p>
+          <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-white/45 uppercase">
+            {total === 0 ? "No scores yet" : `${total} ranked`}
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/home"
-            className="inline-flex min-h-9 items-center rounded-[0.625rem] px-2 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
-          >
-            ← Home
-          </Link>
-          <Wordmark size="sm" />
-        </div>
-      </header>
-
-      <section className="cm-console-card relative mt-6 overflow-hidden rounded-[1.5rem] border border-border bg-card p-5 sm:p-7">
-        <div aria-hidden="true" className="cm-spectrum-bar absolute inset-x-0 top-0 h-1.5" />
-
-        <div className="flex flex-wrap items-end justify-between gap-5">
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
-              {mode === "global" ? "All-time board" : "Daily board"}
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
-              {mode === "global"
-                ? "The sharpest eyes, ranked."
-                : "Same palette. One day. One board."}
-            </h2>
-            <p className="mt-2 max-w-lg text-sm text-muted-foreground">
-              {mode === "global"
-                ? "Every player's best Global game, from freshest personal best to all-time top."
-                : "Pick a day, see who mixed it best, and find your place in the palette."}
-            </p>
+        <div className="flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex min-w-0 items-start gap-4">
+            <ModeGlyph kind="boards" size="lg" />
+            <div className="min-w-0">
+              <p className="cm-eyebrow text-muted-foreground">Boards</p>
+              <h1 className="cm-stencil mt-1 text-4xl leading-none sm:text-5xl">Leaderboards</h1>
+              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                {mode === "global"
+                  ? "Every player's best Global game."
+                  : "One palette. One day. One board."}
+              </p>
+            </div>
           </div>
 
-          <div className="rounded-[1rem] border border-border bg-muted/50 px-3 py-2 text-right">
-            <p className="font-mono text-[9px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
-              {total === 0 ? "No scores" : `${total} ranked`}
-            </p>
-            <p className="mt-0.5 font-display text-sm font-bold tracking-tight">
-              {mode === "global" ? "Global" : date || "Daily"}
-            </p>
-          </div>
+          <nav aria-label="Leaderboard boards" className="flex flex-wrap gap-2">
+            {(["global", "daily"] as const).map((tab) => {
+              const active = tab === mode;
+
+              return (
+                <Link
+                  key={tab}
+                  href={`/leaderboard/${tab}`}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    TAB_CLASSES,
+                    active
+                      ? "border-border bg-primary text-primary-foreground shadow-[0_3px_0_var(--primary-lip)]"
+                      : "border-border bg-card text-foreground shadow-[0_3px_0_var(--border-lip)] hover:bg-muted",
+                  )}
+                >
+                  {tab === "global" ? "Global" : "Daily"}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
-
-        <nav aria-label="Leaderboard boards" className="mt-5 flex flex-wrap gap-2">
-          {(["global", "daily"] as const).map((tab) => {
-            const active = tab === mode;
-
-            return (
-              <Link
-                key={tab}
-                href={`/leaderboard/${tab}`}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  TAB_CLASSES,
-                  active
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:bg-muted",
-                )}
-              >
-                {boardLabel(tab)}
-              </Link>
-            );
-          })}
-        </nav>
       </section>
 
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-wrap items-end gap-3">
           {mode === "daily" ? (
             <>
@@ -166,37 +126,42 @@ export function LeaderboardView({ mode, todayUtc = "" }: LeaderboardViewProps) {
               </Button>
             </>
           ) : (
-            <p className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
+            <p className="font-mono text-[9px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
               Personal bests · all time
             </p>
           )}
         </div>
 
-        {me ? <YourRankCard me={me} className="w-full p-4 sm:w-64" /> : null}
+        {me ? <YourRankCard me={me} className="w-full sm:w-64" /> : null}
       </div>
 
-      <Card className="mt-5 overflow-hidden p-0">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/35 px-4 py-3 sm:px-5">
+      <section className="cm-cabinet mt-4 overflow-hidden p-0" aria-labelledby="board-heading">
+        <div className="cm-marquee flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2.5">
           <div>
-            <h2 className="text-lg font-bold tracking-tight">{boardLabel(mode)}</h2>
-            <p className="text-xs text-muted-foreground">
-              {total === 0 ? "No ranked players yet." : `${total} players with a score.`}
+            <h2
+              id="board-heading"
+              className="font-display text-sm font-extrabold tracking-tight text-white"
+            >
+              {mode === "global" ? "Global" : "Daily"}
+            </h2>
+            <p className="mt-0.5 font-mono text-[8px] tracking-[0.16em] text-white/40 uppercase">
+              {mode === "global" ? "All time" : date || "Daily"}
             </p>
           </div>
-          <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
-            {mode === "global" ? "All time" : date}
+          <p className="font-mono text-[9px] font-bold tracking-[0.16em] text-white/50 uppercase">
+            {total === 0 ? "Empty" : `${total} players`}
           </p>
         </div>
 
-        <div className="p-3 sm:p-5">
-          {query.isPending && (mode === "global" || date) ? (
-            <div className="flex min-h-48 flex-col items-center justify-center gap-3 text-center">
-              <Spinner size="lg" label="Loading leaderboard" />
-              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
-                Reading the board…
-              </p>
-            </div>
-          ) : errorMessage ? (
+        {query.isPending && (mode === "global" || date) ? (
+          <div className="flex min-h-52 flex-col items-center justify-center gap-3 bg-card px-4 py-8 text-center">
+            <Spinner size="lg" label="Loading leaderboard" />
+            <p className="font-mono text-[9px] tracking-[0.16em] text-muted-foreground uppercase">
+              Reading the board…
+            </p>
+          </div>
+        ) : errorMessage ? (
+          <div className="bg-card p-4 sm:p-5">
             <ErrorMessage
               title="Couldn't load the leaderboard"
               message={errorMessage}
@@ -204,7 +169,9 @@ export function LeaderboardView({ mode, todayUtc = "" }: LeaderboardViewProps) {
                 void query.refetch();
               }}
             />
-          ) : entries.length === 0 ? (
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="bg-card p-4 sm:p-5">
             <EmptyState
               title="No scores on this board yet"
               description={
@@ -213,14 +180,16 @@ export function LeaderboardView({ mode, todayUtc = "" }: LeaderboardViewProps) {
                   : "This day has no finished challenge. Try another date."
               }
             />
-          ) : (
+          </div>
+        ) : (
+          <div className="cm-screen border-0 px-2 py-2 sm:px-4 sm:py-3">
             <LeaderboardTable entries={entries} me={me} mode={mode} />
-          )}
-        </div>
+          </div>
+        )}
 
         {!query.isPending && !errorMessage && total > 0 ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/25 px-4 py-3 sm:px-5">
-            <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-border bg-muted/25 px-4 py-3">
+            <p className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase tabular-nums">
               {firstRow}–{lastRow} of {total}
             </p>
 
@@ -233,8 +202,8 @@ export function LeaderboardView({ mode, todayUtc = "" }: LeaderboardViewProps) {
               >
                 Previous
               </Button>
-              <span className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
-                Page {page + 1} / {pageCount}
+              <span className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
+                {page + 1} / {pageCount}
               </span>
               <Button
                 variant="outline"
@@ -247,7 +216,7 @@ export function LeaderboardView({ mode, todayUtc = "" }: LeaderboardViewProps) {
             </div>
           </div>
         ) : null}
-      </Card>
+      </section>
     </div>
   );
 }

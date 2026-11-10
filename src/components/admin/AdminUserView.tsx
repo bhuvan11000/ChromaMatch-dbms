@@ -4,15 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { AchievementGrid, HistoryList } from "@/components/profile";
-import {
-  Button,
-  Card,
-  EmptyState,
-  ErrorMessage,
-  Spinner,
-  Wordmark,
-  useToast,
-} from "@/components/ui";
+import { Button, Card, EmptyState, ErrorMessage, Spinner, useToast } from "@/components/ui";
 import { useAdminHistory, useAdminUpdateStats, useAdminUser } from "@/hooks/useAdmin";
 import { ApiError } from "@/lib/api-client";
 
@@ -57,7 +49,7 @@ function AdminUserContent() {
         <p className="mt-4 text-center text-sm text-muted-foreground">
           <Link
             href="/admin"
-            className="font-semibold text-primary underline-offset-4 hover:underline"
+            className="font-semibold text-primary-ink underline-offset-4 hover:underline"
           >
             Back to players
           </Link>
@@ -90,7 +82,7 @@ function AdminUserContent() {
         <p className="mt-4 text-center text-sm text-muted-foreground">
           <Link
             href="/admin"
-            className="font-semibold text-primary underline-offset-4 hover:underline"
+            className="font-semibold text-primary-ink underline-offset-4 hover:underline"
           >
             Back to players
           </Link>
@@ -103,36 +95,41 @@ function AdminUserContent() {
 
   return (
     <div className="mx-auto w-full max-w-6xl">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-              Admin · Player record
-            </p>
-            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
-              <h1 className="truncate text-xl font-bold tracking-tight">{user.username}</h1>
-              <StatusBadge banned={user.isBanned} />
-              <span className="rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
-                {user.role}
-              </span>
-            </div>
-            <p className="truncate font-mono text-[10px] text-muted-foreground">{user.email}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
+      <section className="cm-cabinet overflow-hidden p-0">
+        <div className="cm-marquee flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2.5 sm:px-7">
+          <p className="font-mono text-[9px] font-bold tracking-[0.2em] text-white/60 uppercase">
+            Admin // Player record
+          </p>
           <Link
             href="/admin"
-            className="inline-flex min-h-9 items-center rounded-[0.625rem] px-2 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+            className="font-mono text-[9px] font-bold tracking-[0.16em] text-white/55 uppercase hover:text-white focus-visible:outline-none"
           >
             ← Players
           </Link>
-          <Wordmark size="sm" />
         </div>
-      </header>
+        <div className="flex flex-wrap items-end justify-between gap-4 p-5 sm:p-7">
+          <div className="min-w-0">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h1 className="truncate font-display text-4xl font-extrabold tracking-tight">
+                {user.username}
+              </h1>
+              <StatusBadge banned={user.isBanned} />
+              <span className="rounded-[0.25rem] border border-border bg-muted px-2 py-0.5 font-mono text-[8px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
+                {user.role}
+              </span>
+            </div>
+            <p className="mt-1 truncate font-mono text-[10px] text-muted-foreground">
+              {user.email}
+            </p>
+          </div>
+          <p className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
+            ID {String(user.id).padStart(4, "0")}
+          </p>
+        </div>
+      </section>
 
-      <section aria-labelledby="admin-stats" className="mt-6">
-        <h2 id="admin-stats" className="text-2xl font-bold tracking-tight">
+      <section aria-labelledby="admin-stats" className="mt-7">
+        <h2 id="admin-stats" className="font-display text-2xl font-extrabold tracking-tight">
           Stats editor
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -172,7 +169,7 @@ function AdminUserContent() {
       </section>
 
       <section aria-labelledby="admin-daily" className="mt-8">
-        <h2 id="admin-daily" className="text-2xl font-bold tracking-tight">
+        <h2 id="admin-daily" className="font-display text-2xl font-extrabold tracking-tight">
           Daily bests
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">The last 30 recorded challenge days.</p>
@@ -192,7 +189,7 @@ function AdminUserContent() {
       </section>
 
       <section aria-labelledby="admin-achievements" className="mt-8">
-        <h2 id="admin-achievements" className="text-2xl font-bold tracking-tight">
+        <h2 id="admin-achievements" className="font-display text-2xl font-extrabold tracking-tight">
           Achievements
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">Earned badges only.</p>
@@ -210,7 +207,7 @@ function AdminUserContent() {
       </section>
 
       <section aria-labelledby="admin-history" className="mt-8">
-        <h2 id="admin-history" className="text-2xl font-bold tracking-tight">
+        <h2 id="admin-history" className="font-display text-2xl font-extrabold tracking-tight">
           History
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">

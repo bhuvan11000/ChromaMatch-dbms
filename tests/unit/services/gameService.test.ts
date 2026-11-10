@@ -35,7 +35,7 @@ import { isValidHsv } from "@/lib/domain/hsv";
 import { AppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import type { GameSubmitRequest } from "@/lib/schemas/game";
-import { startGame, submitGame } from "@/lib/services/gameService";
+import { scoreRoundPreview, startGame, submitGame } from "@/lib/services/gameService";
 import { verifyGameToken } from "@/lib/tokens/gameToken";
 
 import { resetAuthEnv, stubAuthEnv } from "../support/auth";
@@ -170,6 +170,55 @@ describe("startGame (Daily)", () => {
     await expect(startGame(7, { mode: "daily" }, GAME_TEST_NOW)).rejects.toMatchObject({
       code: "SERVICE_UNAVAILABLE",
     });
+  });
+});
+
+describe("scoreRoundPreview", () => {
+  it("scores against the token target without reading or writing the database", async () => {
+    const { token } = await mintGameToken();
+    const guess = FIXED_GUESSES[0] ?? FIXED_TARGETS[0];
+    const previewAt = new Date(GAME_TEST_NOW.getTime() + 1000);
+
+    const result = await scoreRoundPreview(
+      7,
+      { gameToken: token, roundNumber: 1, guess },
+      previewAt,
+    );
+
+    expect(result).toMatchObject({
+      roundNumber: 1,
+      target: tokenTargets()[0],
+      guess,
+      score: EXPECTED_ROUND_SCORES[0],
+      diff: { h: 5.6, s: 3.5, v: 3.5 },
+    });
+    expect(mocks.submitGameResult).not.toHaveBeenCalled();
+    expect(mocks.submitRoomAttempt).not.toHaveBeenCalled();
+    expect(mocks.insertGame).not.toHaveBeenCalled();
+  });
+
+  it("rejects a token belonging to another user", async () => {
+    const { token } = await mintGameToken();
+
+    await expect(
+      scoreRoundPreview(
+        8,
+        { gameToken: token, roundNumber: 1, guess: FIXED_GUESSES[0] ?? FIXED_TARGETS[0] },
+        GAME_TEST_NOW,
+      ),
+    ).rejects.toMatchObject({ code: "TOKEN_USER_MISMATCH" });
+  });
+
+  it("rejects an invalid round index even though the schema normally guards it", async () => {
+    const { token } = await mintGameToken();
+
+    await expect(
+      scoreRoundPreview(
+        7,
+        { gameToken: token, roundNumber: 4, guess: FIXED_GUESSES[0] ?? FIXED_TARGETS[0] },
+        GAME_TEST_NOW,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 });
 

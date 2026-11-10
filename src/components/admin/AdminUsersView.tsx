@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 import {
   Button,
@@ -11,7 +10,6 @@ import {
   Input,
   Modal,
   Spinner,
-  Wordmark,
   useToast,
 } from "@/components/ui";
 import { useAdminSetBan, useAdminUsers } from "@/hooks/useAdmin";
@@ -91,28 +89,25 @@ function AdminUsersContent() {
 
   return (
     <div className="mx-auto w-full max-w-7xl">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-              Admin console
-            </p>
-            <h1 className="truncate text-xl font-bold tracking-tight">Players</h1>
-          </div>
+      <section className="cm-cabinet overflow-hidden p-0">
+        <div className="cm-marquee flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2.5 sm:px-7">
+          <p className="font-mono text-[9px] font-bold tracking-[0.2em] text-white/60 uppercase">
+            Admin console // Roster
+          </p>
+          <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-white/45 uppercase">
+            Admin only
+          </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/home"
-            className="inline-flex min-h-9 items-center rounded-[0.625rem] px-2 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
-          >
-            ← Home
-          </Link>
-          <Wordmark size="sm" />
+        <div className="p-5 sm:p-7">
+          <p className="cm-eyebrow text-muted-foreground">Player records</p>
+          <h1 className="cm-stencil mt-1 text-4xl leading-none sm:text-5xl">Players</h1>
+          <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+            Search the roster, correct stats and manage bans.
+          </p>
         </div>
-      </header>
+      </section>
 
-      <section aria-labelledby="admin-filters" className="mt-6">
+      <section aria-labelledby="admin-filters" className="mt-5">
         <h2 id="admin-filters" className="sr-only">
           Find players
         </h2>
@@ -130,7 +125,7 @@ function AdminUsersContent() {
             <div className="w-full">
               <label
                 htmlFor="admin-banned-filter"
-                className="mb-1.5 block font-display text-sm font-semibold tracking-tight text-foreground"
+                className="mb-1.5 block font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase"
               >
                 Status
               </label>
@@ -141,7 +136,7 @@ function AdminUsersContent() {
                   setBannedFilter(event.target.value as BannedFilter);
                   setOffset(0);
                 }}
-                className="min-h-11 w-full rounded-[0.875rem] border-2 border-input-border bg-input px-3.5 py-2.5 text-sm text-foreground shadow-[inset_0_2px_4px_rgb(0_0_0/0.16)] transition-colors hover:border-input-border-strong focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+                className="min-h-11 w-full rounded-[0.6rem] border-2 border-input-border bg-input px-3 py-2.5 text-sm font-medium text-foreground shadow-[inset_0_2px_0_rgb(0_0_0/0.12)] transition-colors hover:border-input-border-strong focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
               >
                 <option value="all">All players</option>
                 <option value="active">Active only</option>
@@ -155,7 +150,7 @@ function AdminUsersContent() {
       <section aria-labelledby="admin-players" className="mt-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="admin-players" className="text-2xl font-bold tracking-tight">
+            <h2 id="admin-players" className="font-display text-2xl font-extrabold tracking-tight">
               Player list
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">

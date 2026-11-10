@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildRoundScoreBody,
   buildStartBody,
   buildSubmitBody,
   gameMachineReducer,
@@ -10,7 +11,11 @@ import {
 } from "@/hooks/useGameMachine";
 import { REVEAL_MS, ROUNDS_PER_GAME, SLIDER_DEFAULTS } from "@/lib/config/constants";
 import type { Hsv } from "@/lib/domain/hsv";
-import type { GameStartResponse, GameSubmitResponse } from "@/lib/schemas/game";
+import type {
+  GameRoundScoreResponse,
+  GameStartResponse,
+  GameSubmitResponse,
+} from "@/lib/schemas/game";
 
 const TARGETS: Hsv[] = [
   { h: 214.6, s: 62, v: 80.5 },
@@ -52,6 +57,19 @@ const RESULT: GameSubmitResponse = {
   room: null,
 };
 
+function roundScore(
+  roundNumber: number,
+  guess: Hsv = { h: 100, s: 50, v: 50 },
+): GameRoundScoreResponse {
+  return {
+    roundNumber,
+    target: TARGETS[roundNumber - 1] ?? SLIDER_DEFAULTS,
+    guess,
+    score: 8.5,
+    diff: { h: 5.6, s: 3.5, v: 3.5 },
+  };
+}
+
 function starting(): GameMachineState {
   return gameMachineReducer(initialGameMachineState, { type: "START" });
 }
@@ -68,11 +86,14 @@ function submitting(): GameMachineState {
   let state = guessing();
 
   for (let round = 0; round < ROUNDS_PER_GAME; round += 1) {
-    state = gameMachineReducer(state, {
-      type: "SET_GUESS",
-      guess: { h: 100 + round, s: 50, v: 50 },
-    });
+    const guess = { h: 100 + round, s: 50, v: 50 };
+    state = gameMachineReducer(state, { type: "SET_GUESS", guess });
     state = gameMachineReducer(state, { type: "SUBMIT_GUESS" });
+    state = gameMachineReducer(state, {
+      type: "ROUND_SCORED",
+      score: roundScore(round + 1, guess),
+    });
+    state = gameMachineReducer(state, { type: "NEXT_ROUND" });
 
     if (round < ROUNDS_PER_GAME - 1) {
       state = gameMachineReducer(state, { type: "REVEAL_ENDED" });
@@ -136,6 +157,15 @@ describe("gameMachineReducer", () => {
     expect(gameMachineReducer(start, { type: "SUBMIT_GUESS" })).toBe(start);
     expect(gameMachineReducer(reveal, { type: "SUBMIT_GUESS" })).toBe(reveal);
     expect(gameMachineReducer(submittingState, { type: "SUBMIT_GUESS" })).toBe(submittingState);
+
+    const scoring = gameMachineReducer(guess, { type: "SUBMIT_GUESS" });
+    expect(scoring.phase).toBe("ROUND_SCORING");
+    expect(gameMachineReducer(scoring, { type: "SUBMIT_GUESS" })).toBe(scoring);
+    const scored = gameMachineReducer(scoring, {
+      type: "ROUND_SCORED",
+      score: roundScore(1),
+    });
+    expect(gameMachineReducer(scored, { type: "SUBMIT_GUESS" })).toBe(scored);
     expect(
       gameMachineReducer(reveal, {
         type: "SET_GUESS",
@@ -151,20 +181,33 @@ describe("gameMachineReducer", () => {
     expect(gameMachineReducer(guess, { type: "SUBMIT_SUCCEEDED", result: RESULT })).toBe(guess);
   });
 
-  it("advances one round per submitted guess and ends in SUBMITTING after three", () => {
+  it("scoring each guess, then advances one round and ends in SUBMITTING after three", () => {
     let state = guessing();
+    let scored = 0;
 
     for (let round = 0; round < ROUNDS_PER_GAME; round += 1) {
-      state = gameMachineReducer(state, {
-        type: "SET_GUESS",
-        guess: { h: 120 + round, s: 40 + round, v: 60 + round },
-      });
+      const guess = { h: 120 + round, s: 40 + round, v: 60 + round };
+      state = gameMachineReducer(state, { type: "SET_GUESS", guess });
       state = gameMachineReducer(state, { type: "SUBMIT_GUESS" });
+
+      expect(state.phase).toBe("ROUND_SCORING");
+      expect(state.guesses).toHaveLength(round + 1);
+      expect(state.roundScoreNonce).toBe(round + 1);
+
+      state = gameMachineReducer(state, {
+        type: "ROUND_SCORED",
+        score: roundScore(round + 1, guess),
+      });
+      scored += 1;
+      expect(state.phase).toBe("ROUND_SCORE");
+      expect(state.roundScore?.roundNumber).toBe(round + 1);
+
+      state = gameMachineReducer(state, { type: "NEXT_ROUND" });
 
       if (round < ROUNDS_PER_GAME - 1) {
         expect(state.phase).toBe("ROUND_REVEAL");
         expect(state.roundIndex).toBe(round + 1);
-        expect(state.guesses).toHaveLength(round + 1);
+        expect(state.roundScore).toBeNull();
 
         state = gameMachineReducer(state, { type: "REVEAL_ENDED" });
         expect(state.phase).toBe("ROUND_GUESS");
@@ -172,10 +215,37 @@ describe("gameMachineReducer", () => {
       }
     }
 
+    expect(scored).toBe(ROUNDS_PER_GAME);
     expect(state.phase).toBe("SUBMITTING");
     expect(state.guesses).toHaveLength(ROUNDS_PER_GAME);
     expect(state.guesses[2]).toEqual({ h: 122, s: 42, v: 62 });
     expect(state.submitNonce).toBe(2);
+  });
+
+  it("keeps the score preview non-fatal and still advances after a failure", () => {
+    let state = gameMachineReducer(guessing(), {
+      type: "SET_GUESS",
+      guess: { h: 120, s: 40, v: 60 },
+    });
+    state = gameMachineReducer(state, { type: "SUBMIT_GUESS" });
+
+    state = gameMachineReducer(state, {
+      type: "ROUND_SCORE_FAILED",
+      code: "SERVICE_UNAVAILABLE",
+      message: "The round score could not be read.",
+    });
+
+    expect(state.phase).toBe("ROUND_SCORE");
+    expect(state.roundScore).toBeNull();
+    expect(state.roundScoreError).toEqual({
+      code: "SERVICE_UNAVAILABLE",
+      message: "The round score could not be read.",
+    });
+
+    const next = gameMachineReducer(state, { type: "NEXT_ROUND" });
+    expect(next.phase).toBe("ROUND_REVEAL");
+    expect(next.roundIndex).toBe(1);
+    expect(next.roundScoreError).toBeNull();
   });
 
   it("records the result and allows a fresh game to start", () => {
@@ -266,6 +336,14 @@ describe("request builders", () => {
     expect(body).not.toHaveProperty("roomCode");
   });
 
+  it("builds a round-score preview body with a copied guess", () => {
+    const guess = { h: 12.3, s: 45.6, v: 78.9 };
+    const body = buildRoundScoreBody("signed-game-token", 2, guess);
+
+    expect(body).toEqual({ gameToken: "signed-game-token", roundNumber: 2, guess });
+    expect(body.guess).not.toBe(guess);
+  });
+
   it("submits only the token and guesses (no timedOut, targets or scores)", () => {
     const guesses = [
       { h: 1, s: 2, v: 3 },
@@ -352,14 +430,17 @@ describe("timed room guess window", () => {
     state = gameMachineReducer(state, { type: "GUESS_TICK", remainingMs: 0 });
     state = gameMachineReducer(state, { type: "SUBMIT_GUESS", timedOut: true });
 
-    expect(state.phase).toBe("ROUND_REVEAL");
+    expect(state.phase).toBe("ROUND_SCORING");
     expect(state.guesses[0]?.h).toBe(200);
     expect(state.timedOut).toEqual([true, false, false]);
 
-    // A duplicate expiry dispatch while revealing is a no-op (no second submit path).
+    // A duplicate expiry dispatch while scoring is a no-op (no second submit path).
     expect(gameMachineReducer(state, { type: "SUBMIT_GUESS", timedOut: true })).toBe(state);
 
-    const next = gameMachineReducer(state, { type: "REVEAL_ENDED" });
+    const scored = gameMachineReducer(state, { type: "ROUND_SCORED", score: roundScore(1) });
+    const reveal = gameMachineReducer(scored, { type: "NEXT_ROUND" });
+    expect(reveal.phase).toBe("ROUND_REVEAL");
+    const next = gameMachineReducer(reveal, { type: "REVEAL_ENDED" });
     expect(next.guessRemainingMs).toBe(5000);
   });
 
@@ -369,6 +450,8 @@ describe("timed room guess window", () => {
 
     for (let round = 0; round < ROUNDS_PER_GAME; round += 1) {
       state = gameMachineReducer(state, { type: "SUBMIT_GUESS", timedOut: flags[round] });
+      state = gameMachineReducer(state, { type: "ROUND_SCORED", score: roundScore(round + 1) });
+      state = gameMachineReducer(state, { type: "NEXT_ROUND" });
       if (round < ROUNDS_PER_GAME - 1) {
         state = gameMachineReducer(state, { type: "REVEAL_ENDED" });
       }

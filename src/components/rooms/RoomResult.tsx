@@ -66,13 +66,13 @@ export function RoomResult({ result, roomCode, onNextAttempt, onBackToRoom }: Ro
         ) : null
       }
       actions={
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2">
           {hasNext ? (
-            <Button size="lg" onClick={onNextAttempt}>
+            <Button size="lg" className="w-full" onClick={onNextAttempt}>
               Next attempt
             </Button>
           ) : (
-            <Button size="lg" onClick={onBackToRoom}>
+            <Button size="lg" className="w-full" onClick={onBackToRoom}>
               Back to room
             </Button>
           )}

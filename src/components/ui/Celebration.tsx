@@ -251,10 +251,25 @@ export function Celebration({
       data-celebration-shape={meta.shapeName}
       role="status"
       className={cn(
-        "cm-console-card relative overflow-hidden rounded-[1.25rem] border-2 border-accent-gold/35 bg-card p-5 text-card-foreground sm:p-6",
+        "cm-pop relative overflow-hidden rounded-[1.1rem] border-2 border-border bg-card text-card-foreground shadow-[0_5px_0_var(--border-lip)]",
         className,
       )}
     >
+      <div
+        aria-hidden="true"
+        className="cm-marquee flex items-center justify-between gap-3 border-b-2 border-border px-4 py-2"
+      >
+        <span
+          className={cn(
+            "font-mono text-[10px] font-bold tracking-[0.22em] uppercase",
+            KIND_TEXT[kind],
+          )}
+        >
+          [{meta.badgeLabel}]
+        </span>
+        <span aria-hidden="true" className="cm-speaker h-3 w-20 text-white/30" />
+      </div>
+
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         {CHIPS.map((chip, index) => (
           <span
@@ -272,7 +287,7 @@ export function Celebration({
         ))}
       </div>
 
-      <div className="relative flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+      <div className="relative flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
         <div
           className={cn(
             "cm-celebration-badge relative flex size-16 shrink-0 items-center justify-center",
@@ -287,15 +302,7 @@ export function Celebration({
         </div>
 
         <div className="min-w-0">
-          <p
-            className={cn(
-              "font-mono text-[10px] font-bold tracking-[0.22em] uppercase",
-              KIND_TEXT[kind],
-            )}
-          >
-            [{meta.badgeLabel}]
-          </p>
-          <p className="mt-1 font-display text-xl font-bold tracking-tight sm:text-2xl">
+          <p className="font-display text-xl font-extrabold tracking-tight sm:text-2xl">
             {title ?? meta.defaultTitle}
           </p>
           {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}

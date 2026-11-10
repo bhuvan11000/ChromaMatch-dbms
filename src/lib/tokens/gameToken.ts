@@ -65,6 +65,13 @@ export interface SignedGameToken {
 export interface VerifyGameTokenOptions {
   userId: number;
   now: Date;
+  /**
+   * Final submissions must respect the anti-cheat elapsed floor. The
+   * stateless round-preview endpoint sets this to false because it never
+   * persists anything and a player can legitimately guess the first round
+   * before 13 seconds have elapsed.
+   */
+  enforceMinimumElapsed?: boolean;
 }
 
 type ModeContext = Pick<GameTokenClaims, "cid" | "cdate" | "rid" | "tmr">;
@@ -391,7 +398,7 @@ export async function verifyGameToken(
   }
 
   const elapsedSeconds = options.now.getTime() / 1000 - payload.iat;
-  if (elapsedSeconds < GAME_MIN_ELAPSED_SECONDS) {
+  if (options.enforceMinimumElapsed !== false && elapsedSeconds < GAME_MIN_ELAPSED_SECONDS) {
     throw new AppError("SUBMISSION_TOO_FAST");
   }
 

@@ -13,10 +13,10 @@ export function Card({ className, interactive = false, elevated = false, ...prop
   return (
     <div
       className={cn(
-        "cm-console-card rounded-[1.25rem] border border-border text-card-foreground",
-        elevated ? "bg-card-elevated shadow-md" : "bg-card shadow-sm",
+        "cm-console-card relative rounded-[1.25rem] text-card-foreground",
+        elevated ? "bg-card-elevated" : "bg-card",
         interactive &&
-          "transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 hover:border-muted-foreground/40 hover:shadow-md focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40",
+          "transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-1 hover:shadow-[0_8px_0_var(--border-lip)] focus-within:ring-2 focus-within:ring-ring/50",
         className,
       )}
       {...props}
@@ -32,7 +32,7 @@ export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingEle
   return (
     <h2
       className={cn(
-        "font-display text-lg font-bold tracking-tight text-card-foreground",
+        "font-display text-lg font-extrabold tracking-tight text-card-foreground",
         className,
       )}
       {...props}

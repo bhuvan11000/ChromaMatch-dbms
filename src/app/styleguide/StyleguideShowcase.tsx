@@ -308,7 +308,7 @@ function Section({
       <p className="font-mono text-[10px] font-bold tracking-[0.24em] text-muted-foreground uppercase">
         {eyebrow}
       </p>
-      <h2 id={id} className="mt-2 text-2xl font-bold tracking-tight">
+      <h2 id={id} className="mt-2 text-2xl font-extrabold tracking-tight">
         {title}
       </h2>
       {description ? (
@@ -380,8 +380,8 @@ export function StyleguideShowcase() {
     <main id="main-content" className="mx-auto w-full max-w-6xl px-3.5 py-8 sm:px-6 sm:py-12">
       <header className="flex flex-col gap-5 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Wordmark size="lg" subtitle="Studio console · styleguide" />
-          <h1 className="mt-6 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+          <Wordmark size="lg" subtitle="Prism Arcade · styleguide" />
+          <h1 className="cm-stencil mt-6 text-4xl leading-none sm:text-5xl">
             Every control, every state
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
@@ -457,14 +457,14 @@ export function StyleguideShowcase() {
           id="type"
           eyebrow="Typography"
           title="Display · body · numbers"
-          description="Space Grotesk, Plus Jakarta Sans, JetBrains Mono."
+          description="Bricolage Grotesque, Plus Jakarta Sans, JetBrains Mono."
         >
           <Card className="space-y-6 p-6">
             <div>
               <p className="font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
-                Display / Space Grotesk
+                Display / Bricolage Grotesque
               </p>
-              <p className="mt-1 font-display text-4xl font-bold tracking-tight">
+              <p className="mt-1 font-display text-4xl font-extrabold tracking-tight">
                 Calibrate the eye
               </p>
               <p className="mt-1 font-display text-xl font-semibold">
@@ -742,6 +742,7 @@ export function StyleguideShowcase() {
               start={NOOP}
               setGuess={NOOP}
               submitGuess={NOOP}
+              nextRound={NOOP}
               retry={NOOP}
               playAgain={NOOP}
             />

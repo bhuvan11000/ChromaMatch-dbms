@@ -35,18 +35,18 @@ export function RevealCountdown({
 
   return (
     <div className={cn("mt-3", className)} data-testid="game-stage-countdown">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-stage-muted uppercase">
+          <p className="font-mono text-[9px] font-bold tracking-[0.2em] text-stage-muted uppercase">
             {label}
           </p>
-          <p className="mt-0.5 font-display text-sm font-semibold tracking-tight text-stage-fg">
+          <p className="mt-1 font-display text-base font-bold tracking-tight text-stage-fg">
             {hint}
           </p>
         </div>
         <p
           aria-hidden="true"
-          className="shrink-0 font-display text-3xl leading-none font-bold text-stage-fg tabular-nums"
+          className="shrink-0 font-mono text-4xl leading-none font-bold text-stage-fg tabular-nums"
         >
           {seconds.toFixed(1)}s
         </p>
@@ -58,10 +58,10 @@ export function RevealCountdown({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(progress)}
-        className="mt-2 h-3 w-full overflow-hidden rounded-full border border-stage-border bg-stage-surface"
+        className="cm-countdown-track mt-2.5 h-3.5 w-full overflow-hidden rounded-[0.25rem] border border-stage-border bg-stage-surface"
       >
         <div
-          className="h-full rounded-full bg-stage-fg transition-[width] duration-100 ease-linear motion-reduce:transition-none"
+          className="h-full rounded-[0.15rem] bg-stage-fg transition-[width] duration-100 ease-linear motion-reduce:transition-none"
           style={{ width: `${progress}%` }}
         />
       </div>

@@ -3,14 +3,17 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 const mocks = vi.hoisted(() => ({
   startGame: vi.fn(),
   submitGame: vi.fn(),
+  scoreRoundPreview: vi.fn(),
 }));
 
 vi.mock("@/lib/services/gameService", () => ({
   startGame: mocks.startGame,
   submitGame: mocks.submitGame,
+  scoreRoundPreview: mocks.scoreRoundPreview,
 }));
 
 import { POST as startRoute } from "@/app/api/games/start/route";
+import { POST as roundScoreRoute } from "@/app/api/games/round-score/route";
 import { POST as submitRoute } from "@/app/api/games/submit/route";
 import { signSession } from "@/lib/auth/session";
 import { AppError } from "@/lib/errors";
@@ -72,6 +75,14 @@ const SUBMIT_RESPONSE = {
   streak: null,
   achievements: [],
   room: null,
+};
+
+const ROUND_SCORE_RESPONSE = {
+  roundNumber: 1,
+  target: FIXED_TARGETS[0],
+  guess: FIXED_GUESSES[0],
+  score: EXPECTED_ROUND_SCORES[0],
+  diff: { h: 5.6, s: 3.5, v: 3.5 },
 };
 
 function errorBody(body: unknown): { error: { code: string; message: string } } {
@@ -236,5 +247,92 @@ describe("POST /api/games/submit", () => {
 
     expect(response.status).toBe(status);
     expect(errorBody(await response.json()).error.code).toBe(code);
+  });
+});
+
+describe("POST /api/games/round-score", () => {
+  const body = {
+    gameToken: "signed-token",
+    roundNumber: 1,
+    guess: FIXED_GUESSES[0],
+  };
+
+  it("returns 401 without a session and does not call the service", async () => {
+    const response = await roundScoreRoute(
+      makeJsonRequest("/api/games/round-score", "POST", body),
+      undefined,
+    );
+
+    expect(response.status).toBe(401);
+    expect(errorBody(await response.json()).error.code).toBe("UNAUTHENTICATED");
+    expect(mocks.scoreRoundPreview).not.toHaveBeenCalled();
+  });
+
+  it("returns the stateless round preview for an authenticated player", async () => {
+    mocks.scoreRoundPreview.mockResolvedValue(ROUND_SCORE_RESPONSE);
+    const token = await signSession({ userId: 7, role: "player" });
+
+    const response = await roundScoreRoute(
+      makeJsonRequest("/api/games/round-score", "POST", body, sessionCookieHeader(token)),
+      undefined,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual(ROUND_SCORE_RESPONSE);
+    expect(mocks.scoreRoundPreview).toHaveBeenCalledTimes(1);
+    expect(mocks.scoreRoundPreview).toHaveBeenCalledWith(7, body, expect.any(Date));
+  });
+
+  it("rejects client-supplied targets and scores before calling the service", async () => {
+    const token = await signSession({ userId: 7, role: "player" });
+
+    const response = await roundScoreRoute(
+      makeJsonRequest(
+        "/api/games/round-score",
+        "POST",
+        { ...body, target: FIXED_TARGETS[0], totalScore: 30 },
+        sessionCookieHeader(token),
+      ),
+      undefined,
+    );
+
+    expect(response.status).toBe(400);
+    expect(errorBody(await response.json()).error.code).toBe("VALIDATION_ERROR");
+    expect(mocks.scoreRoundPreview).not.toHaveBeenCalled();
+  });
+
+  it("rejects an out-of-range round before calling the service", async () => {
+    const token = await signSession({ userId: 7, role: "player" });
+
+    const response = await roundScoreRoute(
+      makeJsonRequest(
+        "/api/games/round-score",
+        "POST",
+        { ...body, roundNumber: 4 },
+        sessionCookieHeader(token),
+      ),
+      undefined,
+    );
+
+    expect(response.status).toBe(400);
+    expect(errorBody(await response.json()).error.code).toBe("VALIDATION_ERROR");
+    expect(mocks.scoreRoundPreview).not.toHaveBeenCalled();
+  });
+
+  it("rejects a foreign Origin", async () => {
+    const token = await signSession({ userId: 7, role: "player" });
+
+    const response = await roundScoreRoute(
+      makeJsonRequest("/api/games/round-score", "POST", body, {
+        ...sessionCookieHeader(token),
+        origin: "http://evil.example",
+      }),
+      undefined,
+    );
+
+    expect(response.status).toBe(403);
+    expect(errorBody(await response.json()).error.code).toBe("BAD_ORIGIN");
+    expect(mocks.scoreRoundPreview).not.toHaveBeenCalled();
   });
 });

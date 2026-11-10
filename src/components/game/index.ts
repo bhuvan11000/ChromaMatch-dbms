@@ -27,3 +27,6 @@ export type { RevealCountdownProps } from "./RevealCountdown";
 
 export { RoundProgress } from "./RoundProgress";
 export type { RoundProgressProps } from "./RoundProgress";
+
+export { RoundScoreReveal } from "./RoundScoreReveal";
+export type { RoundScoreRevealProps } from "./RoundScoreReveal";

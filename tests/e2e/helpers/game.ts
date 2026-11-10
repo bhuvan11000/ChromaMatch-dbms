@@ -139,5 +139,9 @@ export async function playRounds(page: Page, targets: readonly Hsv[]): Promise<v
 
     await setHsvGuess(page, target);
     await page.getByRole("button", { name: "Submit guess" }).click();
+
+    // Every guess now earns a server-scored preview before the next reveal.
+    await expect(page.getByTestId("round-score")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: /Next round|See total|Continue/ }).click();
   }
 }

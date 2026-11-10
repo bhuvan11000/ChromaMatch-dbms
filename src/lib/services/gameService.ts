@@ -4,12 +4,14 @@ import { submitGameResult, submitRoomAttempt } from "@/lib/db/pg/functions";
 import { findRoomByCode, findRoomMember, listRoomColors } from "@/lib/db/pg/queries/rooms";
 import { generateRandomColors } from "@/lib/domain/colors";
 import { isValidHsv, normalizeHsv, type Hsv } from "@/lib/domain/hsv";
-import { scoreGame, type GameResult } from "@/lib/domain/scoring";
+import { scoreGame, scoreRound, type GameResult } from "@/lib/domain/scoring";
 import { randomPermutation } from "@/lib/domain/shuffle";
 import { AppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import type {
   GameMode,
+  GameRoundScoreRequest,
+  GameRoundScoreResponse,
   GameStartRequest,
   GameStartResponse,
   GameSubmitRequest,
@@ -388,6 +390,45 @@ export async function startGame(
       roundNumber: index + 1,
       target: { h: target.h, s: target.s, v: target.v },
     })),
+  };
+}
+
+/**
+ * Scores one round for immediate feedback without writing anything.
+ *
+ * This is deliberately stateless: the signed token carries the target, and
+ * the `SUBMISSION_TOO_FAST` floor is waived because a first guess can happen
+ * before 13 seconds. The final `submitGame` call remains the only persistence
+ * path and still enforces the floor.
+ */
+export async function scoreRoundPreview(
+  userId: number,
+  input: GameRoundScoreRequest,
+  now: Date,
+): Promise<GameRoundScoreResponse> {
+  const claims = await verifyGameToken(input.gameToken, {
+    userId,
+    now,
+    enforceMinimumElapsed: false,
+  });
+
+  const target = claims.rounds[input.roundNumber - 1];
+  if (!target) {
+    throw new AppError("VALIDATION_ERROR", "That round does not exist in this game.");
+  }
+  if (!isValidHsv(input.guess)) {
+    throw new AppError("VALIDATION_ERROR", "The guess must be a valid HSV color.");
+  }
+
+  const guess = normalizeHsv(input.guess);
+  const round = scoreRound(target, guess);
+
+  return {
+    roundNumber: input.roundNumber,
+    target: { h: target.h, s: target.s, v: target.v },
+    guess,
+    score: round.score,
+    diff: round.diff,
   };
 }
 

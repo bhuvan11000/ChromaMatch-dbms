@@ -109,6 +109,21 @@ describe("game token signing and verification", () => {
     });
   });
 
+  it("lets the stateless round preview skip the elapsed floor", async () => {
+    const { token } = await signGameToken(
+      { userId: 7, mode: "global", rounds: FIXED_TARGETS },
+      GAME_TEST_NOW,
+    );
+
+    await expect(
+      verifyGameToken(token, {
+        userId: 7,
+        now: new Date(GAME_TEST_NOW.getTime() + 2_000),
+        enforceMinimumElapsed: false,
+      }),
+    ).resolves.toMatchObject({ sub: "7", mode: "global" });
+  });
+
   it("rejects a game submitted before the minimum elapsed time", async () => {
     const { token } = await signGameToken(
       { userId: 7, mode: "global", rounds: FIXED_TARGETS },

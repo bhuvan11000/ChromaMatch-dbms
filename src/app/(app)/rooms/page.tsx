@@ -1,11 +1,10 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { JoinForm, RoomCreateForm } from "@/components/rooms";
-import { Card } from "@/components/ui";
+import { ModeGlyph } from "@/components/ui";
 import { ApiError, apiClient } from "@/lib/api-client";
 import {
   roomStateResponseSchema,
@@ -43,49 +42,64 @@ export default function RoomsPage() {
   });
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
-      <Link
-        href="/home"
-        className="inline-flex min-h-9 items-center font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-      >
-        ← Home
-      </Link>
+    <div className="mx-auto w-full max-w-4xl">
+      <section className="cm-cabinet cm-rise overflow-hidden p-0">
+        <div className="cm-marquee flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2.5 sm:px-7">
+          <p className="font-mono text-[9px] font-bold tracking-[0.2em] text-white/60 uppercase">
+            Custom rooms // Link-up
+          </p>
+          <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-white/45 uppercase">
+            2–10 players
+          </p>
+        </div>
 
-      <header className="mt-3">
-        <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-          Custom rooms
-        </p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
-          A private code and bragging rights.
-        </h1>
-        <p className="mt-2 max-w-prose text-sm text-muted-foreground">
-          Everyone in the room gets the same three colours. Best score wins.
-        </p>
-      </header>
+        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-7">
+          <ModeGlyph kind="room" size="lg" />
+          <div>
+            <h1 className="cm-stencil text-4xl leading-none sm:text-5xl">Rooms</h1>
+            <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+              Everyone gets the same three colours. Best score wins.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-        <Card className="min-w-0 p-5 sm:p-6">
-          <h2 className="text-lg font-bold tracking-tight">Create a room</h2>
-          <div className="mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <section className="cm-console-card flex flex-col rounded-[1rem] bg-card p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-display text-xl font-extrabold tracking-tight">Create a room</h2>
+            <span className="font-mono text-[8px] font-bold tracking-[0.14em] text-muted-foreground uppercase">
+              Host
+            </span>
+          </div>
+          <div className="mt-5">
             <RoomCreateForm
               onSubmit={(values) => create.mutate(values)}
               pending={create.isPending}
               error={messageOf(create.error)}
             />
           </div>
-        </Card>
+        </section>
 
-        <Card className="min-w-0 p-5 sm:p-6">
-          <h2 className="text-lg font-bold tracking-tight">Join with a code</h2>
-          <div className="mt-4">
+        <section className="cm-console-card flex flex-col rounded-[1rem] bg-card p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-display text-xl font-extrabold tracking-tight">Join with a code</h2>
+            <span className="font-mono text-[8px] font-bold tracking-[0.14em] text-muted-foreground uppercase">
+              Player
+            </span>
+          </div>
+          <div className="mt-5">
             <JoinForm
               onSubmit={(code) => join.mutate({ code })}
               pending={join.isPending}
               error={messageOf(join.error)}
             />
           </div>
-        </Card>
+          <p className="mt-auto pt-6 font-mono text-[9px] leading-relaxed tracking-[0.06em] text-muted-foreground">
+            Ask the host for the 8-character code.
+          </p>
+        </section>
       </div>
-    </main>
+    </div>
   );
 }

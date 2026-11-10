@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  gameRoundScoreRequestSchema,
+  gameRoundScoreResponseSchema,
   gameStartRequestSchema,
   gameStartResponseSchema,
   gameSubmitRequestSchema,
@@ -140,5 +142,43 @@ describe("game response schemas", () => {
     expect(
       gameSubmitResponseSchema.safeParse({ ...VALID_SUBMIT_RESPONSE, extra: true }).success,
     ).toBe(false);
+  });
+});
+
+describe("round score preview schemas", () => {
+  const VALID_PREVIEW = {
+    gameToken: "signed-token",
+    roundNumber: 2,
+    guess: FIXED_GUESSES[1],
+  };
+
+  it("accepts a token, a 1-based round and one guess", () => {
+    expect(gameRoundScoreRequestSchema.safeParse(VALID_PREVIEW).success).toBe(true);
+  });
+
+  it.each([
+    ["round 0", { ...VALID_PREVIEW, roundNumber: 0 }],
+    ["round 4", { ...VALID_PREVIEW, roundNumber: 4 }],
+    ["a missing token", { roundNumber: 1, guess: FIXED_GUESSES[0] }],
+    ["a client-supplied target", { ...VALID_PREVIEW, target: FIXED_TARGETS[1] }],
+    ["a client-supplied score", { ...VALID_PREVIEW, score: 10 }],
+    ["an unknown key on the guess", { ...VALID_PREVIEW, guess: { ...FIXED_GUESSES[1], n: 1 } }],
+  ])("rejects %s", (_label, body) => {
+    expect(gameRoundScoreRequestSchema.safeParse(body).success).toBe(false);
+  });
+
+  it("accepts the round score response and rejects unknown keys", () => {
+    const response = {
+      roundNumber: 1,
+      target: FIXED_TARGETS[0],
+      guess: FIXED_GUESSES[0],
+      score: EXPECTED_ROUND_SCORES[0],
+      diff: { h: 5.6, s: 3.5, v: 3.5 },
+    };
+
+    expect(gameRoundScoreResponseSchema.safeParse(response).success).toBe(true);
+    expect(gameRoundScoreResponseSchema.safeParse({ ...response, timedOut: false }).success).toBe(
+      false,
+    );
   });
 });

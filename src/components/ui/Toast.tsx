@@ -98,7 +98,7 @@ function ToastCard({ item, onDismiss }: { item: ToastRecord; onDismiss: (id: str
     <div
       role={variant === "error" ? "alert" : "status"}
       className={cn(
-        "pointer-events-auto w-full max-w-sm rounded-[1rem] border-2 p-4 shadow-xl",
+        "cm-pop pointer-events-auto w-full max-w-sm rounded-[0.9rem] border-2 border-border p-4 shadow-[0_5px_0_var(--border-lip)]",
         VARIANT_CLASSES[variant],
       )}
     >

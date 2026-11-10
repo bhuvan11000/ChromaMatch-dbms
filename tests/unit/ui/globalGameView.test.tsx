@@ -68,11 +68,20 @@ function submitting(): GameMachineState {
   let state = gameMachineReducer(revealing(), { type: "REVEAL_ENDED" });
 
   for (let round = 0; round < ROUNDS_PER_GAME; round += 1) {
-    state = gameMachineReducer(state, {
-      type: "SET_GUESS",
-      guess: { h: 100 + round, s: 50, v: 50 },
-    });
+    const guess = { h: 100 + round, s: 50, v: 50 };
+    state = gameMachineReducer(state, { type: "SET_GUESS", guess });
     state = gameMachineReducer(state, { type: "SUBMIT_GUESS" });
+    state = gameMachineReducer(state, {
+      type: "ROUND_SCORED",
+      score: {
+        roundNumber: round + 1,
+        target: FIXED_TARGETS[round] ?? SLIDER_DEFAULTS,
+        guess,
+        score: [9.7, 9.9, 5.7][round] ?? 0,
+        diff: { h: 5.6, s: 3.5, v: 3.5 },
+      },
+    });
+    state = gameMachineReducer(state, { type: "NEXT_ROUND" });
 
     if (round < ROUNDS_PER_GAME - 1) {
       state = gameMachineReducer(state, { type: "REVEAL_ENDED" });
@@ -89,6 +98,7 @@ function renderView(state: GameMachineState): string {
       start={() => undefined}
       setGuess={() => undefined}
       submitGuess={() => undefined}
+      nextRound={() => undefined}
       retry={() => undefined}
       playAgain={() => undefined}
     />,
@@ -113,6 +123,31 @@ describe("GlobalGameView", () => {
     expect(guessHtml).toContain("Hue");
     expect(guessHtml).toContain("Saturation");
     expect(guessHtml).toContain("Value");
+  });
+
+  it("shows the server-scored round result after a guess", () => {
+    const guess = FIXED_GUESSES[0] ?? SLIDER_DEFAULTS;
+    let state = gameMachineReducer(revealing(), { type: "REVEAL_ENDED" });
+    state = gameMachineReducer(state, { type: "SET_GUESS", guess });
+    state = gameMachineReducer(state, { type: "SUBMIT_GUESS" });
+    state = gameMachineReducer(state, {
+      type: "ROUND_SCORED",
+      score: {
+        roundNumber: 1,
+        target: FIXED_TARGETS[0] ?? SLIDER_DEFAULTS,
+        guess,
+        score: 9.7,
+        diff: { h: 5.6, s: 3.5, v: 3.5 },
+      },
+    });
+
+    const html = renderView(state);
+
+    expect(html).toContain('data-testid="round-score"');
+    expect(html).toContain("Round score");
+    expect(html).toContain("9.7");
+    expect(html).toContain("Next round");
+    expect(html).not.toContain("Submit guess");
   });
 
   it("renders the total, all three round breakdowns and result notices", () => {

@@ -118,11 +118,11 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          "relative max-h-[90dvh] w-full overflow-hidden rounded-t-[1.25rem] border border-border bg-card-elevated text-card-foreground shadow-2xl sm:rounded-[1.25rem]",
+          "relative max-h-[90dvh] w-full overflow-hidden rounded-t-[1.25rem] border-2 border-border bg-card-elevated text-card-foreground shadow-[0_-10px_40px_rgb(0_0_0/0.35)] sm:rounded-[1.25rem] sm:shadow-[0_10px_0_var(--border-lip),0_34px_80px_-30px_rgb(0_0_0/0.7)]",
           SIZE_CLASSES[size],
         )}
       >
-        <div aria-hidden="true" className="cm-spectrum-bar h-1 w-full" />
+        <div aria-hidden="true" className="cm-spectrum-bar h-1.5 w-full" />
         <div className="max-h-[calc(90dvh-0.25rem)] overflow-y-auto p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -139,7 +139,7 @@ export function Modal({
               type="button"
               onClick={() => onCloseRef.current()}
               aria-label="Close dialog"
-              className="-m-1 size-9 shrink-0 rounded-[0.625rem] border border-border bg-muted/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card-elevated focus-visible:outline-none"
+              className="-m-1 grid size-9 shrink-0 place-items-center rounded-[0.5rem] border-2 border-border bg-muted text-muted-foreground transition-colors hover:bg-muted-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card-elevated focus-visible:outline-none"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="mx-auto size-4.5">
                 <path

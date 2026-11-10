@@ -5,6 +5,7 @@ export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export type { CardProps } from "./Card";
 
 export { Celebration, ScoreCountUp, formatScoreTenths, getCelebrationMeta } from "./Celebration";
+export { ClickSpark } from "./ClickSpark";
 export type {
   CelebrationKind,
   CelebrationMeta,
@@ -26,6 +27,9 @@ export type { ModalProps, ModalSize } from "./Modal";
 
 export { ModeGlyph } from "./ModeGlyph";
 export type { ModeGlyphKind, ModeGlyphProps } from "./ModeGlyph";
+
+export { Spotlight } from "./Spotlight";
+export type { SpotlightProps } from "./Spotlight";
 
 export { Spinner } from "./Spinner";
 export type { SpinnerProps, SpinnerSize } from "./Spinner";

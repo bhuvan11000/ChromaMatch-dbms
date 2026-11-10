@@ -40,7 +40,9 @@ function OptionGroup<T extends string | number | null>({
 }: OptionGroupProps<T>) {
   return (
     <fieldset disabled={disabled} className="min-w-0">
-      <legend className="mb-1.5 font-display text-sm font-semibold tracking-tight">{legend}</legend>
+      <legend className="mb-1.5 font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
+        {legend}
+      </legend>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <label key={String(option)} className="cursor-pointer">
@@ -52,7 +54,7 @@ function OptionGroup<T extends string | number | null>({
               onChange={() => onChange(option)}
               className="peer sr-only"
             />
-            <span className="inline-flex min-h-11 min-w-12 items-center justify-center gap-1.5 rounded-[0.875rem] border-2 border-border bg-transparent px-4 py-2 text-sm font-semibold transition-colors peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:font-bold peer-checked:before:content-['✓'] peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background peer-disabled:opacity-55">
+            <span className="inline-flex min-h-11 min-w-12 items-center justify-center gap-1.5 rounded-[0.55rem] border-2 border-border bg-card px-3.5 py-2 font-mono text-[11px] font-bold tracking-[0.02em] transition-colors peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground peer-checked:font-bold peer-checked:shadow-[0_2px_0_var(--primary-lip)] peer-checked:before:content-['✓'] peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background peer-disabled:opacity-55">
               {format(option)}
             </span>
           </label>
@@ -96,7 +98,7 @@ export function RoomCreateForm({ onSubmit, pending = false, error = null }: Room
       <div>
         <label
           htmlFor={sizeId}
-          className="mb-1.5 block font-display text-sm font-semibold tracking-tight"
+          className="mb-1.5 block font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase"
         >
           Players ({ROOM_MIN_SIZE}–{ROOM_MAX_SIZE})
         </label>
@@ -105,7 +107,7 @@ export function RoomCreateForm({ onSubmit, pending = false, error = null }: Room
           value={roomSize}
           disabled={pending}
           onChange={(event) => setRoomSize(Number(event.target.value))}
-          className="min-h-11 w-full rounded-[0.875rem] border-2 border-input-border bg-input px-3.5 py-2.5 text-sm text-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none sm:w-40"
+          className="min-h-11 w-full rounded-[0.6rem] border-2 border-input-border bg-input px-3 py-2.5 text-sm font-medium text-foreground shadow-[inset_0_2px_0_rgb(0_0_0/0.12)] transition-colors hover:border-input-border-strong focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none sm:w-44"
         >
           {SIZE_OPTIONS.map((size) => (
             <option key={size} value={size}>

@@ -1,14 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
+import { Bricolage_Grotesque, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { Providers } from "./providers";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-space-grotesk",
+  variable: "--font-bricolage",
   display: "swap",
 });
 
@@ -27,15 +26,18 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ChromaMatch",
-  description: "A color-matching game with global, daily, and room modes.",
+  title: {
+    default: "ChromaMatch — colour memory arcade",
+    template: "%s · ChromaMatch",
+  },
+  description: "A colour-matching arcade game with global, daily, and room modes.",
 };
 
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f3ef" },
-    { media: "(prefers-color-scheme: dark)", color: "#121214" },
+    { media: "(prefers-color-scheme: light)", color: "#f1ead9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a10" },
   ],
 };
 
@@ -43,7 +45,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${plusJakartaSans.variable} ${jetBrainsMono.variable}`}
+      className={`${bricolage.variable} ${plusJakartaSans.variable} ${jetBrainsMono.variable}`}
     >
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         <a

@@ -48,7 +48,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <div className="w-full">
       <label
         htmlFor={inputId}
-        className="mb-1.5 block font-display text-sm font-semibold tracking-tight text-foreground"
+        className="mb-1.5 block font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase"
       >
         {label}
       </label>
@@ -58,25 +58,31 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy || undefined}
         className={cn(
-          "w-full rounded-[0.875rem] border-2 bg-input px-3.5 py-2.5 text-sm text-foreground",
-          "shadow-[inset_0_2px_4px_rgb(0_0_0/0.16)]",
-          "placeholder:text-muted-foreground",
-          "transition-colors focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
+          "min-h-11 w-full rounded-[0.65rem] border-2 bg-input px-3.5 py-2.5 text-sm font-medium text-foreground",
+          "shadow-[inset_0_2px_0_rgb(0_0_0/0.12)]",
+          "placeholder:font-normal placeholder:text-muted-foreground/75",
+          "transition-[border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:outline-none",
           "disabled:cursor-not-allowed disabled:opacity-60",
           error
-            ? "border-danger focus-visible:border-danger focus-visible:ring-danger/35"
+            ? "border-danger focus-visible:border-danger focus-visible:ring-danger/30"
             : "border-input-border hover:border-input-border-strong focus-visible:border-ring",
           className,
         )}
         {...props}
       />
       {hint ? (
-        <p id={hintId} className="mt-1.5 text-xs text-muted-foreground">
+        <p
+          id={hintId}
+          className="mt-1.5 font-mono text-[10px] tracking-[0.02em] text-muted-foreground"
+        >
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} className="mt-1.5 flex items-start gap-1.5 text-sm font-medium text-danger">
+        <p
+          id={errorId}
+          className="mt-1.5 flex items-start gap-1.5 font-mono text-[11px] font-semibold text-danger"
+        >
           <FieldErrorIcon />
           <span className="break-words">{error}</span>
         </p>

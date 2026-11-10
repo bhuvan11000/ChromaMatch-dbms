@@ -2,15 +2,7 @@
 
 import Link from "next/link";
 
-import {
-  Button,
-  Card,
-  EmptyState,
-  ErrorMessage,
-  ModeGlyph,
-  Spinner,
-  Wordmark,
-} from "@/components/ui";
+import { Button, EmptyState, ErrorMessage, Spinner } from "@/components/ui";
 import { useMyAchievements, useHistory, useMyStats } from "@/hooks/useProfile";
 import { useSession } from "@/hooks/useSession";
 import { ApiError } from "@/lib/api-client";
@@ -39,13 +31,25 @@ function SectionHeading({
 }) {
   return (
     <div className="min-w-0">
-      <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-        {eyebrow}
-      </p>
-      <h2 id={id} className="mt-1 text-2xl font-bold tracking-tight">
+      <p className="cm-eyebrow text-muted-foreground">{eyebrow}</p>
+      <h2 id={id} className="mt-1 font-display text-2xl font-extrabold tracking-tight">
         {title}
       </h2>
-      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
+function PanelHeader({ index, title, note }: { index: string; title: string; note: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b-2 border-border bg-muted/35 px-4 py-2.5">
+      <div>
+        <h3 className="font-display text-sm font-extrabold tracking-tight">{title}</h3>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">{note}</p>
+      </div>
+      <span className="font-mono text-[8px] font-bold tracking-[0.12em] text-muted-foreground/60">
+        {index}
+      </span>
     </div>
   );
 }
@@ -60,46 +64,63 @@ export function ProfileView() {
   const historyItems = history.data?.pages.flatMap((page) => page.items) ?? [];
   const earnedCount = stats.data?.achievementsEarned ?? 0;
   const achievementCount = achievements.data?.achievements.length ?? 0;
+  const user = session.user;
+  const initial = user?.username.slice(0, 1).toUpperCase() ?? "?";
+  const memberSince = user?.createdAt ? user.createdAt.slice(0, 4) : "—";
 
   return (
     <div className="mx-auto w-full max-w-6xl">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <ModeGlyph kind="profile" size="md" />
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-              Your station
-            </p>
-            <h1 className="truncate text-xl font-bold tracking-tight">
-              {session.user ? session.user.username : "Profile"}
-            </h1>
-          </div>
+      <section className="cm-cabinet cm-rise overflow-hidden p-0">
+        <div className="cm-marquee flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2.5 sm:px-7">
+          <p className="font-mono text-[9px] font-bold tracking-[0.2em] text-white/60 uppercase">
+            Player card // Station 01
+          </p>
+          <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-white/45 uppercase">
+            {user?.role ?? "player"}
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/home"
-            className="inline-flex min-h-9 items-center rounded-[0.625rem] px-2 font-mono text-[10px] font-bold tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+        <div className="flex flex-col gap-5 p-5 sm:p-7 md:flex-row md:items-center">
+          <div
+            aria-hidden="true"
+            className="grid size-20 shrink-0 place-items-center rounded-[0.9rem] border-2 border-border bg-primary font-display text-4xl font-extrabold text-primary-foreground shadow-[0_4px_0_var(--primary-lip)]"
           >
-            ← Home
-          </Link>
-          <Wordmark size="sm" />
+            {initial}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="cm-eyebrow text-muted-foreground">Player 1</p>
+            <h1 className="mt-1 truncate font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
+              {user?.username ?? "Profile"}
+            </h1>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              Your colours, streaks and badges. Only Global and Daily games count here.
+            </p>
+          </div>
+
+          <div className="flex shrink-0 flex-col items-start gap-2 md:items-end">
+            <span className="cm-sticker rotate-1 text-primary-ink">P1 · Ready</span>
+            <p className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
+              Member since {memberSince}
+            </p>
+            <div aria-hidden="true" className="cm-barcode mt-1 h-7 w-32 text-foreground" />
+          </div>
         </div>
-      </header>
+      </section>
 
       <section aria-labelledby="profile-overview" className="mt-7">
         <SectionHeading
           id="profile-overview"
-          eyebrow="Overview"
-          title="Your colours, streaks and badges."
-          description="Only Global and Daily games count here. Room attempts stay in your history."
+          eyebrow="Stats"
+          title="Your numbers."
+          description="Personal bests, games played and the current Daily streak."
         />
 
         <div className="mt-4">
           {stats.isPending ? (
             <div className="flex min-h-40 flex-col items-center justify-center gap-3">
               <Spinner size="lg" label="Loading your stats" />
-              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+              <p className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
                 Reading the counters…
               </p>
             </div>
@@ -133,7 +154,7 @@ export function ProfileView() {
           ) : stats.isError ? null : stats.data && !stats.data.historyAvailable ? (
             <EmptyState
               title="History insights are offline"
-              description="Your counters still work. Charts will return when the history store is reachable."
+              description="Your counters still work. Charts return when the history store is reachable."
             />
           ) : stats.data?.history &&
             stats.data.history.byMode.length === 0 &&
@@ -146,29 +167,38 @@ export function ProfileView() {
             />
           ) : stats.data?.history ? (
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <Card className="min-w-0 p-4 sm:p-5 lg:col-span-2">
-                <h3 className="text-sm font-bold tracking-tight">Score trend</h3>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  Daily average, last 30 UTC days.
-                </p>
-                <TrendChart points={stats.data.history.trend} />
-              </Card>
+              <div className="cm-console-card overflow-hidden rounded-[1rem] bg-card lg:col-span-2">
+                <PanelHeader
+                  index="CHART 01"
+                  title="Score trend"
+                  note="Daily average, last 30 UTC days."
+                />
+                <div className="p-4 sm:p-5">
+                  <TrendChart points={stats.data.history.trend} />
+                </div>
+              </div>
 
-              <Card className="min-w-0 p-4 sm:p-5">
-                <h3 className="text-sm font-bold tracking-tight">Channel accuracy</h3>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  Closeness to the target; lower miss is better.
-                </p>
-                <AccuracyChart accuracy={stats.data.history.channelAccuracy} />
-              </Card>
+              <div className="cm-console-card overflow-hidden rounded-[1rem] bg-card">
+                <PanelHeader
+                  index="CHART 02"
+                  title="Channel accuracy"
+                  note="Closeness to the target."
+                />
+                <div className="p-4 sm:p-5">
+                  <AccuracyChart accuracy={stats.data.history.channelAccuracy} />
+                </div>
+              </div>
 
-              <Card className="min-w-0 p-4 sm:p-5">
-                <h3 className="text-sm font-bold tracking-tight">Hue regions</h3>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  Average round score by target hue.
-                </p>
-                <HueRegionChart regions={stats.data.history.hueRegions} />
-              </Card>
+              <div className="cm-console-card overflow-hidden rounded-[1rem] bg-card">
+                <PanelHeader
+                  index="CHART 03"
+                  title="Hue regions"
+                  note="Average round score by target hue."
+                />
+                <div className="p-4 sm:p-5">
+                  <HueRegionChart regions={stats.data.history.hueRegions} />
+                </div>
+              </div>
             </div>
           ) : null}
         </div>
@@ -178,7 +208,7 @@ export function ProfileView() {
         <SectionHeading
           id="profile-achievements"
           eyebrow="Badges"
-          title="Achievements"
+          title="Trophy cabinet"
           description={
             stats.data && achievementCount > 0
               ? `${earnedCount} of ${achievementCount} earned.`
@@ -214,13 +244,13 @@ export function ProfileView() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <SectionHeading
             id="profile-history"
-            eyebrow="Recent history"
+            eyebrow="Logbook"
             title="Every run, newest first."
             description="Room attempts are labelled and never feed your stats."
           />
           <Link
             href="/leaderboard/global"
-            className="inline-flex min-h-9 items-center rounded-[0.625rem] border border-border bg-card px-3 py-2 font-mono text-[10px] font-bold tracking-[0.12em] text-foreground uppercase transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+            className="cm-keycap cm-keycap-outline inline-flex min-h-9 items-center rounded-[0.55rem] border-border bg-card px-3 py-1.5 font-mono text-[9px] font-bold tracking-[0.12em] text-foreground uppercase hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
           >
             Global board
           </Link>
@@ -230,7 +260,7 @@ export function ProfileView() {
           {history.isPending ? (
             <div className="flex min-h-40 flex-col items-center justify-center gap-3">
               <Spinner size="lg" label="Loading recent history" />
-              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+              <p className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
                 Opening the logbook…
               </p>
             </div>

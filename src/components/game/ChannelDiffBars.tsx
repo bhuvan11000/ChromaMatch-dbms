@@ -59,33 +59,33 @@ export interface ChannelDiffBarsProps {
  */
 export function ChannelDiffBars({ diff, className }: ChannelDiffBarsProps) {
   return (
-    <dl className={cn("space-y-2.5", className)} aria-label="Difference from target">
+    <dl className={cn("space-y-2", className)} aria-label="Difference from target">
       {CHANNELS.map((channel) => {
         const value = Math.max(0, diff[channel.key]);
-        const width = Math.min(100, (value / channel.max) * 100);
+        const rawWidth = Math.min(100, (value / channel.max) * 100);
+        // Keep tiny-but-real misses visible; the numeric value remains the truth.
+        const width = value === 0 ? 0 : Math.max(4, rawWidth);
 
         return (
           <div
             key={channel.key}
             title={channel.label}
-            className="rounded-[0.75rem] border border-border bg-muted/55 px-2.5 py-2"
+            className="rounded-[0.5rem] border-2 border-border bg-muted/45 px-2.5 py-2"
           >
             <div className="flex items-baseline justify-between gap-2">
               <dt className="font-mono text-[9px] font-bold tracking-[0.14em] text-muted-foreground uppercase">
                 {channel.shortLabel}
               </dt>
-              <dd className="font-display text-sm font-bold whitespace-nowrap text-foreground tabular-nums">
-                Δ{formatDiff(value)}
-                <span className="ml-0.5 text-[9px] font-medium text-muted-foreground">
-                  {channel.unit}
-                </span>
+              <dd className="font-mono text-xs font-bold whitespace-nowrap text-foreground tabular-nums">
+                {formatDiff(value)}
+                <span className="ml-0.5 font-medium text-muted-foreground">{channel.unit}</span>
               </dd>
             </div>
-            <div aria-hidden="true" className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-border">
-              <div
-                className={cn("h-full rounded-full", channel.barClassName)}
-                style={{ width: `${width}%` }}
-              />
+            <div
+              aria-hidden="true"
+              className="mt-1.5 h-2 overflow-hidden rounded-[0.15rem] border border-border/50 bg-card"
+            >
+              <div className={cn("h-full", channel.barClassName)} style={{ width: `${width}%` }} />
             </div>
           </div>
         );

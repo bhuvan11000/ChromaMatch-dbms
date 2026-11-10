@@ -73,7 +73,7 @@ These are small and deliberate; they are repeated where relevant.
 | R1 | Database doc §7.2 example | The example round score `8.9` for target (214.6, 62.0, 80.5) vs guess (209.0, 58.5, 77.0) is **illustrative only**. With the scoring formula and equal weights the correct score is **9.7**. Do not use the example numbers as test data; use the test vectors in §5.4.1. |
 | R2 | Database doc §6.1 | Optional: make username uniqueness **case-insensitive** (unique index on `lower(username)`) so `Alice` and `alice` cannot both exist. The existing `UNIQUE(username)` can stay as well. |
 | R3 | Database doc §8.4 | Use `ROW_NUMBER()` (not `RANK()`) with a deterministic tie-break (earliest achieved time, then lowest `user_id`). This satisfies "ties are ranked arbitrarily" and makes pagination stable. |
-| R4 | Game doc §2 step 5 vs §3 | Because the whole game is scored by the server in **one request after round 3**, round scores and per-channel breakdowns are shown **together on the game result screen**, not after each individual round (this matches the screen-flow diagram in the game document). |
+| R4 | Game doc §2 step 5 vs §3 | **Revised for the arcade revamp:** the server scores each guess through a stateless preview (`POST /api/games/round-score`) so the player sees a round score and channel breakdown immediately. The whole game is still persisted in **one request after round 3**; the result screen shows the final breakdown, total and notices. |
 
 ---
 
@@ -906,7 +906,7 @@ Insert failure → log + one retry + swallow (play result already committed in P
 ```
 `myBest` is `null` if the player has not played today. This endpoint never reveals colors and never creates the challenge.
 
-#### 5.10.4 Game start and submit
+#### 5.10.4 Game start, round preview and submit
 
 **`POST /api/games/start`** (user)
 Request: `{ "mode": "global" | "daily" | "room", "roomCode"?: "ABCD2345" }` (`roomCode` required iff `mode = room`).
@@ -928,6 +928,19 @@ Success 200:
 }
 ```
 Errors: 400 `VALIDATION_ERROR`; 404 `ROOM_NOT_FOUND`; 403 `NOT_ROOM_MEMBER`; 409 `ROOM_NOT_IN_PROGRESS`, `MEMBER_NOT_ACTIVE`, `ATTEMPTS_EXHAUSTED`.
+
+**`POST /api/games/round-score`** (user, stateless)
+Request:
+```json
+{ "gameToken": "<jwt>", "roundNumber": 2, "guess": { "h": 15.5, "s": 88.0, "v": 70.5 } }
+```
+Success 200:
+```json
+{ "roundNumber": 2, "target": { "h": 12.0, "s": 90.0, "v": 70.0 },
+  "guess": { "h": 15.5, "s": 88.0, "v": 70.5 }, "score": 9.9,
+  "diff": { "h": 3.5, "s": 2.0, "v": 0.5 } }
+```
+The target comes only from the verified token. This endpoint **never writes** to Postgres or Mongo and may be called before 13 seconds have elapsed; it exists solely to show a round score after each guess. The final `POST /api/games/submit` remains the only persistence path and still enforces every §5.6.3 check.
 
 **`POST /api/games/submit`** (user)
 Request:
@@ -1038,15 +1051,18 @@ IDLE ──start()──► STARTING ──(token + rounds received)──► RO
         └─ countdown reaches 0 → auto-submit current slider values, timedOut[i] = true ──┤
                                               ▼
                        record guess[i] locally (browser memory only)
-                       i < 3 → ROUND_REVEAL(i+1)      i = 3 → SUBMITTING
+                       ROUND_SCORING ──POST /api/games/round-score──► ROUND_SCORE(i)
+   ROUND_SCORE(i): show the server-scored round, target/guess split and channel deltas
+        ├─ preview failed → show the error and Continue (never blocks the game)
+        └─ Next round ──► i < 3 ? ROUND_REVEAL(i+1) : SUBMITTING
 SUBMITTING ──POST /api/games/submit──► RESULT (all 3 rounds, breakdown, total, notices)
 Any error ──► ERROR (retry / back to home). Closing the tab at any point discards the game.
 ```
 Rules:
-- The client keeps the 3 guesses (and `timedOut` flags) in component state only. Nothing is written to `localStorage`, cookies or the server until submission.
+- The client keeps the 3 guesses (and `timedOut` flags) in component state only. The round-score preview is stateless; nothing is written to `localStorage`, cookies or the database until the final submission.
 - A `beforeunload` warning is shown while a game is in progress.
 - Reveal and countdown timers use `performance.now()`-based scheduling (not accumulated `setInterval` ticks) to avoid drift; the timer is a UX element — the server cannot verify it (open item).
-- The per-round scores are **not available until the final submit returns** (R4 in §1.5). The round screens therefore show only "Round i of 3".
+- The per-round score preview comes from `POST /api/games/round-score`; the client never computes it. If the preview fails, the player can continue and the final submit still scores and persists all three rounds.
 - After RESULT: Global → buttons "Play again" and "Leaderboard"; Daily → "Play again" and "Daily leaderboard"; Room → "Next attempt" if `attemptsRemaining > 0`, else "Back to room".
 - New-PB and unlocked-achievement notices are shown on the result screen (toast/modal) for Global and Daily only.
 
@@ -1084,6 +1100,7 @@ sequenceDiagram
     S->>S: generateRandomColors(3), sign game token
     S-->>B: token + 3 targets (play order)
     Note over B: 3 × (reveal 5 s → hide → sliders → submit locally)
+    Note over B: each guess → POST /api/games/round-score (stateless preview)
     B->>H: POST /api/games/submit (token, guesses x3)
     H->>S: submitGame(userId, ...)
     S->>S: verify token, scoreGame()

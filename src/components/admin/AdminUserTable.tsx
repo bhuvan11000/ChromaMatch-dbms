@@ -24,7 +24,7 @@ function RoleBadge({ role }: { role: AdminUserSummary["role"] }) {
   return (
     <span
       className={cn(
-        "rounded-full border px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.12em] uppercase",
+        "rounded-[0.25rem] border px-2 py-0.5 font-mono text-[8px] font-bold tracking-[0.12em] uppercase",
         role === "admin"
           ? "border-accent-violet/40 bg-accent-violet/10 text-accent-violet"
           : "border-border bg-muted text-muted-foreground",
@@ -39,7 +39,7 @@ function StatusBadge({ banned }: { banned: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.12em] uppercase",
+        "inline-flex items-center gap-1.5 rounded-[0.25rem] border px-2 py-0.5 font-mono text-[8px] font-bold tracking-[0.12em] uppercase",
         banned
           ? "border-danger/40 bg-danger-soft text-danger"
           : "border-success/40 bg-success-soft text-success",
@@ -60,17 +60,17 @@ export function AdminUserTable({
 }: AdminUserTableProps) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[54rem] border-collapse text-left">
+      <table className="w-full min-w-[54rem] border-collapse text-left text-sm">
         <caption className="sr-only">Players</caption>
         <thead>
-          <tr className="border-b border-border">
+          <tr className="border-b-2 border-border bg-muted/30">
             {["Player", "Role", "Status", "Global PB", "Games", "Streak", "Joined", ""].map(
               (label) => (
                 <th
                   key={label || "actions"}
                   scope="col"
                   className={cn(
-                    "px-3 py-2.5 font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase",
+                    "px-3 py-2.5 font-mono text-[9px] font-bold tracking-[0.16em] text-muted-foreground uppercase",
                     ["Global PB", "Games", "Streak"].includes(label) && "text-right",
                   )}
                 >
@@ -93,7 +93,7 @@ export function AdminUserTable({
                 data-banned={user.isBanned ? "true" : "false"}
                 data-protected={protectedRow ? "true" : "false"}
                 className={cn(
-                  "border-b border-border/70 last:border-b-0",
+                  "border-b border-border/60 last:border-b-0",
                   user.isBanned ? "bg-danger-soft/40" : "hover:bg-muted/40",
                 )}
               >
@@ -107,7 +107,7 @@ export function AdminUserTable({
                         {user.username}
                       </Link>
                       {isSelf ? (
-                        <span className="shrink-0 rounded-full border border-primary/35 bg-primary/10 px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.12em] text-primary uppercase">
+                        <span className="shrink-0 rounded-full border border-primary/35 bg-primary/10 px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.12em] text-primary-ink uppercase">
                           You
                         </span>
                       ) : null}

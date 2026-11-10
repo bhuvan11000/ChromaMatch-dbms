@@ -33,10 +33,10 @@ interface ResultNotice {
 export const STREAK_MILESTONES = [3, 7, 30] as const;
 
 const EMPHASIZED_LINK_CLASSES =
-  "cm-keycap cm-keycap-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border-2 border-primary bg-primary/10 px-6 py-3 font-display text-base font-semibold tracking-tight text-foreground select-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
+  "cm-keycap cm-keycap-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-[0.7rem] border-border bg-primary/10 px-6 py-3 font-display text-sm font-extrabold tracking-[0.055em] text-foreground uppercase select-none hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
 
 const OUTLINE_LINK_CLASSES =
-  "cm-keycap cm-keycap-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border-2 border-border bg-transparent px-6 py-3 font-display text-base font-semibold tracking-tight text-foreground select-none hover:border-muted-foreground/50 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
+  "cm-keycap cm-keycap-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-[0.7rem] border-border bg-transparent px-6 py-3 font-display text-sm font-extrabold tracking-[0.055em] text-foreground uppercase select-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none";
 
 function PlayIcon() {
   return (
@@ -96,7 +96,7 @@ function RoundSplitSwatch({
   return (
     <div
       data-testid={`round-split-swatch-${roundNumber}`}
-      className="overflow-hidden rounded-[1rem] border border-border bg-card"
+      className="overflow-hidden rounded-[0.75rem] border-2 border-border bg-card"
     >
       <div className="relative h-32 sm:h-36">
         <ColorSwatch
@@ -105,22 +105,22 @@ function RoundSplitSwatch({
           size="fill"
           frame="none"
         />
-        <span className="absolute top-3 left-3 rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.16em] text-white uppercase">
+        <span className="absolute top-2.5 left-2.5 rounded-[0.3rem] border border-white/25 bg-black/55 px-2 py-1 font-mono text-[8px] font-bold tracking-[0.16em] text-white uppercase backdrop-blur-sm">
           Target
         </span>
-        <span className="absolute right-3 bottom-3 rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] text-white/85 tabular-nums">
+        <span className="absolute right-2.5 bottom-2.5 rounded-[0.3rem] border border-white/25 bg-black/55 px-2 py-1 font-mono text-[8px] text-white/90 tabular-nums backdrop-blur-sm">
           H {target.h.toFixed(1)} · S {target.s.toFixed(1)} · V {target.v.toFixed(1)}
         </span>
       </div>
 
-      <div className="h-px bg-border" />
+      <div className="h-0.5 bg-border" />
 
       <div className="relative h-32 sm:h-36">
         <ColorSwatch hsv={guess} label={`Round ${roundNumber} guess`} size="fill" frame="none" />
-        <span className="absolute top-3 left-3 rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.16em] text-white uppercase">
+        <span className="absolute top-2.5 left-2.5 rounded-[0.3rem] border border-white/25 bg-black/55 px-2 py-1 font-mono text-[8px] font-bold tracking-[0.16em] text-white uppercase backdrop-blur-sm">
           Your mix
         </span>
-        <span className="absolute right-3 bottom-3 rounded-full border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-[9px] text-white/85 tabular-nums">
+        <span className="absolute right-2.5 bottom-2.5 rounded-[0.3rem] border border-white/25 bg-black/55 px-2 py-1 font-mono text-[8px] text-white/90 tabular-nums backdrop-blur-sm">
           H {guess.h.toFixed(1)} · S {guess.s.toFixed(1)} · V {guess.v.toFixed(1)}
         </span>
       </div>
@@ -206,41 +206,45 @@ export function GameResult({
     notices.length > 0 ? notices[Math.min(noticeIndex, notices.length - 1)] : undefined;
 
   return (
-    <section aria-labelledby="game-result-heading" className={cn("space-y-5", className)}>
-      <header className="cm-console-card relative overflow-hidden rounded-[1.5rem] border border-border bg-card p-5 sm:p-7">
-        <div aria-hidden="true" className="cm-spectrum-bar absolute inset-x-0 top-0 h-1.5" />
+    <section aria-labelledby="game-result-heading" className={cn("cm-rise space-y-4", className)}>
+      <header className="cm-cabinet overflow-hidden p-0">
+        <div className="cm-marquee flex items-center justify-between gap-3 px-5 pt-4 pb-2.5 sm:px-7">
+          <p className="font-mono text-[9px] font-bold tracking-[0.2em] text-white/65 uppercase">
+            {header?.kicker ??
+              (isDaily ? "Daily · Shared palette complete" : "Global · Flash complete")}
+          </p>
+          <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-white/45 uppercase">
+            Result
+          </p>
+        </div>
 
-        <div className="flex flex-wrap items-end justify-between gap-5">
+        <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div className="min-w-0">
-            <p className="font-mono text-[10px] font-bold tracking-[0.22em] text-muted-foreground uppercase">
-              {header?.kicker ??
-                (isDaily ? "Daily · Shared palette complete" : "Global · Flash complete")}
-            </p>
-            <h2
-              id="game-result-heading"
-              className="mt-2 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
-            >
+            <h2 id="game-result-heading" className="cm-stencil text-4xl leading-[0.95] sm:text-5xl">
               {header?.title ?? (isDaily ? "Daily logged." : "Palette logged.")}
             </h2>
+            <p className="mt-2 font-mono text-[9px] tracking-[0.16em] text-muted-foreground uppercase">
+              Three rounds · final score
+            </p>
           </div>
 
-          <div className="relative min-w-[12rem] rounded-[1.25rem] border-2 border-border bg-muted/55 px-5 py-4 text-right">
-            <span className="absolute -top-2 right-4 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
+          <div className="cm-led-well min-w-[13rem] rounded-[0.85rem] px-5 py-4 text-right">
+            <p className="font-mono text-[9px] font-bold tracking-[0.18em] text-[var(--screen-muted)] uppercase">
               Total
-            </span>
-            <div className="flex items-end justify-end gap-1">
-              <p className="font-display text-6xl leading-none font-bold tracking-tight">
+            </p>
+            <div className="mt-1 flex items-end justify-end gap-1.5">
+              <p className="font-display text-6xl leading-none font-extrabold tracking-tight text-[var(--screen-gold)]">
                 <ScoreCountUp value={result.totalScore} max={MAX_GAME_SCORE} />
               </p>
               <p
                 aria-hidden="true"
-                className="pb-1.5 font-mono text-sm font-medium text-muted-foreground"
+                className="pb-1.5 font-mono text-xs font-medium text-[var(--screen-muted)]"
               >
                 / {MAX_GAME_SCORE}
               </p>
             </div>
             {result.totalGamesPlayed !== null ? (
-              <p className="mt-2 font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
+              <p className="mt-2 font-mono text-[8px] tracking-[0.14em] text-[var(--screen-muted)] uppercase">
                 Games played {result.totalGamesPlayed}
               </p>
             ) : null}
@@ -259,7 +263,7 @@ export function GameResult({
           />
           {notices.length > 1 ? (
             <div className="flex items-center justify-between gap-3">
-              <p className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+              <p className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
                 Notice {noticeIndex + 1} / {notices.length}
               </p>
               <Button
@@ -286,48 +290,48 @@ export function GameResult({
       ) : null}
 
       {streak ? (
-        <Card
+        <div
           data-testid="daily-streak"
-          className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4 sm:p-5"
+          className="cm-console-card flex flex-wrap items-center gap-x-7 gap-y-3 rounded-[0.9rem] bg-card px-4 py-3.5"
         >
-          <h3 className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
+          <h3 className="font-mono text-[9px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
             Daily streak
           </h3>
-          <p className="font-display text-lg font-bold tracking-tight tabular-nums">
+          <p className="font-display text-lg font-extrabold tracking-tight tabular-nums">
             {streak.current}
             <span className="text-xs font-medium text-muted-foreground">
               {" "}
               {streak.current === 1 ? "day" : "days"} current
             </span>
           </p>
-          <p className="font-display text-lg font-bold tracking-tight tabular-nums">
+          <p className="font-display text-lg font-extrabold tracking-tight tabular-nums">
             {streak.longest}
             <span className="text-xs font-medium text-muted-foreground"> longest</span>
           </p>
-        </Card>
+        </div>
       ) : null}
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {result.rounds.map((round) => (
           <Card key={round.roundNumber} className="overflow-hidden p-0">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/35 px-4 py-3 sm:px-5">
-              <div className="flex items-center gap-2.5">
-                <span className="grid size-8 place-items-center rounded-full bg-foreground font-mono text-xs font-bold text-background tabular-nums">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-border bg-muted/40 px-4 py-3 sm:px-5">
+              <div className="flex items-center gap-3">
+                <span className="grid size-9 place-items-center rounded-[0.4rem] border-2 border-border bg-foreground font-mono text-xs font-bold text-background tabular-nums shadow-[0_2px_0_var(--border-lip)]">
                   {round.roundNumber}
                 </span>
                 <div>
-                  <h3 className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
+                  <h3 className="font-mono text-[9px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
                     Round {round.roundNumber}
                   </h3>
                   <p className="text-[11px] text-muted-foreground">Target vs your mix</p>
                   {round.timedOut ? (
-                    <span className="mt-1 inline-flex rounded-full border border-warning/40 bg-warning-soft px-2 py-0.5 font-mono text-[9px] font-bold tracking-[0.14em] text-warning uppercase">
+                    <span className="mt-1 inline-flex rounded-[0.25rem] border border-warning/45 bg-warning-soft px-1.5 py-0.5 font-mono text-[8px] font-bold tracking-[0.14em] text-warning uppercase">
                       Timed out
                     </span>
                   ) : null}
                 </div>
               </div>
-              <p className="font-display text-2xl font-bold tracking-tight text-foreground tabular-nums">
+              <p className="font-display text-2xl font-extrabold tracking-tight text-foreground tabular-nums">
                 {formatScore(round.score)}
                 <span className="text-xs font-medium text-muted-foreground">
                   {" "}
@@ -336,7 +340,7 @@ export function GameResult({
               </p>
             </div>
 
-            <div className="grid gap-4 p-4 sm:p-5 sm:grid-cols-[minmax(0,1.1fr)_minmax(15rem,0.9fr)] sm:items-center">
+            <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1.1fr)_minmax(15rem,0.9fr)] sm:items-center sm:p-5">
               <RoundSplitSwatch
                 target={round.target}
                 guess={round.guess}
@@ -344,7 +348,7 @@ export function GameResult({
               />
 
               <div>
-                <p className="font-mono text-[10px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
+                <p className="font-mono text-[9px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
                   Channel deltas
                 </p>
                 <ChannelDiffBars diff={round.diff} className="mt-2" />
@@ -356,15 +360,20 @@ export function GameResult({
 
       {result.achievements.length > 0 ? (
         <Card className="p-5">
-          <h3 className="text-lg font-bold tracking-tight">Unlocked this game</h3>
+          <div className="flex items-center gap-2">
+            <span aria-hidden="true" className="text-accent-violet">
+              <AchievementIcon />
+            </span>
+            <h3 className="font-display text-base font-extrabold tracking-tight">Unlocked</h3>
+          </div>
           <ul className="mt-3 space-y-3">
             {result.achievements.map((achievement) => (
               <li key={achievement.id} className="flex gap-3">
-                <span aria-hidden="true" className="mt-0.5 shrink-0 text-accent-violet">
-                  <AchievementIcon />
+                <span aria-hidden="true" className="mt-1 shrink-0 text-accent-violet">
+                  <span className="block size-2 rotate-45 bg-current" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{achievement.name}</p>
+                  <p className="text-sm font-bold text-foreground">{achievement.name}</p>
                   <p className="text-xs text-muted-foreground">{achievement.description}</p>
                 </div>
               </li>

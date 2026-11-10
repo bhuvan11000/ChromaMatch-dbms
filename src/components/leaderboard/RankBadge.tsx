@@ -2,6 +2,8 @@ import { cn } from "@/lib/cn";
 
 export interface RankBadgeProps {
   rank: number;
+  /** `screen` is the light-on-dark high-score treatment. */
+  tone?: "default" | "screen";
   className?: string;
 }
 
@@ -23,16 +25,21 @@ function MedalIcon() {
  * Rank pill. The number is always visible; the medal is a redundant cue for the
  * top three, so rank never depends on colour alone (UI_THEME §1).
  */
-export function RankBadge({ rank, className }: RankBadgeProps) {
+export function RankBadge({ rank, tone = "default", className }: RankBadgeProps) {
   const isTopThree = rank <= 3;
+  const screenTone = tone === "screen";
 
   return (
     <span
       className={cn(
-        "inline-flex min-w-10 items-center justify-center gap-1 rounded-full border px-2 py-1 font-mono text-xs font-bold tabular-nums",
-        isTopThree
-          ? "border-accent-gold/45 bg-accent-gold/10 text-accent-gold"
-          : "border-border bg-muted text-muted-foreground",
+        "inline-flex min-w-10 items-center justify-center gap-1 rounded-[0.3rem] border-2 px-2 py-1 font-mono text-xs font-bold tabular-nums",
+        screenTone
+          ? isTopThree
+            ? "border-[var(--screen-gold)]/50 bg-[var(--screen-gold)]/10 text-[var(--screen-gold)]"
+            : "border-[var(--screen-line)] bg-white/5 text-[var(--screen-muted)]"
+          : isTopThree
+            ? "border-accent-gold/45 bg-accent-gold/10 text-accent-gold"
+            : "border-border bg-muted text-muted-foreground",
         className,
       )}
     >

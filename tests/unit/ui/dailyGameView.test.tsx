@@ -69,7 +69,20 @@ function submitting(): GameMachineState {
   let state = gameMachineReducer(revealing(), { type: "REVEAL_ENDED" });
 
   for (let round = 0; round < ROUNDS_PER_GAME; round += 1) {
+    const guess = FIXED_GUESSES[round] ?? SLIDER_DEFAULTS;
+    state = gameMachineReducer(state, { type: "SET_GUESS", guess });
     state = gameMachineReducer(state, { type: "SUBMIT_GUESS" });
+    state = gameMachineReducer(state, {
+      type: "ROUND_SCORED",
+      score: {
+        roundNumber: round + 1,
+        target: FIXED_TARGETS[round] ?? SLIDER_DEFAULTS,
+        guess,
+        score: [9.7, 9.9, 5.7][round] ?? 0,
+        diff: { h: 5.6, s: 3.5, v: 3.5 },
+      },
+    });
+    state = gameMachineReducer(state, { type: "NEXT_ROUND" });
     if (round < ROUNDS_PER_GAME - 1) {
       state = gameMachineReducer(state, { type: "REVEAL_ENDED" });
     }
@@ -85,6 +98,7 @@ function renderView(state: GameMachineState): string {
       start={() => undefined}
       setGuess={() => undefined}
       submitGuess={() => undefined}
+      nextRound={() => undefined}
       retry={() => undefined}
       playAgain={() => undefined}
     />,
@@ -103,6 +117,30 @@ describe("DailyGameView", () => {
     expect(html).toContain("Same palette for everyone");
     expect(html).toContain("Play Daily");
     expect(html).not.toContain("Play Global");
+  });
+
+  it("shows the round score before the next reveal", () => {
+    const guess = FIXED_GUESSES[0] ?? SLIDER_DEFAULTS;
+    let state = gameMachineReducer(revealing(), { type: "REVEAL_ENDED" });
+    state = gameMachineReducer(state, { type: "SET_GUESS", guess });
+    state = gameMachineReducer(state, { type: "SUBMIT_GUESS" });
+    state = gameMachineReducer(state, {
+      type: "ROUND_SCORED",
+      score: {
+        roundNumber: 1,
+        target: FIXED_TARGETS[0] ?? SLIDER_DEFAULTS,
+        guess,
+        score: 9.7,
+        diff: { h: 5.6, s: 3.5, v: 3.5 },
+      },
+    });
+
+    const html = renderView(state);
+
+    expect(html).toContain('data-testid="round-score"');
+    expect(html).toContain("Round score");
+    expect(html).toContain("9.7");
+    expect(html).toContain("Next round");
   });
 
   it("unmounts the target swatch when the reveal ends", () => {

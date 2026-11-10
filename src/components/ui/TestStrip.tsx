@@ -14,7 +14,14 @@ export interface TestStripProps {
 }
 
 /** Brand test-strip palette, used outside the game stage only. */
-export const TEST_STRIP_COLORS = ["#ff5e5b", "#ffb800", "#34d399", "#22d3ee", "#a78bfa"] as const;
+export const TEST_STRIP_COLORS = [
+  "#ff3b5c",
+  "#ff7a1a",
+  "#ffd000",
+  "#16d39a",
+  "#00b8e6",
+  "#a855f7",
+] as const;
 
 const SIZE_CLASSES: Record<TestStripSize, { frame: string; well: string; gap: string }> = {
   sm: { frame: "px-2 pt-3 pb-3", well: "h-7", gap: "gap-1.5" },
@@ -43,7 +50,7 @@ export function TestStrip({
       aria-label={label}
       aria-hidden={label ? undefined : true}
       className={cn(
-        "cm-test-strip relative flex w-full overflow-hidden rounded-[0.9rem] border border-border bg-[#17171b]",
+        "cm-test-strip relative flex w-full overflow-hidden rounded-[0.9rem] border-2 border-border bg-[#101018]",
         sizing.frame,
         sizing.gap,
         className,

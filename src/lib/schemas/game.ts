@@ -106,6 +106,20 @@ export const gameSubmitRequestSchema = z
 
 export type GameSubmitRequest = z.infer<typeof gameSubmitRequestSchema>;
 
+/**
+ * Stateless per-round preview. The token is the only source of the target;
+ * this request can never change a stored game or result.
+ */
+export const gameRoundScoreRequestSchema = z
+  .object({
+    gameToken: z.string().min(1),
+    roundNumber: z.number().int().min(1).max(ROUNDS_PER_GAME),
+    guess: hsvSchema,
+  })
+  .strict();
+
+export type GameRoundScoreRequest = z.infer<typeof gameRoundScoreRequestSchema>;
+
 export const roundDiffSchema = z
   .object({
     h: z.number().finite().min(0).max(180),
@@ -124,6 +138,10 @@ export const gameSubmitRoundSchema = z
     timedOut: z.boolean().optional(),
   })
   .strict();
+
+export const gameRoundScoreResponseSchema = gameSubmitRoundSchema.omit({ timedOut: true }).strict();
+
+export type GameRoundScoreResponse = z.infer<typeof gameRoundScoreResponseSchema>;
 
 export const gamePbSchema = z
   .object({
