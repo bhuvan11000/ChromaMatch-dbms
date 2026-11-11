@@ -83,6 +83,7 @@ service containers.
 - [`docs/ChromaMatch_Game_Design.md`](docs/ChromaMatch_Game_Design.md) — game rules and modes.
 - [`docs/ChromaMatch_Database_Design.md`](docs/ChromaMatch_Database_Design.md) — relational and document schemas.
 - [`docs/ChromaMatch_Architecture.md`](docs/ChromaMatch_Architecture.md) — implementation contract.
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Vercel + Supabase + Atlas release steps and smoke tests.
 - [`AGENTS.md`](AGENTS.md) — agent rules and fast-path conventions.
 
 ## Security
