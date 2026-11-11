@@ -52,10 +52,13 @@ export function ClickSpark({ children }: { children: ReactNode }) {
       raf = 0;
 
       for (const burst of [...bursts]) {
-        const progress = Math.min(1, (now - burst.start) / BURST_MS);
+        // The first rAF timestamp can precede the performance.now() sample
+        // used to create the burst; clamp so geometry can never go negative.
+        const progress = Math.max(0, Math.min(1, (now - burst.start) / BURST_MS));
         const ctx = burst.ctx;
         const center = CANVAS_SIZE / 2;
         const fade = 1 - progress;
+        const eased = easeOutCubic(progress);
 
         ctx.setTransform(burst.ratio, 0, 0, burst.ratio, 0, 0);
         ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -64,14 +67,14 @@ export function ClickSpark({ children }: { children: ReactNode }) {
         ctx.strokeStyle = "#ffd166";
         ctx.lineWidth = 2 * fade;
         ctx.beginPath();
-        ctx.arc(center, center, 6 + easeOutCubic(progress) * 68, 0, Math.PI * 2);
+        ctx.arc(center, center, Math.max(0, 6 + eased * 68), 0, Math.PI * 2);
         ctx.stroke();
 
         ctx.lineCap = "round";
         ctx.lineWidth = 2;
         for (let index = 0; index < SPARK_COUNT; index += 1) {
           const angle = (index / SPARK_COUNT) * Math.PI * 2 - Math.PI / 2;
-          const travel = (30 + (index % 4) * 13) * easeOutCubic(progress);
+          const travel = Math.max(0, (30 + (index % 4) * 13) * eased);
           const length = (11 - (index % 3)) * (1 - progress);
           const x1 = center + Math.cos(angle) * travel;
           const y1 = center + Math.sin(angle) * travel;
