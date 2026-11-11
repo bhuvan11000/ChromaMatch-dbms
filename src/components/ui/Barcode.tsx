@@ -5,64 +5,77 @@ interface BarcodeModule {
   width: number;
 }
 
-function hashString(value: string): number {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
+/*
+ * Code 39 (USD-3) is deliberately simple: 9 elements per character, 5 bars and
+ * 4 spaces, exactly 3 of them wide. These are the standard digit patterns and
+ * the `*` start/stop pattern; the element sequence starts with a bar and
+ * alternates bar/space.
+ */
+const CODE39_START_STOP: readonly number[] = [1, 3, 1, 1, 3, 1, 3, 1, 1];
+const CODE39_DIGITS: Record<string, readonly number[]> = {
+  "0": [1, 1, 1, 3, 3, 1, 3, 1, 1],
+  "1": [3, 1, 1, 3, 1, 1, 1, 1, 3],
+  "2": [1, 1, 3, 3, 1, 1, 1, 1, 3],
+  "3": [3, 1, 3, 3, 1, 1, 1, 1, 1],
+  "4": [1, 1, 1, 3, 3, 1, 1, 1, 3],
+  "5": [3, 1, 1, 3, 3, 1, 1, 1, 1],
+  "6": [1, 1, 3, 3, 3, 1, 1, 1, 1],
+  "7": [1, 1, 1, 3, 1, 1, 3, 1, 3],
+  "8": [3, 1, 1, 3, 1, 1, 3, 1, 1],
+  "9": [1, 1, 3, 3, 1, 1, 3, 1, 1],
+};
+const QUIET_ZONE_MODULES = 10;
+
+function appendPattern(modules: BarcodeModule[], pattern: readonly number[]): void {
+  pattern.forEach((width, index) => {
+    modules.push({ bar: index % 2 === 0, width });
+  });
 }
 
-function mulberry32(seed: number): () => number {
-  let state = seed;
-  return () => {
-    state = (state + 0x6d2b79f5) | 0;
-    let value = Math.imul(state ^ (state >>> 15), 1 | state);
-    value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
-    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-  };
+function appendGap(modules: BarcodeModule[]): void {
+  modules.push({ bar: false, width: 1 });
 }
 
 /**
- * A deterministic, print-style barcode. It is decorative (aria-hidden), but the
- * varied modules, quiet zones and human-readable line make it read as a real
- * player label rather than a striped rectangle.
+ * Encodes a numeric player ID as a real Code 39 symbol. The payload is limited
+ * to digits so the printed line and the scanner result always match.
  */
-function buildModules(value: string): BarcodeModule[] {
-  const random = mulberry32(hashString(value));
-  const barCount = 42 + Math.floor(random() * 8);
+function encode(value: string): { modules: BarcodeModule[]; payload: string } {
+  const payload = value.replace(/\D/g, "").slice(0, 10) || "0";
   const modules: BarcodeModule[] = [];
 
-  for (let index = 0; index < barCount; index += 1) {
-    if (index > 0) {
-      modules.push({ bar: false, width: random() > 0.82 ? 2 : 1 });
-    }
+  appendPattern(modules, CODE39_START_STOP);
+  appendGap(modules);
 
-    const guard = index < 2 || index >= barCount - 2;
-    const roll = random();
-    modules.push({
-      bar: true,
-      width: guard ? (index % 2 === 0 ? 2 : 1) : roll > 0.82 ? 3 : roll > 0.45 ? 2 : 1,
-    });
+  for (const character of payload) {
+    appendPattern(modules, CODE39_DIGITS[character] ?? CODE39_DIGITS["0"]);
+    appendGap(modules);
   }
 
-  return modules;
+  appendPattern(modules, CODE39_START_STOP);
+
+  return { modules, payload };
 }
 
 export interface BarcodeProps {
-  /** Short player code, e.g. "P1-5278". Used for the pattern and the print line. */
+  /** Numeric player ID. Non-digits are stripped; the printed line uses the encoded payload. */
   value: string;
   className?: string;
 }
 
+/**
+ * A printed Code 39 player-ID label. The cream plate and dark bars work in both
+ * themes, the quiet zones are part of the SVG, and the 40 px bar height plus
+ * 3:1 wide/narrow ratio make the symbol readable by a phone camera.
+ */
 export function Barcode({ value, className }: BarcodeProps) {
-  const modules = buildModules(value);
-  const quietZone = 10;
-  const width = modules.reduce((total, module) => total + module.width, quietZone * 2);
+  const { modules, payload } = encode(value);
+  const totalModules = modules.reduce((total, module) => total + module.width, 0);
+  const width = totalModules + QUIET_ZONE_MODULES * 2;
   const barStarts = modules.map(
     (_, index) =>
-      quietZone + modules.slice(0, index).reduce((total, module) => total + module.width, 0),
+      QUIET_ZONE_MODULES +
+      modules.slice(0, index).reduce((total, module) => total + module.width, 0),
   );
 
   return (
@@ -70,24 +83,24 @@ export function Barcode({ value, className }: BarcodeProps) {
       aria-hidden="true"
       data-testid="barcode"
       className={cn(
-        "inline-flex w-40 max-w-full flex-col items-center gap-1.5 overflow-hidden rounded-[0.2rem] border border-[#17141f]/25 bg-[#fffaf0] px-2 py-1.5 text-[#17141f] shadow-[0_2px_0_rgb(0_0_0/0.18)]",
+        "inline-flex w-72 max-w-full flex-col items-center gap-1.5 overflow-hidden rounded-[0.2rem] border border-[#17141f]/25 bg-[#fffaf0] px-2 py-1.5 text-[#17141f] shadow-[0_2px_0_rgb(0_0_0/0.18)] sm:w-80",
         className,
       )}
     >
       <svg
-        viewBox={`0 0 ${width} 28`}
+        viewBox={`0 0 ${width} 40`}
         preserveAspectRatio="none"
         shapeRendering="crispEdges"
-        className="h-7 w-full fill-current"
+        className="h-10 w-full fill-current"
       >
         {modules.map((module, index) =>
           module.bar ? (
-            <rect key={index} x={barStarts[index]} y={0} width={module.width} height={28} />
+            <rect key={index} x={barStarts[index]} y={0} width={module.width} height={40} />
           ) : null,
         )}
       </svg>
-      <span className="max-w-full truncate font-mono text-[7px] leading-none font-bold tracking-[0.18em]">
-        {value}
+      <span className="max-w-full truncate font-mono text-[8px] leading-none font-bold tracking-[0.24em]">
+        {payload}
       </span>
     </span>
   );

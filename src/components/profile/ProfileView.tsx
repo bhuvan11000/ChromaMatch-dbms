@@ -103,7 +103,7 @@ export function ProfileView() {
             <p className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
               Member since {memberSince}
             </p>
-            <Barcode value={`P1-${user?.id ?? "0000"}`} className="mt-1 w-36 sm:w-40" />
+            <Barcode value={String(user?.id ?? "0000")} className="mt-1" />
           </div>
         </div>
       </section>

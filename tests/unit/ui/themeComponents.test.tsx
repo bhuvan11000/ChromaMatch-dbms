@@ -134,15 +134,16 @@ describe("Celebration", () => {
 });
 
 describe("base UI kit", () => {
-  it("renders a varied player barcode with a printed code", () => {
-    const html = render(<Barcode value="P1-5278" />);
+  it("renders a Code 39 player barcode with a printed payload", () => {
+    const html = render(<Barcode value="5274" />);
 
     expect(html).toContain('aria-hidden="true"');
-    expect(html).toContain("P1-5278");
+    expect(html).toContain("5274");
     expect(html).toContain('shape-rendering="crispEdges"');
-    expect(html.match(/<rect/g)?.length ?? 0).toBeGreaterThan(20);
+    // Start + four data characters + stop: 5 bars each, spaces are not rects.
+    expect(html.match(/<rect/g)?.length ?? 0).toBe(30);
     expect(html).toContain('width="1"');
-    expect(html).toContain('width="2"');
+    expect(html).toContain('width="3"');
   });
 
   it("renders the wordmark and its subtitle", () => {
