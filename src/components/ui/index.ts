@@ -36,6 +36,9 @@ export type { SpinnerProps, SpinnerSize } from "./Spinner";
 
 export { TestStrip, TEST_STRIP_COLORS } from "./TestStrip";
 
+export { TextLoop } from "./TextLoop";
+export type { TextLoopProps } from "./TextLoop";
+
 export { ThemeToggle } from "./ThemeToggle";
 export type { TestStripProps, TestStripSize } from "./TestStrip";
 

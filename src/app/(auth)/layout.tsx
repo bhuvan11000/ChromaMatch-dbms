@@ -76,10 +76,7 @@ export default function AuthLayout({ children }: Readonly<{ children: ReactNode 
             </dl>
           </div>
 
-          <div className="relative z-10 flex items-end justify-between gap-6">
-            <p className="font-mono text-[9px] font-bold tracking-[0.2em] text-white/40 uppercase">
-              3 rounds · 5 seconds · score /30
-            </p>
+          <div className="relative z-10 flex justify-end">
             <div aria-hidden="true" className="cm-speaker h-6 w-24 text-white/25" />
           </div>
         </section>

@@ -13,6 +13,7 @@ import {
   ScoreCountUp,
   Spinner,
   TestStrip,
+  TextLoop,
   Wordmark,
   formatScoreTenths,
   getCelebrationMeta,
@@ -134,6 +135,16 @@ describe("Celebration", () => {
 });
 
 describe("base UI kit", () => {
+  it("renders a decorative curved text loop", () => {
+    const html = render(<TextLoop text="Trust your eye" separator="✦" />);
+
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain("TRUST YOUR EYE");
+    expect(html).toContain("✦");
+    expect(html).toContain("<textPath");
+    expect(html).toContain('viewBox="0 0 1200 180"');
+  });
+
   it("renders a Code 39 player barcode with a printed payload", () => {
     const html = render(<Barcode value="5274" />);
 

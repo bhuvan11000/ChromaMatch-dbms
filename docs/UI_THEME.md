@@ -107,6 +107,8 @@ must not recreate their own stage background.
   game and room detail `max-w-3xl`. Cards stack before they shrink.
 - Public leaderboards use the shell but show a `Sign in` action instead of the
   player/logout cluster.
+- There is no global footer. The home screen closes with the curved
+  `<TextLoop>` brand flourish instead.
 
 ## 5. Component inventory
 
@@ -130,6 +132,7 @@ must not recreate their own stage background.
 | `ClickSpark` | `components/ui/ClickSpark.tsx` | ReactBits-adapted canvas click burst; decorative, reduced-motion-safe. |
 | `ThemeToggle` | `components/ui/ThemeToggle.tsx` | Persisted light/dark override; system is the default. |
 | `Barcode` | `components/ui/Barcode.tsx` | Scannable Code 39 numeric player-ID label on the profile card; theme-independent. |
+| `TextLoop` | `components/ui/TextLoop.tsx` | Decorative seamless curved text marquee on Home; pauses when hidden/hovered and under reduced motion. |
 | `GameStage` | `components/game/GameStage.tsx` | Fixed neutral stage; HUD, countdown, content, optional footer. |
 | `ColorSwatch` | `components/game/ColorSwatch.tsx` | Display-only HSV swatch; sizes `sm/md/lg/reveal/canvas/fill`. |
 | `RevealCountdown` | `components/game/RevealCountdown.tsx` | Achromatic timer + segmented bar used by `GameStage`. |

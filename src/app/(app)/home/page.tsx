@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 import { DailyCard } from "@/components/home/DailyCard";
 import { BoardsCard, GlobalCabinet, ProfileCard, RoomsCard } from "@/components/home/HomePanels";
-import { ErrorMessage, Spinner, TestStrip } from "@/components/ui";
+import { ErrorMessage, Spinner, TestStrip, TextLoop } from "@/components/ui";
 import { useSession } from "@/hooks/useSession";
 import { ApiError, apiClient } from "@/lib/api-client";
 
@@ -143,6 +143,17 @@ export default function HomePage() {
         <BoardsCard className="lg:col-span-5" />
         <ProfileCard className="lg:col-span-7" />
       </section>
+
+      <div className="mt-10">
+        <TextLoop
+          text="Trust your eye"
+          separator="✦"
+          speed={70}
+          curviness={48}
+          fontSize={36}
+          className="text-primary-ink"
+        />
+      </div>
     </div>
   );
 }
