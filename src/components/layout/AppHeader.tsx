@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { AdminNavLink } from "@/components/admin/AdminNavLink";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -176,6 +176,9 @@ export function AppHeader() {
   const avatarTone = user
     ? AVATAR_TONES[user.username.charCodeAt(0) % AVATAR_TONES.length]
     : AVATAR_TONES[0];
+  const activeIndex = APP_NAV_ITEMS.findIndex((item) => isActive(item, pathname));
+  const dotLeft =
+    activeIndex >= 0 ? `${((activeIndex + 0.5) / APP_NAV_ITEMS.length) * 100}%` : "50%";
 
   return (
     <>
@@ -190,33 +193,37 @@ export function AppHeader() {
             <Wordmark size="sm" />
           </Link>
 
-          <nav aria-label="Main" className="ml-4 hidden items-center gap-1.5 md:flex">
-            {APP_NAV_ITEMS.map((item) => {
-              const active = isActive(item, pathname);
+          <nav aria-label="Main" className="ml-4 hidden lg:block">
+            <div className="relative">
+              <div className="cm-pill-nav">
+                {APP_NAV_ITEMS.map((item) => {
+                  const active = isActive(item, pathname);
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "inline-flex min-h-10 items-center gap-2 rounded-[0.7rem] border-2 px-3 py-2 font-display text-sm font-bold tracking-tight transition-colors",
-                    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
-                    active
-                      ? "border-border bg-primary text-primary-foreground shadow-[0_3px_0_var(--primary-lip)]"
-                      : "border-transparent text-muted-foreground hover:border-border hover:bg-card hover:text-foreground",
-                  )}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={active ? "text-primary-foreground" : "text-primary-ink"}
-                  >
-                    {item.icon}
-                  </span>
-                  {item.label}
-                </Link>
-              );
-            })}
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      data-active={active ? "true" : undefined}
+                      className="cm-pill-nav-item focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+                    >
+                      <span className="cm-pill-nav-fill" aria-hidden="true" />
+                      <span className="cm-pill-nav-label">
+                        <span className="cm-pill-nav-label-default">{item.label}</span>
+                        <span className="cm-pill-nav-label-hover" aria-hidden="true">
+                          {item.label}
+                        </span>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+              <span
+                aria-hidden="true"
+                className={cn("cm-pill-nav-dot", activeIndex < 0 && "opacity-0")}
+                style={{ "--pill-nav-dot-left": dotLeft } as CSSProperties}
+              />
+            </div>
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
@@ -276,7 +283,7 @@ export function AppHeader() {
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-border bg-card/96 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-border bg-card/96 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
       >
         <div aria-hidden="true" className="cm-spectrum-bar h-0.5 w-full" />
         <ul className="mx-auto grid max-w-md grid-cols-4">

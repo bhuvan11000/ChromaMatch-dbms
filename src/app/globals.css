@@ -232,6 +232,119 @@
 
 @layer components {
   /* ---------------------------------------------------------------------
+   * Pill navigation (ReactBits Pill Nav, adapted to CSS transitions)
+   * ------------------------------------------------------------------- */
+  .cm-pill-nav {
+    position: relative;
+    display: grid;
+    grid-auto-columns: 4.5rem;
+    grid-auto-flow: column;
+    gap: 0.2rem;
+    padding: 0.25rem;
+    border: 2px solid var(--border);
+    border-radius: 9999px;
+    background-color: var(--marquee-bg);
+    box-shadow:
+      0 3px 0 var(--border-lip),
+      inset 0 1px 0 rgb(255 255 255 / 0.08);
+  }
+
+  .cm-pill-nav-item {
+    position: relative;
+    display: inline-flex;
+    width: 100%;
+    min-height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 9999px;
+    background-color: var(--card-elevated);
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: color 160ms ease;
+  }
+
+  .cm-pill-nav-fill {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background-color: var(--primary);
+    transform: translateY(105%);
+    pointer-events: none;
+    transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .cm-pill-nav-item:hover .cm-pill-nav-fill,
+  .cm-pill-nav-item:focus-visible .cm-pill-nav-fill,
+  .cm-pill-nav-item[data-active="true"] .cm-pill-nav-fill {
+    transform: translateY(0);
+  }
+
+  .cm-pill-nav-label {
+    position: relative;
+    z-index: 1;
+    display: block;
+    height: 1.1em;
+    overflow: hidden;
+    line-height: 1.1;
+  }
+
+  .cm-pill-nav-label-default,
+  .cm-pill-nav-label-hover {
+    display: block;
+    transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .cm-pill-nav-label-hover {
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    color: var(--primary-foreground);
+  }
+
+  .cm-pill-nav-item:hover .cm-pill-nav-label-default,
+  .cm-pill-nav-item:hover .cm-pill-nav-label-hover,
+  .cm-pill-nav-item:focus-visible .cm-pill-nav-label-default,
+  .cm-pill-nav-item:focus-visible .cm-pill-nav-label-hover,
+  .cm-pill-nav-item[data-active="true"] .cm-pill-nav-label-default,
+  .cm-pill-nav-item[data-active="true"] .cm-pill-nav-label-hover {
+    transform: translateY(-100%);
+  }
+
+  .cm-pill-nav-item[data-active="true"] {
+    color: var(--primary-foreground);
+  }
+
+  .cm-pill-nav-dot {
+    position: absolute;
+    bottom: -0.45rem;
+    left: var(--pill-nav-dot-left, 50%);
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 9999px;
+    background-color: var(--primary-ink);
+    transform: translateX(-50%);
+    pointer-events: none;
+    transition: left 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cm-pill-nav-fill,
+    .cm-pill-nav-label-default,
+    .cm-pill-nav-label-hover,
+    .cm-pill-nav-dot {
+      transition: none;
+    }
+  }
+
+  /* ---------------------------------------------------------------------
    * Typography helpers
    * ------------------------------------------------------------------- */
   .cm-eyebrow {

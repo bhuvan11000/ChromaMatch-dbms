@@ -92,7 +92,9 @@ must not recreate their own stage background.
 
 - `AppHeader` (`src/components/layout/AppHeader.tsx`) is the shared chrome for
   signed-in pages and public boards. Desktop: wordmark, Play / Boards / Rooms /
-  Profile tabs, optional Admin link, player chip and logout. Mobile: compact
+  Profile tabs, optional Admin link, player chip and logout. Desktop navigation
+  is a dark pill rail (`.cm-pill-nav`) with a rising fill, rolling label and a
+  sliding active dot, adapted from ReactBits Pill Nav. Below `lg`: compact
   wordmark + player chip + a fixed four-item bottom dock.
 - The header is sticky, two-pixel ink, with a spectrum hairline at the top. The
   bottom dock sits above the safe area and the app shell reserves bottom space.
@@ -175,6 +177,8 @@ Use these classes instead of re-inventing borders, shadows or screens:
 - `.cm-ramp-slider` — functional HSV faders inside the stage.
 - `.cm-spectrum-bar`, `.cm-test-strip`, `.cm-mode-token`, `.cm-halftone`,
   `.cm-speaker`, `.cm-barcode`, `.cm-darkroom-grid` (legacy alias for the auth grid).
+- `.cm-pill-nav` / `-item` / `-fill` / `-label` / `-dot` — desktop pill rail
+  with rising hover fill, rolling label and sliding active dot.
 - `.cm-rise`, `.cm-pop`, `.cm-blink` — chrome entrance/blink motion; never stage motion.
 
 The hard offset shadow is part of the brand. Soft blur is reserved for overlays.
