@@ -53,7 +53,8 @@ export function TrendChart({ points }: TrendChartProps) {
             />
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
-              labelStyle={{ color: "var(--muted-foreground)" }}
+              labelStyle={{ color: "var(--muted-foreground)", fontWeight: 600 }}
+              itemStyle={{ color: "var(--card-foreground)" }}
               formatter={(value) => [`${Number(value).toFixed(1)} / 30`, "Average"]}
             />
             <Line

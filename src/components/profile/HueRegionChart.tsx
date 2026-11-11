@@ -66,6 +66,9 @@ export function HueRegionChart({ regions }: HueRegionChartProps) {
             />
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
+              labelStyle={{ color: "var(--muted-foreground)", fontWeight: 600 }}
+              itemStyle={{ color: "var(--card-foreground)" }}
+              cursor={{ fill: "var(--muted)", fillOpacity: 0.35 }}
               formatter={(value) => [`${Number(value).toFixed(1)} / 10`, "Avg round score"]}
             />
             <Bar dataKey="avgScore" radius={[5, 5, 0, 0]} isAnimationActive={false}>

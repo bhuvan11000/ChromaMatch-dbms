@@ -78,6 +78,9 @@ export function AccuracyChart({ accuracy }: AccuracyChartProps) {
             />
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
+              labelStyle={{ color: "var(--muted-foreground)", fontWeight: 600 }}
+              itemStyle={{ color: "var(--card-foreground)" }}
+              cursor={{ fill: "var(--muted)", fillOpacity: 0.35 }}
               formatter={(value) => [`${Number(value).toFixed(0)}%`, "Closeness"]}
             />
             <Bar dataKey="accuracy" radius={[0, 6, 6, 0]} isAnimationActive={false}>
