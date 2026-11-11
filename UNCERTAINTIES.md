@@ -6,7 +6,7 @@
 > docs, assumptions made while implementing, and follow-ups that need a human
 > decision. Design-level open items still live in `docs/ChromaMatch_Database_Design.md` §11.
 
-Last updated: 2026-11-10
+Last updated: 2026-11-11
 
 ## How to use
 
@@ -101,6 +101,7 @@ Last updated: 2026-11-10
 | R-014 | Logout 401 toast | The `/home` stale-session effect now skips the auto-logout once the explicit logout mutation has succeeded, so the expected `/api/me` 401 after clearing the cookie no longer raises "Could not log out". |
 | R-015 | Text density and personality pass | The first Studio Console pass was too copy-heavy. Home/auth copy is now one line per card plus one hero line; removed the forced wordmark tagline, toast/error prefixes, per-card metadata and auth footer metadata; added the `<TestStrip>` film-strip flourish, illustrated arcade mode tokens, a coloured avatar chip and an icon-only “coming soon” lock. |
 | R-016 | Mode pin second pass | Mode glyphs are now 64 px (home) / 48 px (styleguide) enamel pins: a 4 px anodised rim, dark instrument plate, bold filled mini-scene, a hairline top light and a 3 px bottom drop-shadow. The Profile station is a wide 2-column banner so the 5-card grid resolves cleanly at 2 and 3 columns. |
+| R-017 | DDL demo lifetime | `scripts/ddl-demo.sql` must demonstrate `CREATE`/`ALTER`/`DROP` without touching app tables. It runs inside `cm_ddl_demo` and ends with `ROLLBACK`, so the script is repeatable and leaves no demo objects. A teacher who wants to inspect the final demo tables can replace `ROLLBACK` with `COMMIT` locally. |
 
 ## Notes for the next layer
 
