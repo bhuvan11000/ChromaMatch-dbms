@@ -142,7 +142,9 @@ describe("base UI kit", () => {
     expect(html).toContain("TRUST YOUR EYE");
     expect(html).toContain("✦");
     expect(html).toContain("<textPath");
-    expect(html).toContain('viewBox="0 0 1200 180"');
+    expect(html).toContain('viewBox="0 0 1200 150"');
+    expect(html).toContain("cm-text-loop");
+    expect(html).toContain('preserveAspectRatio="xMidYMid slice"');
   });
 
   it("renders a Code 39 player barcode with a printed payload", () => {

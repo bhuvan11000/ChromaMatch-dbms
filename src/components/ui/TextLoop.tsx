@@ -5,9 +5,8 @@ import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 
 import { cn } from "@/lib/cn";
 
 const VIEW_W = 1200;
-const VIEW_H = 180;
+const VIEW_H = 150;
 const CENTER_Y = VIEW_H / 2;
-const EDGE_FADE = 0.08;
 
 export interface TextLoopProps {
   text?: string;
@@ -58,13 +57,11 @@ export function TextLoop({
   speed = 64,
   direction = "forward",
   curviness = 48,
-  fontSize = 36,
+  fontSize = 32,
   className,
 }: TextLoopProps) {
   const rawId = useId();
   const pathId = `text-loop-${rawId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const fadeId = `${pathId}-fade`;
-  const maskId = `${pathId}-mask`;
   const rootRef = useRef<HTMLDivElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const measureRef = useRef<SVGTextElement>(null);
@@ -194,30 +191,18 @@ export function TextLoop({
       ref={rootRef}
       aria-hidden="true"
       data-testid="text-loop"
-      className={cn("relative w-full overflow-hidden select-none", className)}
+      className={cn("cm-text-loop relative w-full overflow-hidden select-none", className)}
     >
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        preserveAspectRatio="xMidYMid meet"
-        className="block h-auto w-full"
+        preserveAspectRatio="xMidYMid slice"
+        className="block h-20 w-full sm:h-auto"
       >
-        <defs>
-          <linearGradient id={fadeId} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
-            <stop offset={EDGE_FADE} stopColor="#ffffff" stopOpacity="1" />
-            <stop offset={1 - EDGE_FADE} stopColor="#ffffff" stopOpacity="1" />
-            <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
-          </linearGradient>
-          <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width={VIEW_W} height={VIEW_H}>
-            <rect width={VIEW_W} height={VIEW_H} fill={`url(#${fadeId})`} />
-          </mask>
-        </defs>
-
         <text ref={measureRef} className="invisible" style={textStyle} aria-hidden="true">
           {unit}
         </text>
 
-        <g mask={`url(#${maskId})`} className={metrics.length ? undefined : "opacity-0"}>
+        <g className={metrics.length ? undefined : "opacity-0"}>
           <path ref={pathRef} id={pathId} d={path} fill="none" />
           <text
             style={textStyle}

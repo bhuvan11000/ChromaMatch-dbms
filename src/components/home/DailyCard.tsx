@@ -89,6 +89,21 @@ export function DailyCard() {
                 {countdown.label ?? PLACEHOLDER}
               </span>
             </div>
+
+            <div aria-hidden="true" className="mt-4 grid grid-cols-3 gap-2">
+              {[0, 1, 2].map((slot) => (
+                <div key={slot} className="flex flex-col items-center gap-1">
+                  <span className="grid h-10 w-full place-items-center rounded-[0.45rem] border border-dashed border-border/55 bg-muted/50 font-mono text-sm font-bold text-muted-foreground/60">
+                    ?
+                  </span>
+                  <span className="font-mono text-[8px] tracking-[0.12em] text-muted-foreground">
+                    0{slot + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-3 text-sm text-muted-foreground">Same colours for every player.</p>
           </>
         )}
 

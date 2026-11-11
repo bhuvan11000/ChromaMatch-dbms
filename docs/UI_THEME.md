@@ -107,8 +107,8 @@ must not recreate their own stage background.
   game and room detail `max-w-3xl`. Cards stack before they shrink.
 - Public leaderboards use the shell but show a `Sign in` action instead of the
   player/logout cluster.
-- There is no global footer. The home screen closes with the curved
-  `<TextLoop>` brand flourish instead.
+- There is no global footer. Home opens with the headline + test strip, then
+  the curved `<TextLoop>` ribbon bridges into the Global/Daily mode row.
 
 ## 5. Component inventory
 
@@ -132,7 +132,7 @@ must not recreate their own stage background.
 | `ClickSpark` | `components/ui/ClickSpark.tsx` | ReactBits-adapted canvas click burst; decorative, reduced-motion-safe. |
 | `ThemeToggle` | `components/ui/ThemeToggle.tsx` | Persisted light/dark override; system is the default. |
 | `Barcode` | `components/ui/Barcode.tsx` | Scannable Code 39 numeric player-ID label on the profile card; theme-independent. |
-| `TextLoop` | `components/ui/TextLoop.tsx` | Decorative seamless curved text marquee on Home; pauses when hidden/hovered and under reduced motion. |
+| `TextLoop` | `components/ui/TextLoop.tsx` | Decorative seamless curved text marquee on Home between the intro and the modes; edge-faded, pauses when hidden/hovered and under reduced motion. |
 | `GameStage` | `components/game/GameStage.tsx` | Fixed neutral stage; HUD, countdown, content, optional footer. |
 | `ColorSwatch` | `components/game/ColorSwatch.tsx` | Display-only HSV swatch; sizes `sm/md/lg/reveal/canvas/fill`. |
 | `RevealCountdown` | `components/game/RevealCountdown.tsx` | Achromatic timer + segmented bar used by `GameStage`. |
@@ -191,8 +191,8 @@ Do not add `rounded-full` to every panel; the cabinet uses small-to-medium radii
 
 - Mobile-first: 360 px minimum, 44 px targets, cards stack before they shrink.
   Keep the mobile bottom dock clear with shell padding.
-- Home is an attract screen, not a dashboard: one headline, one rule line, the
-  Global cabinet, then Daily / Rooms / Boards / Profile.
+- Home is an attract screen, not a dashboard: one headline with the test strip,
+  the Text Loop ribbon, then Global + Daily, then Rooms / Boards / Profile.
 - One job per label. Buttons keep their name through the flow. Avoid cute
   status copy, fake data and extra taglines.
 - Voice: direct and dry, with arcade warmth. Prefer "Play Global", "Same palette

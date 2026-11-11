@@ -231,6 +231,11 @@
 }
 
 @layer components {
+  /* Decorative curved marquee: fade both ends at any viewport width. */
+  .cm-text-loop {
+    mask-image: linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  }
+
   /* ---------------------------------------------------------------------
    * Pill navigation (ReactBits Pill Nav, adapted to CSS transitions)
    * ------------------------------------------------------------------- */
