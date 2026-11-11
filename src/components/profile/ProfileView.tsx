@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Button, EmptyState, ErrorMessage, Spinner } from "@/components/ui";
+import { Barcode, Button, EmptyState, ErrorMessage, Spinner } from "@/components/ui";
 import { useMyAchievements, useHistory, useMyStats } from "@/hooks/useProfile";
 import { useSession } from "@/hooks/useSession";
 import { ApiError } from "@/lib/api-client";
@@ -103,7 +103,7 @@ export function ProfileView() {
             <p className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase">
               Member since {memberSince}
             </p>
-            <div aria-hidden="true" className="cm-barcode mt-1 h-7 w-32 text-foreground" />
+            <Barcode value={`P1-${user?.id ?? "0000"}`} className="mt-1 w-36 sm:w-40" />
           </div>
         </div>
       </section>

@@ -554,26 +554,6 @@
     background-size: 9px 9px;
   }
 
-  /* Decorative player-card barcode. */
-  .cm-barcode {
-    background-image: repeating-linear-gradient(
-      90deg,
-      currentColor 0,
-      currentColor 2px,
-      transparent 2px,
-      transparent 4px,
-      currentColor 4px,
-      currentColor 7px,
-      transparent 7px,
-      transparent 9px,
-      currentColor 9px,
-      currentColor 10px,
-      transparent 10px,
-      transparent 14px
-    );
-    opacity: 0.7;
-  }
-
   .cm-mode-token {
     filter: drop-shadow(0 -1px 0 rgb(255 255 255 / 0.18)) drop-shadow(0 4px 0 rgb(0 0 0 / 0.6));
     transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1);

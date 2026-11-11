@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { GAME_STAGE_HEX, GAME_STAGE_NEUTRAL_TOKEN, GameStage } from "@/components/game";
 import {
+  Barcode,
   Button,
   Celebration,
   EmptyState,
@@ -133,6 +134,17 @@ describe("Celebration", () => {
 });
 
 describe("base UI kit", () => {
+  it("renders a varied player barcode with a printed code", () => {
+    const html = render(<Barcode value="P1-5278" />);
+
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain("P1-5278");
+    expect(html).toContain('shape-rendering="crispEdges"');
+    expect(html.match(/<rect/g)?.length ?? 0).toBeGreaterThan(20);
+    expect(html).toContain('width="1"');
+    expect(html).toContain('width="2"');
+  });
+
   it("renders the wordmark and its subtitle", () => {
     const html = render(<Wordmark size="lg" subtitle="Darkroom calibration console" />);
 

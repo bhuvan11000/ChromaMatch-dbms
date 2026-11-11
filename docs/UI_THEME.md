@@ -127,6 +127,7 @@ must not recreate their own stage background.
 | `AuthCabinet` | `components/auth/AuthCabinet.tsx` | Shared access-terminal shell for login/register. |
 | `ClickSpark` | `components/ui/ClickSpark.tsx` | ReactBits-adapted canvas click burst; decorative, reduced-motion-safe. |
 | `ThemeToggle` | `components/ui/ThemeToggle.tsx` | Persisted light/dark override; system is the default. |
+| `Barcode` | `components/ui/Barcode.tsx` | Deterministic print-style player code on the profile card; decorative and theme-independent. |
 | `GameStage` | `components/game/GameStage.tsx` | Fixed neutral stage; HUD, countdown, content, optional footer. |
 | `ColorSwatch` | `components/game/ColorSwatch.tsx` | Display-only HSV swatch; sizes `sm/md/lg/reveal/canvas/fill`. |
 | `RevealCountdown` | `components/game/RevealCountdown.tsx` | Achromatic timer + segmented bar used by `GameStage`. |
