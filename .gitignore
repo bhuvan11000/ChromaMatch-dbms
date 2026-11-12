@@ -20,6 +20,10 @@ next-env.d.ts
 # Tooling
 .eslintcache
 
+# Agent skills tooling
+.agents/
+skills-lock.json
+
 # Misc
 .DS_Store
 npm-debug.log*
